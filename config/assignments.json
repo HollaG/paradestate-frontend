@@ -1,0 +1,128 @@
+{
+	"rank_army": {
+		"REC": "Recruit",
+		"PTE": "Private",
+		"LCP": "Lance Corporal",
+		"CPL": "Corporal",
+		"CFC": "Corporal First Class",
+		"3SG": "Third Sergeant",
+		"2SG": "Second Sergeant",
+		"1SG": "First Sergeant",
+		"SSG": "Staff Sergeant",
+		"MSG": "Master Sergeant",
+		"3WO": "Third Warrant Officer",
+		"2WO": "Second Warrant Officer",
+		"1WO": "First Warrant Officer",
+		"SWO": "Staff Warrant Officer",
+		"MWO": "Master Warrant Officer",
+		"CWO": "Chief Warrant Officer",
+		"2LT": "Second Lieutenant",
+		"LTA": "Lieutenant",
+		"CPT": "Captain",
+		"MAJ": "Major",
+		"LTC": "Lieutenant Colonel",
+		"SLTC": "Senior Lieutenant Colonel",
+		"COL": "Colonel",
+		"BG": "Brigadier-General",
+		"MG": "Major-General",
+		"LG": "Lieutenant General",
+		"GEN": "General"
+
+	},
+	"commander": {
+		"officer_wospec": ["2LT", "LTA", "CPT", "MAJ", "LTC", "SLTC", "COL", "BG", "MG", "LG", "GEN", "MSG", "3WO", "2WO", "1WO", "SWO", "MWO", "CWO"],
+		"spec": ["3SG", "2SG", "1SG", "SSG"],
+		"men": ["REC", "PTE", "LCP", "CPL", "CFC"]
+	},
+    "pes": [
+        "A", "B1", "B2", "B3", "B4", "C2", "C9", "D", "E1", "E9", "F"
+    ],
+	"formats": {
+		"single_date_no_time": "dd/MM/yyyy",
+		"single_date_AMPM": "dd/MM/yyyy A" 
+	},
+	"dateformat": "dd/MM/yyyy",
+	"datenoyear": "D/M ddd",
+	"dateampmformat": "dd/MM/yyyy A",
+	"mysqldateformat": "yyyy-MM-dd",
+	"mysqltimeformat": "HHmm",
+	"mysqldatetimeformat": "yyyy-MM-dd HHmm",
+	"datetimeformat": "dd/MM/yyyy hh:mm A",
+	"timeformat": "hh:mm A",
+	"datepickers": {
+		"single_no_time": {
+			"format": "dd/MM/yyyy",
+			"date": true,
+			"time": false,
+			"year": false,
+			"clearButton": false,
+			"nowButton": true,
+			"switchOnClick": true,
+			"cancelText": "CANCEL",
+			
+			"weekStart": 1
+		},
+		"single_time": {
+			"format": "dd/MM/yyyy hh:mm A",
+			"date": true,
+			"time": true,
+			"year": false,
+			"shortTime": true,
+			"clearButton": false,
+			"nowButton": false,
+			"switchOnClick": true,
+			"cancelText": "CANCEL",
+			
+			"weekStart": 1
+		},
+		"double_no_time": {			
+			"showDropdowns": true,
+			"locale": {
+				"format": "dd/MM/yyyy"
+			}
+		},
+		
+		"double_time": {			
+			"showDropdowns": true,
+			"timePicker": true,
+			"locale": {
+				"format": "dd/MM/yyyy"
+			}
+		}
+	},
+	"datepickers_old": {
+		"single_no_time": {
+			"singleDatePicker": true,
+			"showDropdowns": true,
+			"opens": "center",
+			"locale": {
+				"format": "dd/MM/yyyy"
+			}
+		},
+		"double_no_time": {			
+			"showDropdowns": true,
+			"locale": {
+				"format": "dd/MM/yyyy"
+			}
+		},
+		"single_time": {
+			"singleDatePicker": true,
+			"showDropdowns": true,
+			"timePicker": true,
+			"opens": "center",
+			"locale": {
+				"format": "dd/MM/yyyy hh:mm A"
+			}
+		},
+		"double_time": {			
+			"showDropdowns": true,
+			"timePicker": true,
+			"locale": {
+				"format": "dd/MM/yyyy"
+			}
+		}
+	}		
+
+
+	
+}
