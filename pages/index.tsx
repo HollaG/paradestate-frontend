@@ -31,52 +31,192 @@ import {
     MenuButton,
     MenuItem,
     MenuList,
+    Divider,
+    MenuDivider,
+    MenuItemOption,
+    MenuOptionGroup,
 } from "@chakra-ui/react";
 
+import { FaChevronDown } from "react-icons/fa";
+import { useState } from "react";
 const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
     person,
 }) => {
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
+    const disabledStates = person.location.split(",");
+
+    const [buttonStates, setButtonStates] = useState({
+        off: person.off_row_ID ? true : false,
+        leave: person.leave_row_ID ? true : false,
+        attc: person.attc_row_ID ? true : false,
+        course: person.course_row_ID ? true : false,
+        ma: person.ma_row_ID ? true : false,
+        others: person.others_row_ID ? true : false,
+        extras:
+            person.course_row_ID || person.ma_row_ID || person.others_row_ID
+                ? true
+                : false,
+        incamp: person.location === "In camp" ? true : false,
+    });
+
+    const defaultExtrasChecked:string[] = []
+    if (person.ma_row_ID) defaultExtrasChecked.push("ma")
+    if (person.others_row_ID) defaultExtrasChecked.push("others")
+    if (person.course_row_ID) defaultExtrasChecked.push("course")
+
+
+    // Override type checking TODO
+    const [extrasChecked, setExtrasChecked] = useState<string[]|string>(defaultExtrasChecked)
+
+
+    const toggleHandler = (
+        type: "off" | "leave" | "attc" | "course" | "ma" | "others" | "incamp"
+    ) => {
+        if (type !== "incamp")
+            setButtonStates((prevState) => ({
+                // When user selects another location, de-select the in-camp button because they can't be in camp if they are elsewhere
+                ...prevState,
+                incamp: false,
+            }));
+        switch (type) {
+            case "off":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    off: !prevState.off,
+                }));
+                break;
+            case "leave":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    leave: !prevState.leave,
+                }));
+                break;
+            case "attc":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    attc: !prevState.attc,
+                }));
+                break;
+            case "course":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    course: !prevState.course,
+                }));
+                break;
+            case "ma":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    ma: !prevState.ma,
+                }));
+                break;
+            case "others":
+                setButtonStates((prevState) => ({
+                    ...prevState,
+                    others: !prevState.others,
+                }));
+                break;
+            case "incamp":
+                if (buttonStates.incamp) return; // Prevent deselection, only allow user to select this option
+
+                // When user sets incamp to true, deselect all other options
+                // Pls note that the user can only click incamp to true if the person is already in-camp, i.e. has location set as 'In camp'
+                setButtonStates({
+                    off: false,
+                    leave: false,
+                    attc: false,
+                    course: false,
+                    ma: false,
+                    others: false,
+                    extras: false,
+                    incamp: true,
+                });
+                break;
+            default:
+                break;
+        }
+    };
+
     return (
-        <Flex wrap="wrap" my={3}>
-            <Box>
-                <Text fontWeight="semibold">
-                    ({person.pes}) {person.rank} {person.name}
-                </Text>
-                <Text textColor={textColor}>{person.location}</Text>
-            </Box>
-            <Spacer />
-            <Center>
-                <ButtonGroup isAttached size="xs">
-                    <Button variant="outline"> Off </Button>
-                    <Button variant="outline"> Leave </Button>
-                    <Button variant="outline"> AttC</Button>
-                    {/* <Menu>
-                        {({ isOpen }) => (
-                            <>
-                                <MenuButton
-                                    isActive={isOpen}
-                                    as={Button}
-                                    rightIcon={<ChevronDownIcon />}
+        <>
+            <Flex wrap="wrap" my={3}>
+                <Box>
+                    <Text fontWeight="semibold">
+                        ({person.pes}) {person.rank} {person.name}
+                    </Text>
+                    <Text textColor={textColor}>{person.location}</Text>
+                </Box>
+                <Spacer />
+                <Center>
+                    <ButtonGroup isAttached size="xs">
+                        <Button
+                            variant={buttonStates.off ? "solid" : "outline"}
+                            colorScheme="teal"
+                            onClick={() => toggleHandler("off")}
+                            disabled={!!person.off_row_ID}
+                        >
+                            Off
+                        </Button>
+                        <Button
+                            variant={buttonStates.leave ? "solid" : "outline"}
+                            colorScheme="teal"
+                            onClick={() => toggleHandler("leave")}
+                            disabled={!!person.leave_row_ID}
+                        >
+                            Leave
+                        </Button>
+                        <Button
+                            variant={buttonStates.attc ? "solid" : "outline"}
+                            colorScheme="teal"
+                            onClick={() => toggleHandler("attc")}
+                            disabled={!!person.attc_row_ID}
+                        >
+                            AttC
+                        </Button>                        
+                        <Menu closeOnSelect={true}>
+                            <MenuButton
+                                as={Button}
+                                rightIcon={<FaChevronDown />}
+                                variant={
+                                    buttonStates.extras ? "solid" : "outline"
+                                }
+                                colorScheme="teal"
+                            >
+                                Extras
+                            </MenuButton>
+                            <MenuList minWidth="240px">
+                                
+                                <MenuOptionGroup
+                                    value={extrasChecked}
+                                    onChange={setExtrasChecked}
+                                    type="checkbox"
                                 >
-                                    {isOpen ? "Close" : "Open"}
-                                </MenuButton>
-                                <MenuList>
-                                    <MenuItem>Download</MenuItem>
-                                    <MenuItem
-                                        onClick={() => alert("Kagebunshin")}
-                                    >
-                                        Create a Copy
-                                    </MenuItem>
-                                </MenuList>
-                            </>
-                        )}
-                    </Menu> */}
-                    <Button variant="outline"> Extras </Button>
-                    <Button variant="outline"> In camp</Button>
-                </ButtonGroup>
-            </Center>
-        </Flex>
+                                    <MenuItemOption value="course" >
+                                        Course
+                                    </MenuItemOption>
+                                    <MenuItemOption value="ma">
+                                        MA
+                                    </MenuItemOption>
+                                    <MenuItemOption value="others">
+                                        Others
+                                    </MenuItemOption>
+                                </MenuOptionGroup>
+                            </MenuList>
+                        </Menu>
+                        <Button
+                            variant={buttonStates.incamp ? "solid" : "outline"}
+                            colorScheme="green"
+                            onClick={() => toggleHandler("incamp")}
+                            disabled={
+                                person.location !== "In camp" ? true : false
+                            }
+                        >
+                            In camp
+                        </Button>
+                    </ButtonGroup>
+                </Center>
+            </Flex>
+            <Divider />
+        </>
     );
 };
 const PlatoonAccordianItem: React.FC<{
