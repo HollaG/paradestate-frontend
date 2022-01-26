@@ -242,7 +242,7 @@ const PlatoonAccordianItem: React.FC<{
     );
 };
 
-const Dashboard: NextPage<{
+const OldDashboard: NextPage<{
     data?: {
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
         personnelTally: {
@@ -292,6 +292,14 @@ const Dashboard: NextPage<{
         ></Layout>
     );
 };
+
+const Dashboard: NextPage = () => {
+    return <Layout
+    content={
+        <h1> Hello world </h1>
+    }
+></Layout>
+}
 
 export const getServerSideProps = async (
     context: GetServerSidePropsContext
