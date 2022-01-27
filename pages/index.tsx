@@ -384,10 +384,10 @@ const Dashboard: NextPage<{
     };
 }> = ({ data }) => {
     const { data: session } = useSession();
+    const methods = useForm({ shouldUnregister: true });
     if (!data) return <h1> im here </h1>;
     const { sortedByPlatoon, selectedDate } = data;
 
-    const methods = useForm({ shouldUnregister: true });
 
     const {
         register,

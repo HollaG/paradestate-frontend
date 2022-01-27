@@ -189,7 +189,7 @@ const SignInInfo: React.FC = () => {
     );
 };
 
-export default (props: any) => {
+const Sidebar = (props: any) => {
     const { data: session } = useSession();
     const sidebar = useDisclosure();
 
@@ -454,3 +454,5 @@ export default (props: any) => {
         </Box>
     );
 };
+
+export default Sidebar
