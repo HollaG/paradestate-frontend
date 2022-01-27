@@ -384,7 +384,7 @@ const Dashboard: NextPage<{
     };
 }> = ({ data }) => {
     const { data: session } = useSession();
-    if (!data) return <></>;
+    if (!data) return <h1> im here </h1>;
     const { sortedByPlatoon, selectedDate } = data;
 
     const methods = useForm({ shouldUnregister: true });
@@ -434,7 +434,13 @@ export const getServerSideProps = async (
     context: GetServerSidePropsContext
 ) => {
     const session = await getSession(context);
-    if (!session) return { props: {} };
+    if (!session)
+        return {
+            redirect: {
+                destination: "/login",
+                permanent: false,
+            },
+        };
     let currentDate = new Date();
     let formattedDate = format(currentDate, Assignments.mysqldateformat);
 

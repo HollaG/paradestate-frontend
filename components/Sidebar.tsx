@@ -190,6 +190,7 @@ const SignInInfo: React.FC = () => {
 };
 
 export default (props: any) => {
+    const { data: session } = useSession();
     const sidebar = useDisclosure();
 
     const discloures = {
@@ -280,7 +281,6 @@ export default (props: any) => {
                                     onClick={
                                         discloures[link.disclosure].onToggle
                                     }
-                                    
                                 >
                                     {link.name}
                                     <Icon
@@ -304,7 +304,9 @@ export default (props: any) => {
                                             py="2"
                                             icon={IoArrowForward}
                                         >
-                                            {child.name}
+                                            <NextLink href={child.url} passHref>
+                                                <Link>{child.name}</Link>
+                                            </NextLink>
                                         </NavItem>
                                     ))}
                                 </Collapse>
@@ -313,7 +315,9 @@ export default (props: any) => {
                     } else
                         return (
                             <NavItem key={index} icon={link.icon}>
-                                {link.name}
+                                <NextLink href={link.url || "/"} passHref>
+                                    <Link>{link.name}</Link>
+                                </NextLink>
                             </NavItem>
                         );
                 })}
@@ -322,7 +326,7 @@ export default (props: any) => {
     );
     const whiteGray900 = useColorModeValue("white", "gray.900");
     const gray200Gray700 = useColorModeValue("gray.200", "gray.700");
-    const { data: session } = useSession();
+
     return (
         <Box
             as="section"
