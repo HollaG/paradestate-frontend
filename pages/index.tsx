@@ -1,7 +1,7 @@
 import type { GetServerSidePropsContext, NextPage } from "next";
-import { getSession, signIn, signOut, useSession } from "next-auth/react";
-import Link from "next/link";
-import Navbar from "../components/Navbar";
+import { getSession, useSession } from "next-auth/react";
+import NextLink from "next/link";
+
 import executeQuery from "../lib/db";
 import Layout from "../components/Sidebar";
 
@@ -10,9 +10,8 @@ import { addDays, format } from "date-fns";
 
 import Assignments from "../config/assignments.json";
 import { ExtendedPersonnel } from "../types/database";
-import { serialize } from "superjson";
+
 import {
-    Container,
     Text,
     Wrap,
     WrapItem,
@@ -25,96 +24,132 @@ import {
     Flex,
     ButtonGroup,
     Button,
-    Spacer,
     Center,
     Menu,
     MenuButton,
-    MenuItem,
     MenuList,
     Divider,
-    MenuDivider,
     MenuItemOption,
     MenuOptionGroup,
+    Collapse,
+    SimpleGrid,
+    Link,
+    Icon,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
 import { useState } from "react";
-const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
-    person,
-}) => {
-    const textColor = person.location === "In camp" ? "green.500" : "red.500";
-    const disabledStates = person.location.split(",");
 
-    const [buttonStates, setButtonStates] = useState({
+import {
+    AddAttC,
+    AddCourse,
+    AddLeave,
+    AddMA,
+    AddOff,
+    AddOthers,
+} from "../components/Dashboard/AddEvent";
+import { FormProvider, useForm } from "react-hook-form";
+import {
+    IoCheckmarkDoneCircleOutline,
+    IoAlertCircleOutline,
+} from "react-icons/io5";
+
+const DefaultLink: React.FC<{ url: string; type: string }> = ({
+    url,
+    type,
+}) => {
+    return (
+        <NextLink href={url} passHref>
+            <Link color="teal.500">
+                Click here to edit the currently active {type}
+            </Link>
+        </NextLink>
+    );
+};
+
+const PersonAccordianItem: React.FC<{
+    person: ExtendedPersonnel;
+}> = ({ person }) => {
+    const textColor = person.location === "In camp" ? "green.500" : "red.500";
+    const icon =
+        person.location === "In camp"
+            ? IoCheckmarkDoneCircleOutline
+            : IoAlertCircleOutline;
+    const defaultState = {
         off: person.off_row_ID ? true : false,
         leave: person.leave_row_ID ? true : false,
         attc: person.attc_row_ID ? true : false,
         course: person.course_row_ID ? true : false,
         ma: person.ma_row_ID ? true : false,
         others: person.others_row_ID ? true : false,
+        // This property is not currently in use
         extras:
             person.course_row_ID || person.ma_row_ID || person.others_row_ID
                 ? true
                 : false,
         incamp: person.location === "In camp" ? true : false,
-    });
+    };
 
-    const defaultExtrasChecked:string[] = []
-    if (person.ma_row_ID) defaultExtrasChecked.push("ma")
-    if (person.others_row_ID) defaultExtrasChecked.push("others")
-    if (person.course_row_ID) defaultExtrasChecked.push("course")
+    const [buttonStates, setButtonStates] = useState(defaultState);
 
+    const defaultExtrasChecked: string[] = [];
+    if (person.ma_row_ID) defaultExtrasChecked.push("ma");
+    if (person.others_row_ID) defaultExtrasChecked.push("others");
+    if (person.course_row_ID) defaultExtrasChecked.push("course");
 
     // Override type checking TODO
-    const [extrasChecked, setExtrasChecked] = useState<string[]|string>(defaultExtrasChecked)
+    const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
+        defaultExtrasChecked
+    );
 
+    const handleExtras = (checked: string | string[]) => {
+        setExtrasChecked(checked);
+        console.log({ checked });
+
+        // Handle setting the button states
+        let tempArray: string[] = []; // Convert to array (if one option is selected, then it's a string, not an array)
+        if (Array.isArray(checked)) {
+            tempArray = checked;
+        } else {
+            tempArray = [checked];
+        }
+
+        setButtonStates((prevState) => ({
+            ...prevState,
+            course: tempArray.includes("course"),
+            ma: tempArray.includes("ma"),
+            others: tempArray.includes("others"),
+            incamp: false,
+            extras: tempArray.length > 0,
+        }));
+    };
 
     const toggleHandler = (
         type: "off" | "leave" | "attc" | "course" | "ma" | "others" | "incamp"
     ) => {
-        if (type !== "incamp")
-            setButtonStates((prevState) => ({
-                // When user selects another location, de-select the in-camp button because they can't be in camp if they are elsewhere
-                ...prevState,
-                incamp: false,
-            }));
         switch (type) {
             case "off":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     off: !prevState.off,
+                    incamp: false,
                 }));
                 break;
             case "leave":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     leave: !prevState.leave,
+                    incamp: false,
                 }));
                 break;
             case "attc":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     attc: !prevState.attc,
+                    incamp: false,
                 }));
                 break;
-            case "course":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    course: !prevState.course,
-                }));
-                break;
-            case "ma":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    ma: !prevState.ma,
-                }));
-                break;
-            case "others":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    others: !prevState.others,
-                }));
-                break;
+
             case "incamp":
                 if (buttonStates.incamp) return; // Prevent deselection, only allow user to select this option
 
@@ -136,17 +171,31 @@ const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
         }
     };
 
+    const events: (
+        | "off"
+        | "leave"
+        | "attc"
+        | "course"
+        | "ma"
+        | "others"
+        | "extras"
+        | "incamp"
+    )[] = ["off", "leave", "attc", "course", "ma", "others"];
+
     return (
         <>
-            <Flex wrap="wrap" my={3}>
+            <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px">
                 <Box>
                     <Text fontWeight="semibold">
                         ({person.pes}) {person.rank} {person.name}
                     </Text>
-                    <Text textColor={textColor}>{person.location}</Text>
+                    <Flex align="center">
+                        <Icon as={icon} mr={1} color={textColor} />
+                        <Text textColor={textColor}> {person.location}</Text>
+                    </Flex>
                 </Box>
-                <Spacer />
-                <Center>
+                {/* <Spacer /> */}
+                <Center m="auto">
                     <ButtonGroup isAttached size="xs">
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
@@ -171,32 +220,42 @@ const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
                             disabled={!!person.attc_row_ID}
                         >
                             AttC
-                        </Button>                        
+                        </Button>
                         <Menu closeOnSelect={true}>
                             <MenuButton
                                 as={Button}
                                 rightIcon={<FaChevronDown />}
                                 variant={
-                                    buttonStates.extras ? "solid" : "outline"
+                                    extrasChecked.length > 0
+                                        ? "solid"
+                                        : "outline"
                                 }
                                 colorScheme="teal"
                             >
                                 Extras
                             </MenuButton>
                             <MenuList minWidth="240px">
-                                
                                 <MenuOptionGroup
                                     value={extrasChecked}
-                                    onChange={setExtrasChecked}
+                                    onChange={handleExtras}
                                     type="checkbox"
                                 >
-                                    <MenuItemOption value="course" >
+                                    <MenuItemOption
+                                        value="course"
+                                        isDisabled={!!person.course_row_ID}
+                                    >
                                         Course
                                     </MenuItemOption>
-                                    <MenuItemOption value="ma">
+                                    <MenuItemOption
+                                        value="ma"
+                                        isDisabled={!!person.ma_row_ID}
+                                    >
                                         MA
                                     </MenuItemOption>
-                                    <MenuItemOption value="others">
+                                    <MenuItemOption
+                                        value="others"
+                                        isDisabled={!!person.others_row_ID}
+                                    >
                                         Others
                                     </MenuItemOption>
                                 </MenuOptionGroup>
@@ -214,7 +273,74 @@ const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
                         </Button>
                     </ButtonGroup>
                 </Center>
-            </Flex>
+            </SimpleGrid>
+
+            {/* Render if user is on an event */}
+            {/* TODO - instead of checking all the events, we check each individual event on the user  */}
+
+            {events.map((event, index) =>
+                defaultState[event] ? (
+                    <DefaultLink
+                        key={index}
+                        url={`/personnel/manage/${event}/${
+                            person.personnel_ID
+                        }/#${person[`${event}_row_ID`]}`}
+                        type={event === "ma" ? "medical appointment" : event}
+                    />
+                ) : null
+            )}
+
+            {/* only render the below if the user is not already on event */}
+            {!defaultState.off && (
+                <Collapse in={buttonStates.off} animateOpacity unmountOnExit>
+                    <AddOff
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.off}
+                    />
+                </Collapse>
+            )}
+            {!defaultState.leave && (
+                <Collapse in={buttonStates.leave} animateOpacity unmountOnExit>
+                    <AddLeave
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.leave}
+                    />
+                </Collapse>
+            )}
+            {!defaultState.attc && (
+                <Collapse in={buttonStates.attc} animateOpacity unmountOnExit>
+                    <AddAttC
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.attc}
+                    />
+                </Collapse>
+            )}
+
+            {!defaultState.course && (
+                <Collapse in={buttonStates.course} animateOpacity unmountOnExit>
+                    <AddCourse
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.course}
+                    />
+                </Collapse>
+            )}
+            {!defaultState.ma && (
+                <Collapse in={buttonStates.ma} animateOpacity unmountOnExit>
+                    <AddMA
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.ma}
+                    />
+                </Collapse>
+            )}
+            {!defaultState.others && (
+                <Collapse in={buttonStates.others} animateOpacity unmountOnExit>
+                    <AddOthers
+                        personnel_ID={person.personnel_ID}
+                        enabled={buttonStates.others}
+                    />
+                </Collapse>
+            )}
+
             <Divider />
         </>
     );
@@ -259,13 +385,18 @@ const Dashboard: NextPage<{
 }> = ({ data }) => {
     const { data: session } = useSession();
     if (!data) return <></>;
+    const { sortedByPlatoon, selectedDate } = data;
+
+    const methods = useForm({ shouldUnregister: true });
+
     const {
-        sortedByPlatoon,
-        personnelTally,
-        personnelNotInCamp,
-        selectedDate,
-    } = data;
-    console.log("IN react app frontend", { data });
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors },
+    } = methods;
+
+    const onSubmit = (data: any) => console.log(data);
     return (
         <Layout
             content={
@@ -273,19 +404,25 @@ const Dashboard: NextPage<{
                     <Wrap>
                         <WrapItem>
                             <Text fontSize="2xl">
-                                {" "}
                                 Set status for: {selectedDate}
                             </Text>
                         </WrapItem>
                     </Wrap>
                     <Accordion defaultIndex={[0]} allowMultiple allowToggle>
-                        {Object.keys(sortedByPlatoon).map((platoon, index) => (
-                            <PlatoonAccordianItem
-                                key={index}
-                                personnel={sortedByPlatoon[platoon]}
-                                platoon={platoon}
-                            />
-                        ))}
+                        <FormProvider {...methods}>
+                            <form onSubmit={methods.handleSubmit(onSubmit)}>
+                                {Object.keys(sortedByPlatoon).map(
+                                    (platoon, index) => (
+                                        <PlatoonAccordianItem
+                                            key={index}
+                                            personnel={sortedByPlatoon[platoon]}
+                                            platoon={platoon}
+                                        />
+                                    )
+                                )}
+                                <Button type="submit"> submit </Button>
+                            </form>
+                        </FormProvider>
                     </Accordion>
                 </Box>
             }
@@ -328,12 +465,6 @@ export const getServerSideProps = async (
 
         if (!objectified) return { props: {} };
 
-        const personnelTally: {
-            total: number;
-            incamp: number;
-            [key: string]: any;
-        } = { total: 0, incamp: 0 };
-
         const edited = objectified.map((x) => {
             const strArr = [];
             if (x.attc_row_ID) strArr.push("On AttC");
@@ -355,24 +486,7 @@ export const getServerSideProps = async (
                 }
             }
 
-            // set up object key
-            personnelTally[x.platoon]
-                ? personnelTally[x.platoon]
-                : (personnelTally[x.platoon] = {});
-
-            // Add one to total
-            personnelTally[x.platoon]["total"]
-                ? (personnelTally[x.platoon]["total"] =
-                      personnelTally[x.platoon]["total"] + 1)
-                : (personnelTally[x.platoon]["total"] = 1);
-            personnelTally["total"] = personnelTally["total"] + 1;
             if (!strArr.length) {
-                // add one to current if in camp
-                personnelTally[x.platoon]["incamp"]
-                    ? (personnelTally[x.platoon]["incamp"] =
-                          personnelTally[x.platoon]["incamp"] + 1)
-                    : (personnelTally[x.platoon]["incamp"] = 1);
-                personnelTally["incamp"] = personnelTally["incamp"] + 1;
                 strArr.push("In camp");
             }
 
@@ -386,33 +500,9 @@ export const getServerSideProps = async (
                 return r;
             }, {});
 
-        const personnelNotInCamp: {
-            personnel_ID: number;
-            type: "off" | "leave" | "ma" | "attc" | "course" | "others";
-        }[] = [];
-        edited.forEach((person) => {
-            let type: "off" | "leave" | "ma" | "attc" | "course" | "others" =
-                "off";
-            if (person.leave_row_ID) type = "leave";
-
-            if (person.ma_row_ID) type = "ma";
-
-            if (person.attc_row_ID) type = "attc";
-
-            if (person.course_row_ID) type = "course";
-
-            if (person.others_row_ID) type = "others";
-
-            personnelNotInCamp.push({
-                personnel_ID: person.personnel_ID,
-                type,
-            });
-        });
-
         const data = {
             sortedByPlatoon,
-            personnelTally,
-            personnelNotInCamp,
+
             selectedDate: formattedDate,
         };
 

@@ -47,7 +47,21 @@ import { useSession, signOut, signIn } from "next-auth/react";
 import NextLink from "next/link";
 import { FaClipboardCheck, FaRss, FaChevronDown } from "react-icons/fa";
 
-import { IoAnalyticsOutline, IoArrowForward, IoCalendarOutline, IoChevronDown, IoChevronUp, IoFileTrayStackedOutline, IoFolderOpenOutline, IoHomeOutline, IoMailOutline, IoMedicalOutline, IoPeopleOutline, IoSettingsOutline, IoTrendingUp } from "react-icons/io5";
+import {
+    IoAnalyticsOutline,
+    IoArrowForward,
+    IoCalendarOutline,
+    IoChevronDown,
+    IoChevronUp,
+    IoFileTrayStackedOutline,
+    IoFolderOpenOutline,
+    IoHomeOutline,
+    IoMailOutline,
+    IoMedicalOutline,
+    IoPeopleOutline,
+    IoSettingsOutline,
+    IoTrendingUp,
+} from "react-icons/io5";
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -177,9 +191,6 @@ const SignInInfo: React.FC = () => {
 
 export default (props: any) => {
     const sidebar = useDisclosure();
-    const personnelDropdown = useDisclosure();
-    const eventDropdown = useDisclosure();
-    const formatDropdown = useDisclosure();
 
     const discloures = {
         personnel: useDisclosure(),
@@ -260,15 +271,16 @@ export default (props: any) => {
                 color="gray.600"
                 aria-label="Main Navigation"
             >
-                {LinkItems.map((link) => {
+                {LinkItems.map((link, index) => {
                     if (link.isGroup) {
                         return (
-                            <>
+                            <Box key={index}>
                                 <NavItem
                                     icon={link.icon}
                                     onClick={
                                         discloures[link.disclosure].onToggle
                                     }
+                                    
                                 >
                                     {link.name}
                                     <Icon
@@ -285,15 +297,25 @@ export default (props: any) => {
                                 <Collapse
                                     in={discloures[link.disclosure].isOpen}
                                 >
-                                    {link.children.map((child) => (
-                                        <NavItem pl="12" py="2" icon={IoArrowForward}>
+                                    {link.children.map((child, index) => (
+                                        <NavItem
+                                            key={index}
+                                            pl="12"
+                                            py="2"
+                                            icon={IoArrowForward}
+                                        >
                                             {child.name}
                                         </NavItem>
                                     ))}
                                 </Collapse>
-                            </>
+                            </Box>
                         );
-                    } else return <NavItem icon={link.icon}>{link.name}</NavItem>;
+                    } else
+                        return (
+                            <NavItem key={index} icon={link.icon}>
+                                {link.name}
+                            </NavItem>
+                        );
                 })}
             </Flex>
         </Box>
@@ -356,7 +378,7 @@ export default (props: any) => {
                             aria-label="open menu"
                             icon={<FiBell />}
                         />
-                        {session && (
+                        {session && session.user ? (
                             <Flex alignItems={"center"}>
                                 <Menu>
                                     <MenuButton
@@ -367,11 +389,7 @@ export default (props: any) => {
                                         <HStack>
                                             <Avatar
                                                 size={"sm"}
-                                                src={
-                                                    session
-                                                        ? session.user.photo
-                                                        : "https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9"
-                                                }
+                                                src={session.user.photo}
                                             />
                                             <VStack
                                                 display={{
@@ -417,8 +435,7 @@ export default (props: any) => {
                                     </MenuList>
                                 </Menu>
                             </Flex>
-                        )}
-                        {!session && (
+                        ) : (
                             <Button colorScheme="teal" onClick={() => signIn()}>
                                 Sign in
                             </Button>
