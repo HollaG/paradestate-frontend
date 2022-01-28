@@ -195,7 +195,7 @@ const PersonAccordianItem: React.FC<{
                     </Flex>
                 </Box>
                 {/* <Spacer /> */}
-                <Center m="auto">
+                <Flex align="center" m={{lg: "unset", sm:"auto"}}>
                     <ButtonGroup isAttached size="xs">
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
@@ -272,7 +272,7 @@ const PersonAccordianItem: React.FC<{
                             In camp
                         </Button>
                     </ButtonGroup>
-                </Center>
+                </Flex>
             </SimpleGrid>
 
             {/* Render if user is on an event */}
