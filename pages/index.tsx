@@ -63,11 +63,13 @@ const DefaultLink: React.FC<{ url: string; type: string }> = ({
     type,
 }) => {
     return (
-        <NextLink href={url} passHref>
-            <Link color="teal.500">
-                Click here to edit the currently active {type}
-            </Link>
-        </NextLink>
+        <Box  mb={1}>
+            <NextLink href={url} passHref>
+                <Link color="teal.500">
+                    Click here to edit the currently active {type}
+                </Link>
+            </NextLink>
+        </Box>
     );
 };
 
@@ -435,7 +437,7 @@ const Dashboard: NextPage<{
     return (
         <Layout
             content={
-                <Container maxW="container.lg">
+                <Container maxW="container.lg" p={{base: 0, md: 3}} >
                     <Wrap>
                         <WrapItem>
                             <Text fontSize="2xl">
@@ -510,8 +512,11 @@ export const getServerSideProps = async (
 
         if (!objectified) return { props: {} };
 
-        const edited = objectified.map((x) => {
+        const hasEvent: any[] = [];
+        const noEvent: any[] = [];
+        objectified.forEach((x) => {
             const strArr = [];
+            let hasAnEvent = false;
             if (x.attc_row_ID) strArr.push("On AttC");
             if (x.course_row_ID) strArr.push("On course");
             if (x.leave_row_ID) strArr.push("On leave");
@@ -533,6 +538,7 @@ export const getServerSideProps = async (
 
             if (!strArr.length) {
                 strArr.push("In camp");
+                hasAnEvent = true;
             }
 
             const str = strArr.join(", ");
@@ -542,8 +548,11 @@ export const getServerSideProps = async (
             const cleansed = Object.fromEntries(
                 Object.entries(x).filter(([_, v]) => v != null)
             ) as ExtendedPersonnel;
-            return cleansed;
+            if (hasAnEvent) hasEvent.push(cleansed);
+            else noEvent.push(cleansed);
         });
+
+        const edited = [...hasEvent, ...noEvent];
 
         const sortedByPlatoon: { [key: string]: ExtendedPersonnel } =
             edited.reduce((r: any, a) => {

@@ -17,7 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { IoTrash } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
@@ -171,13 +171,9 @@ const Confirm: NextPage = () => {
         const responseData = await sendPOST("/api/dashboard/submit", data);
 
         console.log({ responseData });
-        if (responseData.success)
-            setConfirmedDashboardData(responseData.data);
+        if (responseData.success) setConfirmedDashboardData(responseData.data);
     };
     const dispatch = useDispatch();
-    if (!dashboardData || !Object.keys(dashboardPersonnel).length) return <></>;
-
-    console.log({ dashboardPersonnel, dashboardData });
 
     const activeEventNames = Object.keys(dashboardData) as Array<
         keyof typeof dashboardData
@@ -189,6 +185,20 @@ const Confirm: NextPage = () => {
     ) => {
         dispatch(dashboardActions.deleteEntry({ type, personnel_ID }));
     };
+
+    useEffect(() => {
+        if (
+            !Object.keys(dashboardData.off).length &&
+            !Object.keys(dashboardData.leave).length &&
+            !Object.keys(dashboardData.ma).length &&
+            !Object.keys(dashboardData.attc).length &&
+            !Object.keys(dashboardData.course).length &&
+            !Object.keys(dashboardData.others).length
+        ) {
+            // No more
+            router.push("/");
+        }
+    }, [dashboardData]);
 
     const Verify = (
         <Container maxW="container.lg">
