@@ -18,24 +18,28 @@ import {
     WrapItem,
 } from "@chakra-ui/react";
 
-import MobileDateRangePicker  from "@mui/lab/MobileDateRangePicker";
+import MobileDateRangePicker from "@mui/lab/MobileDateRangePicker";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import Assignments from '../../config/assignments.json'
+import Assignments from "../../config/assignments.json";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
 const AMPMSelection: React.FC<{
     personnel_ID: number;
     type: string;
     identifier: string;
-}> = ({ personnel_ID, type, identifier }) => {
+
+    defaultTime: "AM" | "PM";
+}> = ({ personnel_ID, type, identifier, defaultTime }) => {
     const { register } = useFormContext();
     return (
         <Select
             size="sm"
             w="28"
             {...register(`${personnel_ID}-${type}-${identifier}-time`)}
-            defaultValue={type === "start" ? "AM" : "PM"}
+            defaultValue={defaultTime}
         >
             <option> AM </option>
             <option> PM </option>
@@ -53,6 +57,10 @@ const CustomDateRangePicker: React.FC<{
     endPlaceholder: string;
 
     renderSelects: boolean;
+
+    defaultValues?: [Date, Date];
+    defaultStartTime?: "AM" | "PM";
+    defaultEndTime?: "AM" | "PM";
 }> = ({
     personnel_ID,
     type,
@@ -61,15 +69,21 @@ const CustomDateRangePicker: React.FC<{
     endLeftAdorn,
     endPlaceholder,
     renderSelects,
+
+    defaultValues,
+    defaultStartTime = "AM",
+    defaultEndTime = "PM"
 }) => {
     const { register, control } = useFormContext();
+    const currentDate = parse(format(new Date(), Assignments.dateformat), Assignments.dateformat, new Date()); // TODO: Change this to the selected date
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
                 name={`${personnel_ID}-${type}-date`}
                 control={control}
+                defaultValue={defaultValues || [currentDate, currentDate]}
                 render={(
-                    { field: { onChange, value = [null, null] } } // Value has to be set to an array of length 2 for the start value and end value
+                    { field: { onChange, value = defaultValues || [currentDate, currentDate] } } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateRangePicker
                         value={value}
@@ -103,6 +117,7 @@ const CustomDateRangePicker: React.FC<{
                                             type={type}
                                             identifier="start"
                                             personnel_ID={personnel_ID}
+                                            defaultTime={defaultStartTime}
                                         />
                                     )}
                                 </Flex>
@@ -129,6 +144,7 @@ const CustomDateRangePicker: React.FC<{
                                             type={type}
                                             identifier="end"
                                             personnel_ID={personnel_ID}
+                                            defaultTime={defaultEndTime}
                                         />
                                     )}
                                 </Flex>

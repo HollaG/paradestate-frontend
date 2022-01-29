@@ -77,7 +77,7 @@ export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='off'
+                type='attc'
                 startLeftAdorn="Start"
                 startPlaceholder="AttC start date"
                 endLeftAdorn="End"
@@ -106,7 +106,7 @@ export const AddCourse: React.FC<{ personnel_ID: number; enabled: boolean }> = (
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='off'
+                type='course'
                 startLeftAdorn="Start"
                 startPlaceholder="Course start date"
                 endLeftAdorn="End"
@@ -135,7 +135,7 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateTimePicker
                 personnel_ID={personnel_ID}
-                type='off'
+                type='ma'
                 leftAdorn="Date"
                 placeholder="Medical appointment date and time"                
                 

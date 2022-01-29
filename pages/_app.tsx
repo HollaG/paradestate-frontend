@@ -5,6 +5,9 @@ import DateFnsAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { deepmerge } from "@mui/utils";
+import { Provider } from "react-redux";
+import store from "../store";
+
 const muiTheme = createTheme({
     // typography: {
     //     fontFamily: "Inter", //Custom Font
@@ -20,10 +23,8 @@ const muiTheme = createTheme({
 
 const chakraTheme = extendTheme({
     components: {
-        Link: {
-            
-        }
-    }
+        Link: {},
+    },
 });
 
 const theme = deepmerge(chakraTheme, muiTheme);
@@ -31,11 +32,13 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     return (
         <ThemeProvider theme={theme}>
             <ChakraProvider resetCSS theme={theme}>
-                <SessionProvider session={session}>
-                    <LocalizationProvider dateAdapter={DateFnsAdapter}>
-                        <Component {...pageProps} />
-                    </LocalizationProvider>
-                </SessionProvider>
+                <Provider store={store}>
+                    <SessionProvider session={session}>
+                        <LocalizationProvider dateAdapter={DateFnsAdapter}>
+                            <Component {...pageProps} />
+                        </LocalizationProvider>
+                    </SessionProvider>
+                </Provider>
             </ChakraProvider>
         </ThemeProvider>
     );

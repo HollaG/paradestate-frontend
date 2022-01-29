@@ -35,10 +35,11 @@ import {
     SimpleGrid,
     Link,
     Icon,
+    Container,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     AddAttC,
@@ -53,6 +54,9 @@ import {
     IoCheckmarkDoneCircleOutline,
     IoAlertCircleOutline,
 } from "react-icons/io5";
+import { useDispatch } from "react-redux";
+import { dashboardActions } from "../store/dashboard-slice";
+import { useRouter } from "next/router";
 
 const DefaultLink: React.FC<{ url: string; type: string }> = ({
     url,
@@ -195,8 +199,9 @@ const PersonAccordianItem: React.FC<{
                     </Flex>
                 </Box>
                 {/* <Spacer /> */}
-                <Flex align="center" m={{lg: "unset", sm:"auto"}}>
-                    <ButtonGroup isAttached size="xs">
+
+                <Flex alignItems="center" m={{ lg: "unset", base: "auto" }}>
+                    <ButtonGroup isAttached size="xs" ml={{ lg: "auto" }}>
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
                             colorScheme="teal"
@@ -371,15 +376,15 @@ const PlatoonAccordianItem: React.FC<{
 const Dashboard: NextPage<{
     data?: {
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
-        personnelTally: {
-            [key: string]: any;
-            total: number;
-            incamp: number;
-        };
-        personnelNotInCamp: {
-            personnel_ID: number;
-            type: "off" | "leave" | "ma" | "attc" | "course" | "others";
-        }[];
+        // personnelTally: {
+        //     [key: string]: any;
+        //     total: number;
+        //     incamp: number;
+        // };
+        // personnelNotInCamp: {
+        //     personnel_ID: number;
+        //     type: "off" | "leave" | "ma" | "attc" | "course" | "others";
+        // }[];
         selectedDate: string;
     };
 }> = ({ data }) => {
@@ -388,19 +393,49 @@ const Dashboard: NextPage<{
     if (!data) return <h1> im here </h1>;
     const { sortedByPlatoon, selectedDate } = data;
 
-
     const {
         register,
         handleSubmit,
+        getValues,
         watch,
         formState: { errors },
     } = methods;
 
-    const onSubmit = (data: any) => console.log(data);
+    const dispatch = useDispatch();
+    const router = useRouter();
+    const onSubmit = (data: { [key: string]: any }) => {
+        if (!Object.keys(data).length) return alert("No data");
+
+        // dispatch(dashboardActions.updateForm(data));
+
+        console.log({ data });
+        fetch("/api/dashboard/confirm", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data }),
+        })
+            .then((res) => res.json())
+            .then((responseData) => {
+                dispatch(dashboardActions.updateData(responseData));
+                router.push("/confirm");
+            });
+    };
+
+    // Every 5 seconds, update the redux store with the current data.
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         dispatch(dashboardActions.updateForm(getValues()));
+    //     }, 5000);
+
+    //     return () => clearInterval(interval);
+    // }, []);
+
     return (
         <Layout
             content={
-                <Box>
+                <Container maxW="container.lg">
                     <Wrap>
                         <WrapItem>
                             <Text fontSize="2xl">
@@ -420,11 +455,15 @@ const Dashboard: NextPage<{
                                         />
                                     )
                                 )}
-                                <Button type="submit"> submit </Button>
+                                <Center mt={3}>
+                                    <Button type="submit" colorScheme="teal">
+                                        Submit
+                                    </Button>
+                                </Center>
                             </form>
                         </FormProvider>
                     </Accordion>
-                </Box>
+                </Container>
             }
         ></Layout>
     );
@@ -498,8 +537,14 @@ export const getServerSideProps = async (
 
             const str = strArr.join(", ");
             x.location = str;
-            return x;
+
+            // Remove null values
+            const cleansed = Object.fromEntries(
+                Object.entries(x).filter(([_, v]) => v != null)
+            ) as ExtendedPersonnel;
+            return cleansed;
         });
+
         const sortedByPlatoon: { [key: string]: ExtendedPersonnel } =
             edited.reduce((r: any, a) => {
                 r[a.platoon] = [...(r[a.platoon] || []), a];

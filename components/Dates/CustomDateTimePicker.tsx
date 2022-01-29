@@ -34,12 +34,14 @@ const CustomDateTimePicker: React.FC<{
     leftAdorn: string;
     placeholder: string;
  
+    defaultValue?: string
 }> = ({
     personnel_ID,
     type,
     leftAdorn,
     placeholder,
     
+    defaultValue = new Date()
 }) => {
     const { register, control } = useFormContext();
     return (
@@ -47,6 +49,7 @@ const CustomDateTimePicker: React.FC<{
             <Controller
                 name={`${personnel_ID}-${type}-date-time`}
                 control={control}
+                defaultValue={defaultValue}
                 render={(
                     { field: { onChange, value }  } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
