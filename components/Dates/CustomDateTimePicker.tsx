@@ -22,7 +22,7 @@ import {
 import DateTimePicker from "@mui/lab/DateTimePicker";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import {
     CalendarPickerSkeleton,
@@ -57,7 +57,9 @@ const CustomDateTimePicker: React.FC<{
     const [highlightedDays, setHighlightedDays] = useState<HighlightedDay[]>(
         []
     );
-    const fetchDisabledDates = (date: Date) => {
+
+
+    const fetchDisabledDates = useCallback((date: Date) => {
         const formattedDate = format(date, Assignments.mysqldateformat);
         const url = `/api/dashboard/activeEvents?personnel_ID=${personnel_ID}&type=${type}&date=${formattedDate}`;
         console.log({ url });
@@ -67,14 +69,14 @@ const CustomDateTimePicker: React.FC<{
                 setIsLoading(false);
                 setHighlightedDays(data);
             });
-    };
+    }, [personnel_ID, type])
 
     const handleMonthChange = (date: Date) => {
         setIsLoading(true);
         fetchDisabledDates(date);
     };
 
-    const memoized = useMemo(() => fetchDisabledDates, []);
+    const memoized = useMemo(() => fetchDisabledDates, [fetchDisabledDates]);
     useEffect(() => {
         memoized(new Date());
     }, [memoized, setIsLoading]);

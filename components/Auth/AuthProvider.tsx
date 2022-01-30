@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
         }
         if (session === null) setError({message: "Failed to sign in"})
         console.log(user, status)
-    }, [session, status]);
+    }, [session, status, user]);
 
     const value = {
         user,

@@ -220,7 +220,7 @@ const PersonAccordianItem: React.FC<{
                 dashboardData.others[person.personnel_ID],
             incamp: prevState.incamp,
         }));
-    }, [dashboardData]);
+    }, [dashboardData, person.personnel_ID]);
 
     const events: (
         | "off"
@@ -438,6 +438,7 @@ const Dashboard: NextProtectedPage<{
     console.log("Hello!~");
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
+    const dispatch = useDispatch();
 
     const router = useRouter();
     if (!data) {
@@ -454,7 +455,6 @@ const Dashboard: NextProtectedPage<{
         formState: { errors },
     } = methods;
 
-    const dispatch = useDispatch();
 
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");

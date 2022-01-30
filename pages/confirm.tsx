@@ -198,7 +198,7 @@ const Confirm: NextPage = () => {
             // No more
             router.push("/");
         }
-    }, [dashboardData]);
+    }, [dashboardData, router]);
 
     const Verify = (
         <>
