@@ -42,7 +42,7 @@ const CustomDateTimePicker: React.FC<{
     leftAdorn: string;
     placeholder: string;
 
-    defaultValue?: string;
+    defaultValue?: Date;
 }> = ({
     personnel_ID,
     type,

@@ -170,6 +170,7 @@ export const ConfirmMA: React.FC<{
                 type="ma"
                 leftAdorn="Date"
                 placeholder="Medical appointment date and time"
+                defaultValue={data["date-time"]}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
