@@ -1,8 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Personnel } from "../types/database";
 import { DashboardState, EventData } from "../types/types";
-
-const initialState: DashboardState = {
+const loadState = () => {
+    try {
+        const serializedState = localStorage.getItem("dashboard");
+        if (!serializedState) return undefined;
+        else return JSON.parse(serializedState);
+    } catch (err) {
+        return undefined;
+    }
+};
+const initialState: DashboardState = loadState() || {
     data: {
         off: {},
         leave: {},
@@ -13,31 +21,10 @@ const initialState: DashboardState = {
     },
     personnelMap: {},
 };
-const temp: DashboardState = {
-    data: {
-        off: {},
-        leave: {},
-        attc: {
-            
-        },
-        course: {
-           
-            
-        },
-        ma: {
-            
-        },
-        others: {
-           
-        },
-    },
-    personnelMap: {
-        
-    },
-};
+
 const dashboardSlice = createSlice({
     name: "dashboard",
-    initialState: temp,
+    initialState,
     reducers: {
         updateData(state, action: PayloadAction<DashboardState>) {
             state.data = action.payload.data;
