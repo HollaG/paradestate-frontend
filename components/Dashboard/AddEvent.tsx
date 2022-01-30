@@ -1,14 +1,29 @@
-import { Box, Checkbox, Input, InputGroup, InputLeftAddon, InputRightAddon, InputRightElement, SimpleGrid, Text } from "@chakra-ui/react";
+import {
+    Box,
+    Checkbox,
+    Input,
+    InputGroup,
+    InputLeftAddon,
+    InputRightAddon,
+    InputRightElement,
+    SimpleGrid,
+    Text,
+} from "@chakra-ui/react";
 import { DateRange } from "@mui/lab/DateRangePicker";
-import { useState } from "react";
+import { format } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
 import { FieldValues, useFormContext, UseFormReturn } from "react-hook-form";
 import CustomDateRangePicker from "../Dates/CustomDateRangePicker";
 import CustomDateTimePicker from "../Dates/CustomDateTimePicker";
 
+import Assignments from "../../config/assignments.json";
+import { HighlightedDay } from "../../types/types";
+
 export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     personnel_ID,
 }) => {
-    const { register } = useFormContext()
+    const { register } = useFormContext();
+
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <Text fontSize="sm" fontWeight="bold">
@@ -17,18 +32,22 @@ export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='leave'
+                type="leave"
                 startLeftAdorn="Start"
                 startPlaceholder="Leave start date"
                 endLeftAdorn="End"
                 endPlaceholder="Leave end date"
                 renderSelects={true}
-            
+                
+               
             />
 
             <InputGroup size="sm">
-                <InputLeftAddon children="Reason"/>
-                <Input placeholder="Reason for leave" {...register(`${personnel_ID}-leave-reason`)}/>
+                <InputLeftAddon children="Reason" />
+                <Input
+                    placeholder="Reason for leave"
+                    {...register(`${personnel_ID}-leave-reason`)}
+                />
             </InputGroup>
         </SimpleGrid>
     );
@@ -36,9 +55,9 @@ export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
 export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     personnel_ID,
-    enabled
+    enabled,
 }) => {
-    const { register } = useFormContext()
+    const { register } = useFormContext();
 
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -48,17 +67,19 @@ export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='off'
+                type="off"
                 startLeftAdorn="Start"
                 startPlaceholder="Off start date"
                 endLeftAdorn="End"
                 endPlaceholder="Off end date"
                 renderSelects={true}
-             
             />
             <InputGroup size="sm">
-                <InputLeftAddon children="Reason"/>
-                <Input placeholder="Reason for off" {...register(`${personnel_ID}-off-reason`)}/>
+                <InputLeftAddon children="Reason" />
+                <Input
+                    placeholder="Reason for off"
+                    {...register(`${personnel_ID}-off-reason`)}
+                />
             </InputGroup>
         </SimpleGrid>
     );
@@ -66,9 +87,9 @@ export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
 export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     personnel_ID,
-    enabled
+    enabled,
 }) => {
-    const { register } = useFormContext()
+    const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <Text fontSize="sm" fontWeight="bold">
@@ -77,27 +98,29 @@ export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='attc'
+                type="attc"
                 startLeftAdorn="Start"
                 startPlaceholder="AttC start date"
                 endLeftAdorn="End"
                 endPlaceholder="AttC end date"
                 renderSelects={false}
-             
             />
             <InputGroup size="sm">
-                <InputLeftAddon children="Reason"/>
-                <Input placeholder="Reason for AttC" {...register(`${personnel_ID}-attc-reason`)}/>
+                <InputLeftAddon children="Reason" />
+                <Input
+                    placeholder="Reason for AttC"
+                    {...register(`${personnel_ID}-attc-reason`)}
+                />
             </InputGroup>
         </SimpleGrid>
     );
 };
 
-export const AddCourse: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-    enabled
-}) => {
-    const { register } = useFormContext()
+export const AddCourse: React.FC<{
+    personnel_ID: number;
+    enabled: boolean;
+}> = ({ personnel_ID, enabled }) => {
+    const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <Text fontSize="sm" fontWeight="bold">
@@ -106,17 +129,19 @@ export const AddCourse: React.FC<{ personnel_ID: number; enabled: boolean }> = (
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='course'
+                type="course"
                 startLeftAdorn="Start"
                 startPlaceholder="Course start date"
                 endLeftAdorn="End"
                 endPlaceholder="Course end date"
                 renderSelects={false}
-             
             />
             <InputGroup size="sm">
-                <InputLeftAddon children="Name"/>
-                <Input placeholder="Name of Course" {...register(`${personnel_ID}-course-name`)}/>
+                <InputLeftAddon children="Name" />
+                <Input
+                    placeholder="Name of Course"
+                    {...register(`${personnel_ID}-course-name`)}
+                />
             </InputGroup>
         </SimpleGrid>
     );
@@ -124,9 +149,9 @@ export const AddCourse: React.FC<{ personnel_ID: number; enabled: boolean }> = (
 
 export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     personnel_ID,
-    enabled
+    enabled,
 }) => {
-    const { register } = useFormContext()
+    const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <Text fontSize="sm" fontWeight="bold">
@@ -135,22 +160,29 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
             <CustomDateTimePicker
                 personnel_ID={personnel_ID}
-                type='ma'
+                type="ma"
                 leftAdorn="Date"
-                placeholder="Medical appointment date and time"                
-                
-             
+                placeholder="Medical appointment date and time"
             />
             <InputGroup size="sm">
-                <InputLeftAddon children="Name"/>
-                <Input placeholder="Name of Medical Appointment" {...register(`${personnel_ID}-ma-name`)}/>
+                <InputLeftAddon children="Name" />
+                <Input
+                    placeholder="Name of Medical Appointment"
+                    {...register(`${personnel_ID}-ma-name`)}
+                />
             </InputGroup>
             <InputGroup size="sm">
-                <InputLeftAddon children="Location"/>
-                <Input placeholder="Location of Medical Appointment" {...register(`${personnel_ID}-ma-location`)}/>
-                <InputRightAddon w="6rem"/>
-                <InputRightElement w='6rem'> 
-                    <Checkbox size="sm" {...register(`${personnel_ID}-ma-incamp`)}>
+                <InputLeftAddon children="Location" />
+                <Input
+                    placeholder="Location of Medical Appointment"
+                    {...register(`${personnel_ID}-ma-location`)}
+                />
+                <InputRightAddon w="6rem" />
+                <InputRightElement w="6rem">
+                    <Checkbox
+                        size="sm"
+                        {...register(`${personnel_ID}-ma-incamp`)}
+                    >
                         In camp
                     </Checkbox>
                 </InputRightElement>
@@ -159,11 +191,11 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     );
 };
 
-export const AddOthers: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-    enabled
-}) => {
-    const { register } = useFormContext()
+export const AddOthers: React.FC<{
+    personnel_ID: number;
+    enabled: boolean;
+}> = ({ personnel_ID, enabled }) => {
+    const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <Text fontSize="sm" fontWeight="bold">
@@ -172,25 +204,29 @@ export const AddOthers: React.FC<{ personnel_ID: number; enabled: boolean }> = (
 
             <CustomDateRangePicker
                 personnel_ID={personnel_ID}
-                type='others'
+                type="others"
                 startLeftAdorn="Start"
                 startPlaceholder="Other appointment's start date"
                 endLeftAdorn="End"
                 endPlaceholder="Other appointment's end date"
                 renderSelects={false}
-             
             />
             <InputGroup size="sm">
-                <InputLeftAddon children="Name"/>
-                <Input placeholder="Other appointment name" {...register(`${personnel_ID}-others-name`)}/>
-                <InputRightAddon w="10rem"/>
-                <InputRightElement w='10rem'> 
-                    <Checkbox size="sm" {...register(`${personnel_ID}-others-incamp`)}>
+                <InputLeftAddon children="Name" />
+                <Input
+                    placeholder="Other appointment name"
+                    {...register(`${personnel_ID}-others-name`)}
+                />
+                <InputRightAddon w="10rem" />
+                <InputRightElement w="10rem">
+                    <Checkbox
+                        size="sm"
+                        {...register(`${personnel_ID}-others-incamp`)}
+                    >
                         Include in strength
                     </Checkbox>
                 </InputRightElement>
             </InputGroup>
-            
         </SimpleGrid>
     );
 };

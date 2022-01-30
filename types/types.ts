@@ -38,3 +38,9 @@ export interface Data {
     ma: any;
     others: any;
 }
+
+export interface HighlightedDay { 
+    day: number,
+    badgeText: string,
+    disabled: boolean
+}

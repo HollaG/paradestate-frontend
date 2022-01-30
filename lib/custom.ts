@@ -33,7 +33,7 @@ export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
             ? new Date(outOfOffice.date[1])
             : outOfOffice.date[1];
 
-    const days = differenceInBusinessDays(start, end);
+    const days = differenceInBusinessDays(end, start);
 
     let hours = getHoursBetweenStartAndEndTimes(
         outOfOffice["start-time"],

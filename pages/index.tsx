@@ -190,6 +190,10 @@ const PersonAccordianItem: React.FC<{
         | "incamp"
     )[] = ["off", "leave", "attc", "course", "ma", "others"];
 
+
+  
+
+
     return (
         <>
             <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px">
@@ -414,7 +418,7 @@ const Dashboard: NextProtectedPage<{
     const dispatch = useDispatch();
 
     const onSubmit = (data: { [key: string]: any }) => {
-        if (!Object.keys(data).length) return alert("No data");
+        if (!Object.keys(data).length) return alert("No data was entered");
 
         // dispatch(dashboardActions.updateForm(data));
 
@@ -433,28 +437,6 @@ const Dashboard: NextProtectedPage<{
             });
     };
 
-    // Every 5 seconds, update the redux store with the current data.
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         dispatch(dashboardActions.updateForm(getValues()));
-    //     }, 5000);
-
-    //     return () => clearInterval(interval);
-    // }, []);
-
-    const steps = [
-        "Enter personnel details",
-        "Confirm entered details",
-        "Details registered",
-    ];
-
-    // const atLeastOneSelected =
-    //     Object.keys(dashboardData.off).length ||
-    //     Object.keys(dashboardData.leave).length ||
-    //     Object.keys(dashboardData.ma).length ||
-    //     Object.keys(dashboardData.attc).length ||
-    //     Object.keys(dashboardData.course).length ||
-    //     Object.keys(dashboardData.others).length;
 
     return (
         <Layout
@@ -508,7 +490,7 @@ export const getServerSideProps = async (
                 permanent: false,
             },
         };
-        console.log("Made it past redirect")
+        
     let selectedDate = new Date();
     let formattedDate = format(selectedDate, Assignments.mysqldateformat);
 
@@ -589,7 +571,7 @@ export const getServerSideProps = async (
 
             selectedDate, // TO CHANGE
         };
-        console.log({data})
+        
         return {
             props: {
                 data,
