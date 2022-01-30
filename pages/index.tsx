@@ -36,6 +36,7 @@ import {
     Link,
     Icon,
     Container,
+    Heading,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
@@ -57,13 +58,14 @@ import {
 import { useDispatch } from "react-redux";
 import { dashboardActions } from "../store/dashboard-slice";
 import { useRouter } from "next/router";
+import { NextProtectedPage } from "../lib/auth";
 
 const DefaultLink: React.FC<{ url: string; type: string }> = ({
     url,
     type,
 }) => {
     return (
-        <Box  mb={1}>
+        <Box mb={1}>
             <NextLink href={url} passHref>
                 <Link color="teal.500">
                     Click here to edit the currently active {type}
@@ -375,7 +377,7 @@ const PlatoonAccordianItem: React.FC<{
     );
 };
 
-const Dashboard: NextPage<{
+const Dashboard: NextProtectedPage<{
     data?: {
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
         // personnelTally: {
@@ -387,14 +389,20 @@ const Dashboard: NextPage<{
         //     personnel_ID: number;
         //     type: "off" | "leave" | "ma" | "attc" | "course" | "others";
         // }[];
-        selectedDate: string;
+        selectedDate: Date;
     };
 }> = ({ data }) => {
-    const { data: session } = useSession();
+    console.log("Hello!~")
+    // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
-    if (!data) return <h1> im here </h1>;
-    const { sortedByPlatoon, selectedDate } = data;
 
+    const router = useRouter();
+    if (!data) {
+        return <h1> erorr</ h1>;
+    }
+
+    const { sortedByPlatoon, selectedDate } = data;
+ 
     const {
         register,
         handleSubmit,
@@ -404,7 +412,7 @@ const Dashboard: NextPage<{
     } = methods;
 
     const dispatch = useDispatch();
-    const router = useRouter();
+
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data");
 
@@ -434,17 +442,34 @@ const Dashboard: NextPage<{
     //     return () => clearInterval(interval);
     // }, []);
 
+    const steps = [
+        "Enter personnel details",
+        "Confirm entered details",
+        "Details registered",
+    ];
+
+    // const atLeastOneSelected =
+    //     Object.keys(dashboardData.off).length ||
+    //     Object.keys(dashboardData.leave).length ||
+    //     Object.keys(dashboardData.ma).length ||
+    //     Object.keys(dashboardData.attc).length ||
+    //     Object.keys(dashboardData.course).length ||
+    //     Object.keys(dashboardData.others).length;
+
     return (
         <Layout
             content={
-                <Container maxW="container.lg" p={{base: 0, md: 3}} >
-                    <Wrap>
-                        <WrapItem>
-                            <Text fontSize="2xl">
-                                Set status for: {selectedDate}
-                            </Text>
-                        </WrapItem>
-                    </Wrap>
+                <>
+                    <Center w="100%" mb={2}>
+                        <Heading>
+                            {format(selectedDate, "eee d LLL yyyy")}
+                        </Heading>
+                        {/* <Button colorScheme="teal" size="xs" ml={2}>
+                            {" "}
+                            Change
+                        </Button> */}
+                    </Center>
+
                     <Accordion defaultIndex={[0]} allowMultiple allowToggle>
                         <FormProvider {...methods}>
                             <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -465,7 +490,7 @@ const Dashboard: NextPage<{
                             </form>
                         </FormProvider>
                     </Accordion>
-                </Container>
+                </>
             }
         ></Layout>
     );
@@ -475,26 +500,25 @@ export const getServerSideProps = async (
     context: GetServerSidePropsContext
 ) => {
     const session = await getSession(context);
-    if (!session)
+    console.log({ session });
+    if (!session || !session.user)
         return {
             redirect: {
                 destination: "/login",
                 permanent: false,
             },
         };
-    let currentDate = new Date();
-    let formattedDate = format(currentDate, Assignments.mysqldateformat);
+        console.log("Made it past redirect")
+    let selectedDate = new Date();
+    let formattedDate = format(selectedDate, Assignments.mysqldateformat);
 
-    if (format(currentDate, "aaa") === "pm")
-        formattedDate = format(
-            addDays(currentDate, 1),
-            Assignments.mysqldateformat
-        );
+    if (format(selectedDate, "aaa") === "pm")
+        selectedDate = addDays(selectedDate, 1);
 
     const opts = {
         unit: session.user.unit,
         company: session.user.company,
-        selDate: currentDate,
+        selDate: selectedDate,
     };
     console.log(opts);
     try {
@@ -563,9 +587,9 @@ export const getServerSideProps = async (
         const data = {
             sortedByPlatoon,
 
-            selectedDate: formattedDate,
+            selectedDate, // TO CHANGE
         };
-
+        console.log({data})
         return {
             props: {
                 data,
@@ -578,5 +602,7 @@ export const getServerSideProps = async (
         };
     }
 };
+
+Dashboard.requireAuth = true;
 
 export default Dashboard;

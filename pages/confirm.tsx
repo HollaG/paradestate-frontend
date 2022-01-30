@@ -201,7 +201,7 @@ const Confirm: NextPage = () => {
     }, [dashboardData]);
 
     const Verify = (
-        <Container maxW="container.lg">
+        <>
             <Heading> Confirm details </Heading>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -320,11 +320,11 @@ const Confirm: NextPage = () => {
                     </Center>
                 </form>
             </FormProvider>
-        </Container>
+        </>
     );
 
     const Confirmed = (
-        <Container maxW="container.lg">
+        <>
             <Heading> Success </Heading>
 
             <Accordion
@@ -429,7 +429,7 @@ const Confirm: NextPage = () => {
                         ) : null
                     )}
             </Accordion>
-        </Container>
+        </>
     );
     return <Layout content={confirmedDashboardData ? Confirmed : Verify} />;
 };

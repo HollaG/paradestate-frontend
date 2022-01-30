@@ -29,6 +29,7 @@ import {
     Input,
     InputGroup,
     InputLeftElement,
+    Container,
 } from "@chakra-ui/react";
 import {
     FiHome,
@@ -447,12 +448,15 @@ const Sidebar = (props: any) => {
                     </HStack>
                 </Flex>
 
+                {/* TODO - change this to Just 1 container? */}
                 <Box as="main" p="4">
-                    {props.content}
+                    <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
+                        {props.content}
+                    </Container>
                 </Box>
             </Box>
         </Box>
     );
 };
 
-export default Sidebar
+export default Sidebar;

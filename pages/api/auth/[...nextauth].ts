@@ -19,9 +19,11 @@ export default NextAuth({
             },
         }),
     ],
-    // jwt: {
-    //     secret: "asbdfjbajsdfbjkadbfjdkasbjk",
-    // },
+    jwt: {
+        secret: "asbdfjbajsdfbjkadbfjdkasbjk",
+        maxAge: 30 * 24 * 60 * 60
+    },
+    
     secret: "my-super-secret-token",
     callbacks: {
         async signIn({ account, profile }) {
@@ -35,7 +37,7 @@ export default NextAuth({
 
             
             // set('user', user)
-         
+            console.log({account, profile})
             return true; // Do different verification for other providers that don't have `email_verified`
         },
         // async jwt({ token, account }) {
@@ -56,6 +58,7 @@ export default NextAuth({
             
             const userResult:User[] = await executeQuery({query: `SELECT * FROM users WHERE email = ?`, values: [session.user?.email]})
             session.user = userResult[0] 
+        
             // set('user', userResult[0])
             // console.log({session})
             return session

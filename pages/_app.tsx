@@ -7,6 +7,10 @@ import { createTheme, ThemeProvider } from "@mui/material";
 import { deepmerge } from "@mui/utils";
 import { Provider } from "react-redux";
 import store from "../store";
+import { AuthProvider } from "../components/Auth/AuthProvider";
+import { AuthGuard } from "../components/Auth/AuthGuard";
+import { NextPage } from "next/types";
+import { NextProtectedPage } from "../lib/auth";
 
 const muiTheme = createTheme({
     // typography: {
@@ -28,14 +32,29 @@ const chakraTheme = extendTheme({
 });
 
 const theme = deepmerge(chakraTheme, muiTheme);
-function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+
+function App({
+    Component,
+    pageProps: { session, ...pageProps },
+}: {
+    Component: NextProtectedPage;
+    pageProps: AppProps;
+}) {
     return (
         <ThemeProvider theme={theme}>
             <ChakraProvider resetCSS theme={theme}>
                 <Provider store={store}>
                     <SessionProvider session={session}>
                         <LocalizationProvider dateAdapter={DateFnsAdapter}>
-                            <Component {...pageProps} />
+                            <AuthProvider>
+                                {Component.requireAuth ? (
+                                    <AuthGuard>
+                                        <Component {...pageProps} />
+                                    </AuthGuard>
+                                ) : (
+                                    <Component {...pageProps} />
+                                )}
+                            </AuthProvider>
                         </LocalizationProvider>
                     </SessionProvider>
                 </Provider>
