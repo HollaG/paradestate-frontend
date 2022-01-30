@@ -55,10 +55,11 @@ import {
     IoCheckmarkDoneCircleOutline,
     IoAlertCircleOutline,
 } from "react-icons/io5";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { dashboardActions } from "../store/dashboard-slice";
 import { useRouter } from "next/router";
 import { NextProtectedPage } from "../lib/auth";
+import { RootState } from "../types/types";
 
 const DefaultLink: React.FC<{ url: string; type: string }> = ({
     url,
@@ -79,19 +80,38 @@ const PersonAccordianItem: React.FC<{
     person: ExtendedPersonnel;
 }> = ({ person }) => {
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
+    const dashboardData = useSelector(
+        (state: RootState) => state.dashboard.data
+    );
+
     const icon =
         person.location === "In camp"
             ? IoCheckmarkDoneCircleOutline
             : IoAlertCircleOutline;
     const defaultState = {
-        off: person.off_row_ID ? true : false,
-        leave: person.leave_row_ID ? true : false,
-        attc: person.attc_row_ID ? true : false,
-        course: person.course_row_ID ? true : false,
-        ma: person.ma_row_ID ? true : false,
-        others: person.others_row_ID ? true : false,
+        off:
+            // defaultData.off[person.personnel_ID] ||
+            person.off_row_ID ? true : false,
+        leave:
+            // defaultData.leave[person.personnel_ID] ||
+            person.leave_row_ID ? true : false,
+        attc:
+            // defaultData.attc[person.personnel_ID] ||
+            person.attc_row_ID ? true : false,
+        course:
+            // defaultData.course[person.personnel_ID] ||
+            person.course_row_ID ? true : false,
+        ma:
+            // defaultData.ma[person.personnel_ID] ||
+            person.ma_row_ID ? true : false,
+        others:
+            // defaultData.others[person.personnel_ID] ||
+            person.others_row_ID ? true : false,
         // This property is not currently in use
         extras:
+            // defaultData.course[person.personnel_ID] ||
+            // defaultData.ma[person.personnel_ID] ||
+            // defaultData.others[person.personnel_ID] ||
             person.course_row_ID || person.ma_row_ID || person.others_row_ID
                 ? true
                 : false,
@@ -179,6 +199,29 @@ const PersonAccordianItem: React.FC<{
         }
     };
 
+    useEffect(() => {
+        setButtonStates((prevState) => ({
+            off: dashboardData.off[person.personnel_ID],
+
+            leave: dashboardData.leave[person.personnel_ID],
+
+            attc: dashboardData.attc[person.personnel_ID],
+
+            course: dashboardData.course[person.personnel_ID],
+
+            ma: dashboardData.ma[person.personnel_ID],
+
+            others: dashboardData.others[person.personnel_ID],
+
+            // This property is not currently in use
+            extras:
+                dashboardData.course[person.personnel_ID] ||
+                dashboardData.ma[person.personnel_ID] ||
+                dashboardData.others[person.personnel_ID],
+            incamp: prevState.incamp,
+        }));
+    }, [dashboardData]);
+
     const events: (
         | "off"
         | "leave"
@@ -189,10 +232,6 @@ const PersonAccordianItem: React.FC<{
         | "extras"
         | "incamp"
     )[] = ["off", "leave", "attc", "course", "ma", "others"];
-
-
-  
-
 
     return (
         <>
@@ -308,7 +347,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.off} animateOpacity unmountOnExit>
                     <AddOff
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.off}
+                        data={dashboardData.off[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -316,7 +355,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.leave} animateOpacity unmountOnExit>
                     <AddLeave
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.leave}
+                        data={dashboardData.leave[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -324,7 +363,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.attc} animateOpacity unmountOnExit>
                     <AddAttC
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.attc}
+                        data={dashboardData.attc[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -333,7 +372,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.course} animateOpacity unmountOnExit>
                     <AddCourse
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.course}
+                        data={dashboardData.course[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -341,7 +380,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.ma} animateOpacity unmountOnExit>
                     <AddMA
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.ma}
+                        data={dashboardData.ma[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -349,7 +388,7 @@ const PersonAccordianItem: React.FC<{
                 <Collapse in={buttonStates.others} animateOpacity unmountOnExit>
                     <AddOthers
                         personnel_ID={person.personnel_ID}
-                        enabled={buttonStates.others}
+                        data={dashboardData.others[person.personnel_ID]}
                     />
                 </Collapse>
             )}
@@ -396,17 +435,17 @@ const Dashboard: NextProtectedPage<{
         selectedDate: Date;
     };
 }> = ({ data }) => {
-    console.log("Hello!~")
+    console.log("Hello!~");
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
 
     const router = useRouter();
     if (!data) {
-        return <h1> erorr</ h1>;
+        return <h1> erorr</h1>;
     }
 
     const { sortedByPlatoon, selectedDate } = data;
- 
+
     const {
         register,
         handleSubmit,
@@ -437,7 +476,9 @@ const Dashboard: NextProtectedPage<{
             });
     };
 
-
+    const clearSelection = () => {
+        dispatch(dashboardActions.clearData());
+    }
     return (
         <Layout
             content={
@@ -446,10 +487,10 @@ const Dashboard: NextProtectedPage<{
                         <Heading>
                             {format(selectedDate, "eee d LLL yyyy")}
                         </Heading>
-                        {/* <Button colorScheme="teal" size="xs" ml={2}>
+                        <Button colorScheme="teal" size="xs" ml={2} onClick={() => clearSelection()}>
                             {" "}
-                            Change
-                        </Button> */}
+                            Clear
+                        </Button>
                     </Center>
 
                     <Accordion defaultIndex={[0]} allowMultiple allowToggle>
@@ -490,7 +531,7 @@ export const getServerSideProps = async (
                 permanent: false,
             },
         };
-        
+
     let selectedDate = new Date();
     let formattedDate = format(selectedDate, Assignments.mysqldateformat);
 
@@ -571,7 +612,7 @@ export const getServerSideProps = async (
 
             selectedDate, // TO CHANGE
         };
-        
+
         return {
             props: {
                 data,

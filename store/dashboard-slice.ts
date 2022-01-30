@@ -45,7 +45,7 @@ const dashboardSlice = createSlice({
             return { ...state, data: { ...state.data, [type]: tempObj } };
         },
         clearData(state) { 
-            return { ...state, data: initialState.data };
+            return { ...state, data: { off: {}, leave: {}, attc: {}, course: {}, ma: {}, others: {} } };
         }
     },
 });

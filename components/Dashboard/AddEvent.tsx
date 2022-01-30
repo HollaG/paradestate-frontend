@@ -19,9 +19,15 @@ import CustomDateTimePicker from "../Dates/CustomDateTimePicker";
 import Assignments from "../../config/assignments.json";
 import { HighlightedDay } from "../../types/types";
 
-export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-}) => {
+export const AddLeave: React.FC<{
+    personnel_ID: number;
+    data?: {
+        reason: string;
+        date: [Date, Date];
+        "start-time": "AM" | "PM";
+        "end-time": "AM" | "PM";
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
 
     return (
@@ -38,14 +44,18 @@ export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
                 endLeftAdorn="End"
                 endPlaceholder="Leave end date"
                 renderSelects={true}
-                
-               
+
+                defaultValues={data?.date}
+                defaultStartTime={data?.["start-time"]}
+                defaultEndTime={data?.["end-time"]}
             />
 
             <InputGroup size="sm">
                 <InputLeftAddon children="Reason" />
                 <Input
                     placeholder="Reason for leave"
+                    defaultValue={data?.reason}
+
                     {...register(`${personnel_ID}-leave-reason`)}
                 />
             </InputGroup>
@@ -53,10 +63,15 @@ export const AddLeave: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     );
 };
 
-export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-    enabled,
-}) => {
+export const AddOff: React.FC<{
+    personnel_ID: number;
+    data?: {
+        reason: string;
+        date: [Date, Date];
+        "start-time": "AM" | "PM";
+        "end-time": "AM" | "PM";
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
 
     return (
@@ -73,10 +88,15 @@ export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
                 endLeftAdorn="End"
                 endPlaceholder="Off end date"
                 renderSelects={true}
+
+                defaultValues={data?.date}
+                defaultStartTime={data?.["start-time"]}
+                defaultEndTime={data?.["end-time"]}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Reason" />
                 <Input
+                    defaultValue={data?.reason}
                     placeholder="Reason for off"
                     {...register(`${personnel_ID}-off-reason`)}
                 />
@@ -85,10 +105,13 @@ export const AddOff: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
     );
 };
 
-export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-    enabled,
-}) => {
+export const AddAttC: React.FC<{
+    personnel_ID: number;
+    data?: {
+        reason: string;
+        date: [Date, Date];
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -104,11 +127,16 @@ export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
                 endLeftAdorn="End"
                 endPlaceholder="AttC end date"
                 renderSelects={false}
+
+                defaultValues={data?.date}
+                
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Reason" />
                 <Input
                     placeholder="Reason for AttC"
+                    defaultValue={data?.reason}
+                    
                     {...register(`${personnel_ID}-attc-reason`)}
                 />
             </InputGroup>
@@ -118,8 +146,11 @@ export const AddAttC: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
 export const AddCourse: React.FC<{
     personnel_ID: number;
-    enabled: boolean;
-}> = ({ personnel_ID, enabled }) => {
+    data?: {
+        name: string;
+        date: [Date, Date];
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -135,11 +166,15 @@ export const AddCourse: React.FC<{
                 endLeftAdorn="End"
                 endPlaceholder="Course end date"
                 renderSelects={false}
+
+                defaultValues={data?.date}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
                     placeholder="Name of Course"
+                    defaultValue={data?.name}
+
                     {...register(`${personnel_ID}-course-name`)}
                 />
             </InputGroup>
@@ -147,10 +182,15 @@ export const AddCourse: React.FC<{
     );
 };
 
-export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
-    personnel_ID,
-    enabled,
-}) => {
+export const AddMA: React.FC<{
+    personnel_ID: number;
+    data?: {
+        name: string;
+        location: string;
+        incamp: boolean;
+        "date-time": Date;
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -163,10 +203,13 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
                 type="ma"
                 leftAdorn="Date"
                 placeholder="Medical appointment date and time"
+
+                defaultValue={data?.["date-time"]}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
+                    defaultValue={data?.name}
                     placeholder="Name of Medical Appointment"
                     {...register(`${personnel_ID}-ma-name`)}
                 />
@@ -174,12 +217,14 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
             <InputGroup size="sm">
                 <InputLeftAddon children="Location" />
                 <Input
+                    defaultValue={data?.location}
                     placeholder="Location of Medical Appointment"
                     {...register(`${personnel_ID}-ma-location`)}
                 />
                 <InputRightAddon w="6rem" />
                 <InputRightElement w="6rem">
                     <Checkbox
+                        defaultChecked={data?.incamp}
                         size="sm"
                         {...register(`${personnel_ID}-ma-incamp`)}
                     >
@@ -193,8 +238,12 @@ export const AddMA: React.FC<{ personnel_ID: number; enabled: boolean }> = ({
 
 export const AddOthers: React.FC<{
     personnel_ID: number;
-    enabled: boolean;
-}> = ({ personnel_ID, enabled }) => {
+    data?: {
+        name: string;
+        incamp: boolean;
+        date: [Date, Date];
+    };
+}> = ({ personnel_ID, data }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -210,16 +259,20 @@ export const AddOthers: React.FC<{
                 endLeftAdorn="End"
                 endPlaceholder="Other appointment's end date"
                 renderSelects={false}
+
+                defaultValues={data?.date}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
+                    defaultValue={data?.name}
                     placeholder="Other appointment name"
                     {...register(`${personnel_ID}-others-name`)}
                 />
                 <InputRightAddon w="10rem" />
                 <InputRightElement w="10rem">
                     <Checkbox
+                        defaultChecked={data?.incamp}
                         size="sm"
                         {...register(`${personnel_ID}-others-incamp`)}
                     >
