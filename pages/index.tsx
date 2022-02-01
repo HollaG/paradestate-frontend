@@ -517,9 +517,10 @@ const Dashboard: NextProtectedPage<{
         formState: { errors },
     } = methods;
 
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
-
+        setIsSubmitting(true)
         // dispatch(dashboardActions.updateForm(data));
 
         console.log({ data });
@@ -572,7 +573,7 @@ const Dashboard: NextProtectedPage<{
                                     )
                                 )}
                                 <Center mt={3}>
-                                    <Button type="submit" colorScheme="teal">
+                                    <Button type="submit" colorScheme="teal" isLoading={isSubmitting}>
                                         Submit
                                     </Button>
                                 </Center>

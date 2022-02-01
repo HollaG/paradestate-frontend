@@ -11,7 +11,7 @@ import { AuthProvider } from "../components/Auth/AuthProvider";
 import { AuthGuard } from "../components/Auth/AuthGuard";
 import { NextPage } from "next/types";
 import { NextProtectedPage } from "../lib/auth";
-
+import "../styles/globals.css";
 const muiTheme = createTheme({
     // typography: {
     //     fontFamily: "Inter", //Custom Font

@@ -171,20 +171,35 @@ const Confirm: NextPage = () => {
     const [confirmedDashboardData, setConfirmedDashboardData] =
         useState<EventData>();
     const [secondsLeft, setSecondsLeft] = useState(10);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const dispatch = useDispatch();
 
     const onSubmit = async (data: any) => {
+        setIsSubmitting(true);
         const responseData = await sendPOST("/api/dashboard/submit", data);
 
         console.log({ responseData });
-        if (responseData.success) setConfirmedDashboardData(responseData.data);
+        if (responseData.success) {
+            setSuccess(true);
+            setConfirmedDashboardData(responseData.data)
 
-        setInterval(() => {
-            if (secondsLeft === 0) router.push("/");
-            else setSecondsLeft((prevSecs) => prevSecs - 1);
-        }, 1000);
+            dispatch(dashboardActions.clearData());
+        }
     };
-    const dispatch = useDispatch();
 
+    useEffect(() => {
+        if (!success) return;
+
+        if (secondsLeft <= 0) {
+            router.push("/");
+            return;
+        }
+        const timeout = setTimeout(() => {
+            setSecondsLeft((prevSecs) => prevSecs - 1);
+        }, 1000);
+        return () => clearTimeout(timeout);
+    }, [success, secondsLeft, setSecondsLeft]);
     const activeEventNames = Object.keys(dashboardData) as Array<
         keyof typeof dashboardData
     >;
@@ -197,6 +212,7 @@ const Confirm: NextPage = () => {
     };
 
     useEffect(() => {
+        if (confirmedDashboardData) return;
         if (
             !Object.keys(dashboardData.off).length &&
             !Object.keys(dashboardData.leave).length &&
@@ -208,7 +224,7 @@ const Confirm: NextPage = () => {
             // No more
             router.push("/");
         }
-    }, [dashboardData, router]);
+    }, [dashboardData, router, confirmedDashboardData]);
 
     const clearSelection = () => {
         dispatch(dashboardActions.clearData());
@@ -338,7 +354,11 @@ const Confirm: NextPage = () => {
                         )}
                     </Accordion>
                     <Center mt={3}>
-                        <Button type="submit" colorScheme="teal">
+                        <Button
+                            type="submit"
+                            colorScheme="teal"
+                            isLoading={isSubmitting}
+                        >
                             Submit
                         </Button>
                     </Center>
