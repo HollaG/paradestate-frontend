@@ -15,7 +15,9 @@ import {
     IconButton,
     Text,
 } from "@chakra-ui/react";
+import { format } from "date-fns";
 import { NextPage } from "next";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -36,6 +38,7 @@ import {
     ConfirmOff,
     ConfirmOthers,
 } from "../components/Dashboard/ConfirmEvent";
+import DashboardHeading from "../components/Dashboard/Heading";
 import Layout from "../components/Sidebar";
 import { capitalizeFirstLetter } from "../lib/custom";
 import fetcher, { sendPOST } from "../lib/fetcher";
@@ -167,11 +170,18 @@ const Confirm: NextPage = () => {
 
     const [confirmedDashboardData, setConfirmedDashboardData] =
         useState<EventData>();
+    const [secondsLeft, setSecondsLeft] = useState(10);
+
     const onSubmit = async (data: any) => {
         const responseData = await sendPOST("/api/dashboard/submit", data);
 
         console.log({ responseData });
         if (responseData.success) setConfirmedDashboardData(responseData.data);
+
+        setInterval(() => {
+            if (secondsLeft === 0) router.push("/");
+            else setSecondsLeft((prevSecs) => prevSecs - 1);
+        }, 1000);
     };
     const dispatch = useDispatch();
 
@@ -200,9 +210,23 @@ const Confirm: NextPage = () => {
         }
     }, [dashboardData, router]);
 
+    const clearSelection = () => {
+        dispatch(dashboardActions.clearData());
+    };
+
     const Verify = (
         <>
-            <Heading> Confirm details </Heading>
+            <DashboardHeading step={1}>
+                <Heading>{format(new Date(), "eee d LLL yyyy")}</Heading>
+                <Button
+                    colorScheme="teal"
+                    size="xs"
+                    ml={2}
+                    onClick={() => clearSelection()}
+                >
+                    Clear
+                </Button>
+            </DashboardHeading>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)}>
                     <Accordion
@@ -325,7 +349,25 @@ const Confirm: NextPage = () => {
 
     const Confirmed = (
         <>
-            <Heading> Success </Heading>
+            <DashboardHeading step={2}>
+                <Heading>Events added</Heading>
+                <Link href="/" passHref>
+                    <Button
+                        colorScheme="teal"
+                        size="xs"
+                        ml={2}
+                        onClick={() => clearSelection()}
+                    >
+                        Back to home ({secondsLeft}s)
+                    </Button>
+                </Link>
+                {/* <Box>
+                    <Text>
+                        
+                        You will be automatically redirected in 10 seconds.
+                    </Text>
+                </Box> */}
+            </DashboardHeading>
 
             <Accordion
                 defaultIndex={activeEventNames.map((_, index) => index)}
@@ -398,7 +440,7 @@ const Confirm: NextPage = () => {
                                                         }
                                                     </Text>
                                                 </Box>
-                                                <IconButton
+                                                {/* <IconButton
                                                     colorScheme="red"
                                                     fontSize="20px"
                                                     icon={<Icon as={IoTrash} />}
@@ -410,7 +452,7 @@ const Confirm: NextPage = () => {
                                                     //     //     personnel_ID
                                                     //     // )
                                                     // }
-                                                />
+                                                /> */}
                                             </Flex>
 
                                             <ResultFields

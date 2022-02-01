@@ -37,10 +37,17 @@ import {
     Icon,
     Container,
     Heading,
+    theme,
+    Badge,
+    Stack,
+    Tag,
+    TagLabel,
+    TagLeftIcon,
+    TagRightIcon,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
     AddAttC,
@@ -54,25 +61,34 @@ import { FormProvider, useForm } from "react-hook-form";
 import {
     IoCheckmarkDoneCircleOutline,
     IoAlertCircleOutline,
+    IoCheckmarkDoneOutline,
+    IoOpenOutline,
 } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { dashboardActions } from "../store/dashboard-slice";
 import { useRouter } from "next/router";
 import { NextProtectedPage } from "../lib/auth";
 import { RootState } from "../types/types";
+import CustomStepper from "../components/Dashboard/CustomStepper";
+import DashboardHeading from "../components/Dashboard/Heading";
 
 const DefaultLink: React.FC<{ url: string; type: string }> = ({
     url,
     type,
 }) => {
     return (
-        <Box mb={1}>
-            <NextLink href={url} passHref>
-                <Link color="teal.500">
-                    Click here to edit the currently active {type}
-                </Link>
-            </NextLink>
-        </Box>
+        <NextLink href={url} passHref>
+            {/* <Badge colorScheme="red">On {type}</Badge> */}
+
+            <Link>
+                <Tag size="sm" variant="subtle" colorScheme="red">
+                    {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+
+                    <TagLabel> On {type}</TagLabel>
+                    <TagRightIcon as={IoOpenOutline} />
+                </Tag>
+            </Link>
+        </NextLink>
     );
 };
 
@@ -88,37 +104,48 @@ const PersonAccordianItem: React.FC<{
         person.location === "In camp"
             ? IoCheckmarkDoneCircleOutline
             : IoAlertCircleOutline;
-    const defaultState = {
-        off:
-            // defaultData.off[person.personnel_ID] ||
-            person.off_row_ID ? true : false,
-        leave:
-            // defaultData.leave[person.personnel_ID] ||
-            person.leave_row_ID ? true : false,
-        attc:
-            // defaultData.attc[person.personnel_ID] ||
-            person.attc_row_ID ? true : false,
-        course:
-            // defaultData.course[person.personnel_ID] ||
-            person.course_row_ID ? true : false,
-        ma:
-            // defaultData.ma[person.personnel_ID] ||
-            person.ma_row_ID ? true : false,
-        others:
-            // defaultData.others[person.personnel_ID] ||
-            person.others_row_ID ? true : false,
-        // This property is not currently in use
-        extras:
-            // defaultData.course[person.personnel_ID] ||
-            // defaultData.ma[person.personnel_ID] ||
-            // defaultData.others[person.personnel_ID] ||
-            person.course_row_ID || person.ma_row_ID || person.others_row_ID
-                ? true
-                : false,
-        incamp: person.location === "In camp" ? true : false,
-    };
+    const defaultState = useMemo(
+        () => ({
+            off:
+                // defaultData.off[person.personnel_ID] ||
+                person.off_row_ID ? true : false,
+            leave:
+                // defaultData.leave[person.personnel_ID] ||
+                person.leave_row_ID ? true : false,
+            attc:
+                // defaultData.attc[person.personnel_ID] ||
+                person.attc_row_ID ? true : false,
+            course:
+                // defaultData.course[person.personnel_ID] ||
+                person.course_row_ID ? true : false,
+            ma:
+                // defaultData.ma[person.personnel_ID] ||
+                person.ma_row_ID ? true : false,
+            others:
+                // defaultData.others[person.personnel_ID] ||
+                person.others_row_ID ? true : false,
+            // This property is not currently in use
+            extras:
+                // defaultData.course[person.personnel_ID] ||
+                // defaultData.ma[person.personnel_ID] ||
+                // defaultData.others[person.personnel_ID] ||
+                person.course_row_ID || person.ma_row_ID || person.others_row_ID
+                    ? true
+                    : false,
+            incamp: person.location === "In camp" ? true : false,
+        }),
+        [person]
+    );
 
     const [buttonStates, setButtonStates] = useState(defaultState);
+    const incamp =
+        person.location === "In camp" &&
+        !buttonStates.off &&
+        !buttonStates.leave &&
+        !buttonStates.attc &&
+        !buttonStates.course &&
+        !buttonStates.ma &&
+        !buttonStates.others;
 
     const defaultExtrasChecked: string[] = [];
     if (person.ma_row_ID) defaultExtrasChecked.push("ma");
@@ -199,28 +226,51 @@ const PersonAccordianItem: React.FC<{
         }
     };
 
+    // Handle setting the values for saved inputs from redux store
     useEffect(() => {
         setButtonStates((prevState) => ({
-            off: dashboardData.off[person.personnel_ID],
+            // Only set the button states if dashboardData.[whatever] exists
+            off: defaultState.off || dashboardData.off[person.personnel_ID],
+            // ? true : prevState.off,
 
-            leave: dashboardData.leave[person.personnel_ID],
+            leave:
+                defaultState.leave || dashboardData.leave[person.personnel_ID],
+            // ? true
+            // : prevState.leave,
 
-            attc: dashboardData.attc[person.personnel_ID],
+            attc: defaultState.attc || dashboardData.attc[person.personnel_ID],
+            // ? true
+            // : prevState.attc,
 
-            course: dashboardData.course[person.personnel_ID],
+            course:
+                defaultState.course ||
+                dashboardData.course[person.personnel_ID],
+            // ? true
+            // : prevState.course,
 
-            ma: dashboardData.ma[person.personnel_ID],
+            ma: defaultState.ma || dashboardData.ma[person.personnel_ID],
+            // ? true : prevState.ma,
 
-            others: dashboardData.others[person.personnel_ID],
+            others:
+                defaultState.others ||
+                dashboardData.others[person.personnel_ID],
+            // ? true
+            // : prevState.others,
 
             // This property is not currently in use
             extras:
+                defaultState.extras ||
                 dashboardData.course[person.personnel_ID] ||
                 dashboardData.ma[person.personnel_ID] ||
                 dashboardData.others[person.personnel_ID],
             incamp: prevState.incamp,
         }));
-    }, [dashboardData, person.personnel_ID]);
+    }, [dashboardData, person.personnel_ID, defaultState]);
+
+    // Function to clear all selectins
+    // const clearThis = () => {
+    //     setButtonStates(defaultState);
+    // }
 
     const events: (
         | "off"
@@ -241,8 +291,36 @@ const PersonAccordianItem: React.FC<{
                         ({person.pes}) {person.rank} {person.name}
                     </Text>
                     <Flex align="center">
-                        <Icon as={icon} mr={1} color={textColor} />
-                        <Text textColor={textColor}> {person.location}</Text>
+                        {/* <Icon as={icon} mr={1} color={textColor} /> */}
+                        {/* <Text textColor={textColor}> {person.location}</Text> */}
+                        <Stack direction="row" my={1}>
+                            {person.location === "In camp" && (
+                                // <Badge colorScheme="green" variant="subtle"> In camp </Badge>
+                                <Tag
+                                    size="sm"
+                                    variant="subtle"
+                                    colorScheme="green"
+                                >
+                                    {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+                                    <TagLabel> In camp </TagLabel>
+                                </Tag>
+                            )}
+                            {events.map((event, index) =>
+                                defaultState[event] ? (
+                                    <DefaultLink
+                                        key={index}
+                                        url={`/personnel/manage/${event}/${
+                                            person.personnel_ID
+                                        }/#${person[`${event}_row_ID`]}`}
+                                        type={
+                                            event === "ma"
+                                                ? "medical appointment"
+                                                : event
+                                        }
+                                    />
+                                ) : null
+                            )}{" "}
+                        </Stack>
                     </Flex>
                 </Box>
                 {/* <Spacer /> */}
@@ -251,7 +329,6 @@ const PersonAccordianItem: React.FC<{
                     <ButtonGroup isAttached size="xs" ml={{ lg: "auto" }}>
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("off")}
                             disabled={!!person.off_row_ID}
                         >
@@ -259,7 +336,6 @@ const PersonAccordianItem: React.FC<{
                         </Button>
                         <Button
                             variant={buttonStates.leave ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("leave")}
                             disabled={!!person.leave_row_ID}
                         >
@@ -267,7 +343,6 @@ const PersonAccordianItem: React.FC<{
                         </Button>
                         <Button
                             variant={buttonStates.attc ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("attc")}
                             disabled={!!person.attc_row_ID}
                         >
@@ -282,7 +357,6 @@ const PersonAccordianItem: React.FC<{
                                         ? "solid"
                                         : "outline"
                                 }
-                                colorScheme="teal"
                             >
                                 Extras
                             </MenuButton>
@@ -314,7 +388,7 @@ const PersonAccordianItem: React.FC<{
                             </MenuList>
                         </Menu>
                         <Button
-                            variant={buttonStates.incamp ? "solid" : "outline"}
+                            variant={incamp ? "solid" : "outline"}
                             colorScheme="green"
                             onClick={() => toggleHandler("incamp")}
                             disabled={
@@ -329,18 +403,6 @@ const PersonAccordianItem: React.FC<{
 
             {/* Render if user is on an event */}
             {/* TODO - instead of checking all the events, we check each individual event on the user  */}
-
-            {events.map((event, index) =>
-                defaultState[event] ? (
-                    <DefaultLink
-                        key={index}
-                        url={`/personnel/manage/${event}/${
-                            person.personnel_ID
-                        }/#${person[`${event}_row_ID`]}`}
-                        type={event === "ma" ? "medical appointment" : event}
-                    />
-                ) : null
-            )}
 
             {/* only render the below if the user is not already on event */}
             {!defaultState.off && (
@@ -455,7 +517,6 @@ const Dashboard: NextProtectedPage<{
         formState: { errors },
     } = methods;
 
-
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
 
@@ -478,20 +539,25 @@ const Dashboard: NextProtectedPage<{
 
     const clearSelection = () => {
         dispatch(dashboardActions.clearData());
-    }
+    };
     return (
         <Layout
             content={
                 <>
-                    <Center w="100%" mb={2}>
+                    <DashboardHeading step={0}>
                         <Heading>
                             {format(selectedDate, "eee d LLL yyyy")}
                         </Heading>
-                        <Button colorScheme="teal" size="xs" ml={2} onClick={() => clearSelection()}>
-                            {" "}
+                        <Button
+                            colorScheme="teal"
+                            size="xs"
+                            ml={2}
+                            onClick={() => clearSelection()}
+                        >
                             Clear
                         </Button>
-                    </Center>
+                    </DashboardHeading>
+                    
 
                     <Accordion defaultIndex={[0]} allowMultiple allowToggle>
                         <FormProvider {...methods}>

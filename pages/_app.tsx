@@ -1,4 +1,4 @@
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme, withDefaultColorScheme } from "@chakra-ui/react";
 import { AppProps } from "next/dist/shared/lib/router/router";
 import { SessionProvider } from "next-auth/react";
 import DateFnsAdapter from "@mui/lab/AdapterDateFns";
@@ -16,20 +16,25 @@ const muiTheme = createTheme({
     // typography: {
     //     fontFamily: "Inter", //Custom Font
     // },
-    // palette: {
-    //     primary: {
-    //         light: "#38B2AC", //Colors from Chakra-UI (Teal-400)
-    //         main: "#319795", //Teal-500
-    //         dark: "#2C7A7B", //Teal-600
-    //     },
-    // },
+    palette: {
+        primary: {
+            light: "#38B2AC", //Colors from Chakra-UI (Teal-400)
+            main: "#319795", //Teal-500
+            dark: "#2C7A7B", //Teal-600
+        },
+    },
+    // stepper:  {
+    //     iconColor: "red"
+    // }
+    
 });
 
-const chakraTheme = extendTheme({
-    components: {
-        Link: {},
-    },
-});
+const chakraTheme = extendTheme(
+    withDefaultColorScheme({
+        colorScheme: "teal",
+        components: ["Button"],
+    })
+);
 
 const theme = deepmerge(chakraTheme, muiTheme);
 
