@@ -18,6 +18,7 @@ import CustomDateTimePicker from "../Dates/CustomDateTimePicker";
 import Assignments from "../../config/assignments.json";
 import { differenceInCalendarDays, format } from "date-fns";
 import { parse } from "path/posix";
+import { calculateOutOfOfficeDuration } from "../../lib/custom";
 
 export const AddedLeaveOrOff: React.FC<{
     data: {
@@ -28,6 +29,7 @@ export const AddedLeaveOrOff: React.FC<{
         days: number;
     };
 }> = ({ data }) => {
+    console.log({data})
     const convertedDate = data.date.map((date) => new Date(date));
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -36,7 +38,7 @@ export const AddedLeaveOrOff: React.FC<{
                 {format(convertedDate[0], Assignments.dateformat)} (
                 {data["start-time"]}) -{" "}
                 {format(convertedDate[1], Assignments.dateformat)} (
-                {data["end-time"]}) ({data.days} days)
+                {data["end-time"]}) ({calculateOutOfOfficeDuration(data)} days)
             </Text>
         </SimpleGrid>
     );
@@ -62,7 +64,7 @@ export const AddedAttCOrCourse: React.FC<{
             <Text fontWeight="light">
                 {format(convertedDate[0], Assignments.dateformat)} -{" "}
                 {format(convertedDate[1], Assignments.dateformat)} (
-                {differenceInCalendarDays(convertedDate[0], convertedDate[1])}{" "}
+                {differenceInCalendarDays(convertedDate[1], convertedDate[0])}{" "}
                 days)
             </Text>
         </SimpleGrid>
@@ -74,10 +76,13 @@ export const AddedMA: React.FC<{
         name: string;
         location: string;
         incamp: boolean;
-        "date-time": string;
+        "date-time"?: string;
+        "date-time-formatted"?: string;
     };
 }> = ({ data }) => {
-    const convertedDate = new Date(data["date-time"]);
+    const convertedDate =
+        data["date-time-formatted"] ||
+        format(new Date(data["date-time"] || ""), Assignments.datetimeformat);
 
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -86,8 +91,7 @@ export const AddedMA: React.FC<{
                 {data.location || "Unspecified location"}
             </Text>
             <Text fontWeight="light">
-                {format(convertedDate, Assignments.datetimeformat)} (
-                {data.incamp ? "In Camp" : "Out of Camp"})
+                {convertedDate} ({data.incamp ? "In Camp" : "Out of Camp"})
             </Text>
         </SimpleGrid>
     );
@@ -108,7 +112,7 @@ export const AddedOthers: React.FC<{
             <Text fontWeight="light">
                 {format(convertedDate[0], Assignments.dateformat)} -{" "}
                 {format(convertedDate[1], Assignments.dateformat)} (
-                {differenceInCalendarDays(convertedDate[0], convertedDate[1])}{" "}
+                {differenceInCalendarDays(convertedDate[1], convertedDate[0])}{" "}
                 days) ({data.incamp ? "In Camp" : "Out of Camp"})
             </Text>
         </SimpleGrid>

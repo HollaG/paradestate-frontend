@@ -44,6 +44,14 @@ import {
     TagLabel,
     TagLeftIcon,
     TagRightIcon,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    useDisclosure,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
@@ -71,30 +79,152 @@ import { NextProtectedPage } from "../lib/auth";
 import { RootState } from "../types/types";
 import CustomStepper from "../components/Dashboard/CustomStepper";
 import DashboardHeading from "../components/Dashboard/Heading";
+import {
+    AddedAttCOrCourse,
+    AddedLeaveOrOff,
+    AddedMA,
+    AddedOthers,
+} from "../components/Dashboard/AddedEvent";
+import { capitalizeFirstLetter, onClickUrl } from "../lib/custom";
 
-const DefaultLink: React.FC<{ url: string; type: string }> = ({
-    url,
-    type,
-}) => {
+const DefaultLink: React.FC<{
+    url: string;
+    type:
+        | "ma"
+        | "off"
+        | "leave"
+        | "attc"
+        | "course"
+        | "others"
+        | "extras"
+        | "incamp";
+    person: ExtendedPersonnel;
+}> = ({ url, type, person }) => {
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    let modalContents;
+    switch (type) {
+        case "leave": {
+            let data = {
+                reason: person.leave_reason as string,
+                date: [person.leave_start, person.leave_end] as [
+                    string,
+                    string
+                ],
+                "start-time": person.leave_start_time as "AM" | "PM",
+                "end-time": person.leave_end_time as "AM" | "PM",
+                days: 0,
+            };
+            modalContents = <AddedLeaveOrOff data={data} />;
+            break;
+        }
+        case "off": {
+            let data = {
+                reason: person.off_reason as string,
+                date: [person.off_start, person.off_end] as [string, string],
+                "start-time": person.off_start_time as "AM" | "PM",
+                "end-time": person.off_end_time as "AM" | "PM",
+                days: 0,
+            };
+            modalContents = <AddedLeaveOrOff data={data} />;
+            break;
+        }
+        case "attc": {
+            let data = {
+                reason: person.attc_name as string,
+                date: [person.attc_start, person.attc_end] as [string, string],
+            };
+            modalContents = <AddedAttCOrCourse data={data} />;
+            break;
+        }
+        case "course": {
+            let data = {
+                name: person.course_name as string,
+                date: [person.course_start, person.course_end] as [
+                    string,
+                    string
+                ],
+            };
+            modalContents = <AddedAttCOrCourse data={data} />;
+            break;
+        }
+        case "ma": {
+            let data = {
+                name: person.ma_name as string,
+                location: person.ma_location as string,
+                incamp: Boolean(person.ma_incamp),
+                "date-time-formatted": `${format(
+                    new Date(person.ma_date),
+                    Assignments.dateformat
+                )} ${person.ma_time}`,
+            };
+            modalContents = <AddedMA data={data} />;
+            break;
+        }
+        case "others": {
+            let data = {
+                name: person.others_name as string,
+                incamp: Boolean(person.others_incamp),
+                date: [person.others_start, person.others_end] as [
+                    string,
+                    string
+                ],
+            };
+            modalContents = <AddedOthers data={data} />;
+            break;
+        }
+    }
+    const router = useRouter();
     return (
-        <NextLink href={url} passHref>
+        <>
+            {/* <NextLink href={url} passHref> */}
             {/* <Badge colorScheme="red">On {type}</Badge> */}
 
-            <Link>
-                <Tag size="sm" variant="subtle" colorScheme="red">
-                    {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+            {/* <Link> */}
+            <Tag size="sm" variant="subtle" colorScheme="red" onClick={onOpen} sx={{cursor: 'pointer'}}>
+                {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
 
-                    <TagLabel> On {type}</TagLabel>
-                    <TagRightIcon as={IoOpenOutline} />
-                </Tag>
-            </Link>
-        </NextLink>
+                <TagLabel>
+                    On {type === "ma" ? "medical appointment" : type}
+                </TagLabel>
+                <TagRightIcon as={IoOpenOutline} />
+            </Tag>
+            {/* </Link> */}
+            {/* </NextLink> */}
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>{capitalizeFirstLetter(type)}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text> {person.rank} {person.name} </Text>
+                        <Text> {person.platoon} </Text>
+                        {modalContents}
+                        
+                        </ModalBody>
+
+                    <ModalFooter>
+                        <Button
+                            colorScheme="purple"
+                            mr={3}
+                            onClick={onClickUrl(url)}
+                        >
+                            Edit {type}
+                        </Button>
+
+                        <Button mr={3} onClick={onClose}>
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </>
     );
 };
 
 const PersonAccordianItem: React.FC<{
     person: ExtendedPersonnel;
-}> = ({ person }) => {
+    selectedDate: Date;
+}> = ({ person, selectedDate }) => {
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
@@ -148,9 +278,9 @@ const PersonAccordianItem: React.FC<{
         !buttonStates.others;
 
     const defaultExtrasChecked: string[] = [];
-    if (person.ma_row_ID) defaultExtrasChecked.push("ma");
-    if (person.others_row_ID) defaultExtrasChecked.push("others");
-    if (person.course_row_ID) defaultExtrasChecked.push("course");
+    if (person.ma_row_ID || dashboardData.ma[person.personnel_ID]) defaultExtrasChecked.push("ma");
+    if (person.others_row_ID || dashboardData.others[person.personnel_ID]) defaultExtrasChecked.push("others");
+    if (person.course_row_ID || dashboardData.course[person.personnel_ID]) defaultExtrasChecked.push("course");
 
     // Override type checking TODO
     const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
@@ -159,7 +289,7 @@ const PersonAccordianItem: React.FC<{
 
     const handleExtras = (checked: string | string[]) => {
         setExtrasChecked(checked);
-        console.log({ checked });
+     
 
         // Handle setting the button states
         let tempArray: string[] = []; // Convert to array (if one option is selected, then it's a string, not an array)
@@ -228,6 +358,7 @@ const PersonAccordianItem: React.FC<{
 
     // Handle setting the values for saved inputs from redux store
     useEffect(() => {
+       
         setButtonStates((prevState) => ({
             // Only set the button states if dashboardData.[whatever] exists
             off: defaultState.off || dashboardData.off[person.personnel_ID],
@@ -287,9 +418,16 @@ const PersonAccordianItem: React.FC<{
         <>
             <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px">
                 <Box>
-                    <Text fontWeight="semibold">
-                        ({person.pes}) {person.rank} {person.name}
-                    </Text>
+                    {/* <Flex align="center"> */}
+                    <Stack direction="row">
+                        <Center>
+                            <Badge colorScheme="purple">{person.pes}</Badge>
+                        </Center>
+                        <Text fontWeight="semibold">
+                            {person.rank} {person.name}
+                        </Text>
+                    </Stack>
+                    {/* </Flex> */}
                     <Flex align="center">
                         {/* <Icon as={icon} mr={1} color={textColor} /> */}
                         {/* <Text textColor={textColor}> {person.location}</Text> */}
@@ -312,11 +450,8 @@ const PersonAccordianItem: React.FC<{
                                         url={`/personnel/manage/${event}/${
                                             person.personnel_ID
                                         }/#${person[`${event}_row_ID`]}`}
-                                        type={
-                                            event === "ma"
-                                                ? "medical appointment"
-                                                : event
-                                        }
+                                        type={event}
+                                        person={person}
                                     />
                                 ) : null
                             )}{" "}
@@ -410,6 +545,7 @@ const PersonAccordianItem: React.FC<{
                     <AddOff
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.off[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
                     />
                 </Collapse>
             )}
@@ -418,6 +554,7 @@ const PersonAccordianItem: React.FC<{
                     <AddLeave
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.leave[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
                     />
                 </Collapse>
             )}
@@ -426,6 +563,7 @@ const PersonAccordianItem: React.FC<{
                     <AddAttC
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.attc[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
                     />
                 </Collapse>
             )}
@@ -435,6 +573,7 @@ const PersonAccordianItem: React.FC<{
                     <AddCourse
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.course[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
                     />
                 </Collapse>
             )}
@@ -443,6 +582,7 @@ const PersonAccordianItem: React.FC<{
                     <AddMA
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.ma[person.personnel_ID]}
+                        defaultDate={selectedDate}
                     />
                 </Collapse>
             )}
@@ -451,6 +591,7 @@ const PersonAccordianItem: React.FC<{
                     <AddOthers
                         personnel_ID={person.personnel_ID}
                         data={dashboardData.others[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
                     />
                 </Collapse>
             )}
@@ -462,7 +603,8 @@ const PersonAccordianItem: React.FC<{
 const PlatoonAccordianItem: React.FC<{
     personnel: ExtendedPersonnel[];
     platoon: string;
-}> = ({ personnel, platoon }) => {
+    selectedDate: Date;
+}> = ({ personnel, platoon, selectedDate }) => {
     return (
         <AccordionItem>
             <Text>
@@ -475,7 +617,11 @@ const PlatoonAccordianItem: React.FC<{
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
                 {personnel.map((person, index) => (
-                    <PersonAccordianItem key={index} person={person} />
+                    <PersonAccordianItem
+                        selectedDate={selectedDate}
+                        key={index}
+                        person={person}
+                    />
                 ))}
             </AccordionPanel>
         </AccordionItem>
@@ -497,7 +643,7 @@ const Dashboard: NextProtectedPage<{
         selectedDate: Date;
     };
 }> = ({ data }) => {
-    console.log("Hello!~");
+
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
     const dispatch = useDispatch();
@@ -517,13 +663,13 @@ const Dashboard: NextProtectedPage<{
         formState: { errors },
     } = methods;
 
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
-        setIsSubmitting(true)
+        setIsSubmitting(true);
         // dispatch(dashboardActions.updateForm(data));
 
-        console.log({ data });
+
         fetch("/api/dashboard/confirm", {
             method: "POST",
             headers: {
@@ -558,7 +704,6 @@ const Dashboard: NextProtectedPage<{
                             Clear
                         </Button>
                     </DashboardHeading>
-                    
 
                     <Accordion defaultIndex={[0]} allowMultiple allowToggle>
                         <FormProvider {...methods}>
@@ -566,6 +711,7 @@ const Dashboard: NextProtectedPage<{
                                 {Object.keys(sortedByPlatoon).map(
                                     (platoon, index) => (
                                         <PlatoonAccordianItem
+                                            selectedDate={selectedDate}
                                             key={index}
                                             personnel={sortedByPlatoon[platoon]}
                                             platoon={platoon}
@@ -573,7 +719,11 @@ const Dashboard: NextProtectedPage<{
                                     )
                                 )}
                                 <Center mt={3}>
-                                    <Button type="submit" colorScheme="teal" isLoading={isSubmitting}>
+                                    <Button
+                                        type="submit"
+                                        colorScheme="teal"
+                                        isLoading={isSubmitting}
+                                    >
                                         Submit
                                     </Button>
                                 </Center>
@@ -590,7 +740,7 @@ export const getServerSideProps = async (
     context: GetServerSidePropsContext
 ) => {
     const session = await getSession(context);
-    console.log({ session });
+
     if (!session || !session.user)
         return {
             redirect: {
@@ -610,10 +760,10 @@ export const getServerSideProps = async (
         company: session.user.company,
         selDate: selectedDate,
     };
-    console.log(opts);
+
     try {
         const query = queryBuilder(
-            "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE unit = :unit AND company = :company AND DATE(ord) >= DATE(:selDate) AND DATE(post_in) <= DATE(:selDate) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
+            "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE unit = :unit AND company = :company AND DATE(ord) >= DATE(:selDate) AND DATE(post_in) <= DATE(:selDate) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
             opts
         );
         // console.log(query);
@@ -679,6 +829,7 @@ export const getServerSideProps = async (
 
             selectedDate, // TO CHANGE
         };
+
 
         return {
             props: {

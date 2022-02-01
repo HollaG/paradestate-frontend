@@ -27,7 +27,8 @@ export const AddLeave: React.FC<{
         "start-time": "AM" | "PM";
         "end-time": "AM" | "PM";
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: [Date, Date]
+}> = ({ personnel_ID, data, defaultDate }) => {
     const { register } = useFormContext();
 
     return (
@@ -45,7 +46,7 @@ export const AddLeave: React.FC<{
                 endPlaceholder="Leave end date"
                 renderSelects={true}
 
-                defaultValues={data?.date}
+                defaultValues={data?.date || defaultDate}
                 defaultStartTime={data?.["start-time"]}
                 defaultEndTime={data?.["end-time"]}
             />
@@ -71,7 +72,8 @@ export const AddOff: React.FC<{
         "start-time": "AM" | "PM";
         "end-time": "AM" | "PM";
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: [Date, Date]
+}> = ({ personnel_ID, data, defaultDate }) => {
     const { register } = useFormContext();
 
     return (
@@ -89,7 +91,7 @@ export const AddOff: React.FC<{
                 endPlaceholder="Off end date"
                 renderSelects={true}
 
-                defaultValues={data?.date}
+                defaultValues={data?.date || defaultDate}
                 defaultStartTime={data?.["start-time"]}
                 defaultEndTime={data?.["end-time"]}
             />
@@ -111,7 +113,8 @@ export const AddAttC: React.FC<{
         reason: string;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: [Date, Date]
+}> = ({ personnel_ID, data, defaultDate }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -128,7 +131,7 @@ export const AddAttC: React.FC<{
                 endPlaceholder="AttC end date"
                 renderSelects={false}
 
-                defaultValues={data?.date}
+                defaultValues={data?.date || defaultDate}
                 
             />
             <InputGroup size="sm">
@@ -150,7 +153,8 @@ export const AddCourse: React.FC<{
         name: string;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: [Date, Date]
+}> = ({ personnel_ID, data, defaultDate }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -167,7 +171,7 @@ export const AddCourse: React.FC<{
                 endPlaceholder="Course end date"
                 renderSelects={false}
 
-                defaultValues={data?.date}
+                defaultValues={data?.date || defaultDate}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
@@ -190,7 +194,8 @@ export const AddMA: React.FC<{
         incamp: boolean;
         "date-time": Date;
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: Date
+}> = ({ personnel_ID, data, defaultDate }) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -204,7 +209,7 @@ export const AddMA: React.FC<{
                 leftAdorn="Date"
                 placeholder="Medical appointment date and time"
 
-                defaultValue={data?.["date-time"]}
+                defaultValue={data?.["date-time"] || defaultDate}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
@@ -243,7 +248,8 @@ export const AddOthers: React.FC<{
         incamp: boolean;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    defaultDate: [Date, Date];
+}> = ({ personnel_ID, data, defaultDate}) => {
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -260,7 +266,7 @@ export const AddOthers: React.FC<{
                 endPlaceholder="Other appointment's end date"
                 renderSelects={false}
 
-                defaultValues={data?.date}
+                defaultValues={data?.date || defaultDate}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />

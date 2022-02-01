@@ -19,8 +19,18 @@ export const formatMySQLDateHelper = (date: string) =>
 export const formatMySQLDateTimeHelper = (date: string) =>
     format(new Date(date), Assignments.mysqldatetimeformat);
 
-export const formatMySQLTimeHelper = (date:string) => 
+export const formatMySQLTimeHelper = (date: string) =>
     format(new Date(date), Assignments.mysqltimeformat);
+
+export const openInNewTab = (url: string): void => {
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (newWindow) newWindow.opener = null;
+};
+
+export const onClickUrl =
+    (url: string): (() => void) =>
+    () =>
+        openInNewTab(url);
 
 export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
     console.log({ outOfOffice });
@@ -41,8 +51,8 @@ export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
     );
 
     let halfDays = hours / 12;
-
-    return days + halfDays;
+    console.log({ days, halfDays });
+    return days + halfDays / 2;
     // If start time is AM, add 24 hours
     // if start time is PM, add 12 hours
     // If end time is AM, subtract 12 hours
