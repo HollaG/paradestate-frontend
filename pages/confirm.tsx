@@ -199,7 +199,7 @@ const Confirm: NextPage = () => {
             setSecondsLeft((prevSecs) => prevSecs - 1);
         }, 1000);
         return () => clearTimeout(timeout);
-    }, [success, secondsLeft, setSecondsLeft]);
+    }, [success, secondsLeft, setSecondsLeft, router]);
     const activeEventNames = Object.keys(dashboardData) as Array<
         keyof typeof dashboardData
     >;

@@ -660,6 +660,7 @@ const Dashboard: NextProtectedPage<{
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
     const dispatch = useDispatch();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
     if (!data) {
@@ -676,7 +677,6 @@ const Dashboard: NextProtectedPage<{
         formState: { errors },
     } = methods;
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
         setIsSubmitting(true);
