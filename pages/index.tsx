@@ -277,10 +277,14 @@ const PersonAccordianItem: React.FC<{
         !buttonStates.ma &&
         !buttonStates.others;
 
-    const defaultExtrasChecked: string[] = [];
-    if (person.ma_row_ID || dashboardData.ma[person.personnel_ID]) defaultExtrasChecked.push("ma");
-    if (person.others_row_ID || dashboardData.others[person.personnel_ID]) defaultExtrasChecked.push("others");
-    if (person.course_row_ID || dashboardData.course[person.personnel_ID]) defaultExtrasChecked.push("course");
+    const defaultExtrasChecked: string[] = useMemo( () => {
+        const temp = []
+        if (person.ma_row_ID ) temp.push("ma");
+        if (person.others_row_ID) temp.push("others");
+        if (person.course_row_ID) temp.push("course");
+        return temp
+    }, [person])
+
 
     // Override type checking TODO
     const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
@@ -396,7 +400,16 @@ const PersonAccordianItem: React.FC<{
                 dashboardData.others[person.personnel_ID],
             incamp: prevState.incamp,
         }));
-    }, [dashboardData, person.personnel_ID, defaultState]);
+        // reset the extrasChecked state to the intial value
+     
+        
+       
+        const temp = []
+        if (dashboardData.ma[person.personnel_ID]) temp.push("ma");
+        if (dashboardData.others[person.personnel_ID]) temp.push("others");
+        if (dashboardData.course[person.personnel_ID]) temp.push("course");
+        setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])])
+    }, [dashboardData, person, defaultState, defaultExtrasChecked]);
 
     // Function to clear all selectins
     // const clearThis = () => {

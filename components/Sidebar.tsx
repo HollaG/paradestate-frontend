@@ -91,89 +91,89 @@ const LinkItems: (
       }
 )[] = [
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
-    { name: "Overview", icon: IoCalendarOutline, url: "/overview" },
-    { name: "Analytics", icon: IoAnalyticsOutline, url: "/analytics" },
-    {
-        name: "Manage statuses (medical)",
-        icon: IoMedicalOutline,
-        url: "/personnel/manage/status",
-    },
+    // { name: "Overview", icon: IoCalendarOutline, url: "/overview" },
+    // { name: "Analytics", icon: IoAnalyticsOutline, url: "/analytics" },
+    // {
+    //     name: "Manage statuses (medical)",
+    //     icon: IoMedicalOutline,
+    //     url: "/personnel/manage/status",
+    // },
 
-    {
-        name: "Parade state",
-        icon: IoMailOutline,
-        url: "/deliverables/parade-state",
-    },
-    { name: "Status list", icon: IoMailOutline, url: "/" },
-    { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
-    {
-        name: "Personnel",
-        isGroup: true,
-        disclosure: "personnel",
-        icon: IoPeopleOutline,
-        children: [
-            { name: "Manage personnel", icon: FiSettings, url: "/" },
-            { name: "Manage website", icon: FiSettings, url: "/" },
-        ],
-    },
-    {
-        name: "Event Managers",
-        isGroup: true,
-        disclosure: "event",
-        icon: IoSettingsOutline,
-        children: [
-            {
-                name: "AttC Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Off Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Leave Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Course Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Medical Appointment Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Other Appointments Manager",
-                icon: FiSettings,
-                url: "/",
-            },
-        ],
-    },
-    {
-        name: "Deliverable formats",
-        isGroup: true,
-        disclosure: "format",
-        icon: IoFolderOpenOutline,
-        children: [
-            {
-                name: "Parade State",
-                icon: FiSettings,
-                url: "/",
-            },
-            {
-                name: "Status List",
-                icon: FiSettings,
-                url: "/",
-            },
-        ],
-    },
+    // {
+    //     name: "Parade state",
+    //     icon: IoMailOutline,
+    //     url: "/deliverables/parade-state",
+    // },
+    // { name: "Status list", icon: IoMailOutline, url: "/" },
+    // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
+    // {
+    //     name: "Personnel",
+    //     isGroup: true,
+    //     disclosure: "personnel",
+    //     icon: IoPeopleOutline,
+    //     children: [
+    //         { name: "Manage personnel", icon: FiSettings, url: "/" },
+    //         { name: "Manage website", icon: FiSettings, url: "/" },
+    //     ],
+    // },
+    // {
+    //     name: "Event Managers",
+    //     isGroup: true,
+    //     disclosure: "event",
+    //     icon: IoSettingsOutline,
+    //     children: [
+    //         {
+    //             name: "AttC Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Off Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Leave Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Course Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Medical Appointment Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Other Appointments Manager",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //     ],
+    // },
+    // {
+    //     name: "Deliverable formats",
+    //     isGroup: true,
+    //     disclosure: "format",
+    //     icon: IoFolderOpenOutline,
+    //     children: [
+    //         {
+    //             name: "Parade State",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //         {
+    //             name: "Status List",
+    //             icon: FiSettings,
+    //             url: "/",
+    //         },
+    //     ],
+    // },
 
-    { name: "FAQ", icon: FiSettings, url: "/" },
+    // { name: "FAQ", icon: FiSettings, url: "/" },
 ];
 
 const SignInInfo: React.FC = () => {
@@ -263,7 +263,7 @@ const Sidebar = (props: any) => {
             <Flex px="4" py="5" align="center">
                 {/* <Logo /> */}
                 <Text fontSize="2xl" ml="2" color="white" fontWeight="semibold">
-                    Choc UI
+                    {session?.user?.unit} {session?.user?.company}
                 </Text>
             </Flex>
             <Flex
