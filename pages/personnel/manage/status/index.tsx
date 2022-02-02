@@ -32,11 +32,19 @@ import {
     MenuItemOption,
     MenuList,
     MenuOptionGroup,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     SimpleGrid,
     Stack,
     Tag,
     TagLabel,
     Text,
+    useDisclosure,
 } from "@chakra-ui/react";
 import { Session } from "inspector";
 import { ExtendedStatus, Status } from "../../../../types/types";
@@ -56,12 +64,53 @@ import useSWRImmutable from "swr/immutable";
 import StatusInputs from "../../../../components/Personnel/Status/StatusInputs";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
-import { statusActions } from "../../../../store/status-slice";
+import statusSlice, { statusActions } from "../../../../store/status-slice";
+import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
 
 export interface StatusOption extends OptionBase {
     label: string;
     value: string;
 }
+
+const StatusModal: React.FC<{
+    statuses: ExtendedStatus[];
+    isOpen: boolean;
+    onOpen: () => void;
+    onClose: () => void;
+}> = ({ statuses, isOpen, onOpen, onClose }) => {
+    console.log({ statuses }, "----------------------------------");
+    return (
+        <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>Status</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                    {statuses.map((status, index) => (
+                        <Box key={index} my={3}>
+                            <StatusEntry status={status} />
+                            <Divider />
+                        </Box>
+                    ))}
+                </ModalBody>
+
+                <ModalFooter>
+                    <Button
+                        colorScheme="purple"
+                        mr={3}
+                        // onClick={onClickUrl(url)}
+                    >
+                        Edit statuses
+                    </Button>
+
+                    <Button mr={3} onClick={onClose}>
+                        Close
+                    </Button>
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
+    );
+};
 
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
@@ -74,6 +123,10 @@ const PersonAccordionItem: React.FC<{
     const isVisible =
         search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const modalOpenHandler = (e: any) => { // TODO 
+
+    }
     let tags;
     if (!statusesById[person.personnel_ID]) {
         tags = (
@@ -85,14 +138,24 @@ const PersonAccordionItem: React.FC<{
     } else if (statusesById[person.personnel_ID].length > 1) {
         tags = (
             <>
-                <Tag size="sm" variant="subtle" colorScheme="red">
+                <Tag
+                    size="sm"
+                    variant="subtle"
+                    colorScheme="red"
+                    onClick={onOpen}
+                >
                     {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
                     <TagLabel>
                         {" "}
                         {statusesById[person.personnel_ID][0].status_name}
                     </TagLabel>
                 </Tag>
-                <Tag size="sm" variant="subtle" colorScheme="red">
+                <Tag
+                    size="sm"
+                    variant="subtle"
+                    colorScheme="red"
+                    onClick={onOpen}
+                >
                     {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
                     <TagLabel>
                         {" "}
@@ -103,10 +166,9 @@ const PersonAccordionItem: React.FC<{
         );
     } else {
         tags = (
-            <Tag size="sm" variant="subtle" colorScheme="red">
+            <Tag size="sm" variant="subtle" colorScheme="red" onClick={onOpen}>
                 {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
                 <TagLabel>
-                    {" "}
                     {statusesById[person.personnel_ID][0].status_name}
                 </TagLabel>
             </Tag>
@@ -116,86 +178,60 @@ const PersonAccordionItem: React.FC<{
     const [isChecked, setIsChecked] = useState(false);
 
     return (
-        <Collapse in={isVisible} animateOpacity>
-            {/* <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px"> */}
-            <Flex my={3} w="100%">
-                {/* <Box
-                    flexGrow={1}
-                    onClick={() => setIsChecked((prevState) => !prevState)}
-                    cursor="pointer"
-                >
-         
-                    <Stack direction="row">
-                        <Center>
-                            <Badge colorScheme="purple">{person.pes}</Badge>
-                        </Center>
-                        <Text fontWeight="semibold">
-                            {person.rank} {person.name}
-                        </Text>
-                    </Stack>
-                   
-                    <Flex align="center">
-                      
-                        <Stack direction="row" my={1} wrap="wrap">
-                            {tags}
-                        </Stack>
-                    </Flex>
-                </Box> */}
-                {/* <Spacer /> */}
-                <Flex
-                    alignItems="center"
-                    m={{ lg: "unset", base: "auto" }}
-                    w="100%"
-                >
-                    {/* <Checkbox
-                        colorScheme="teal"
-                        size="lg"
-                        isChecked={isChecked}
-                        onChange={(e) => setIsChecked(e.target.checked)}
-                    /> */}
-                    <Checkbox
-                        colorScheme="teal"
-                        size="md"
-                        // isChecked={isChecked}
-                        // onChange={(e) => setIsChecked(e.target.checked)}
-                        flexDirection="row-reverse"
+        <>
+            <Collapse in={isVisible} animateOpacity>
+                <Flex my={3} w="100%">
+                    <Flex
+                        alignItems="center"
+                        m={{ lg: "unset", base: "auto" }}
                         w="100%"
-                        className="checkbox-reversed"
-                        {...register(`status-personnel-${person.personnel_ID}`)}
                     >
-                        <Box
-                            // flexGrow={1}
-                            // onClick={() =>
-                            //     setIsChecked((prevState) => !prevState)
-                            // }
-                            cursor="pointer"
+                        <Checkbox
+                            colorScheme="teal"
+                            size="md"
+                            // isChecked={isChecked}
+                            // onChange={(e) => setIsChecked(e.target.checked)}
+                            flexDirection="row-reverse"
+                            w="100%"
+                            className="checkbox-reversed"
+                            {...register(
+                                `status-personnel-${person.personnel_ID}`
+                            )}
                         >
-                            {/* <Flex align="center"> */}
-                            <Stack direction="row">
-                                <Center>
-                                    <Badge colorScheme="purple">
-                                        {person.pes}
-                                    </Badge>
-                                </Center>
-                                <Text fontWeight="semibold">
-                                    {person.rank} {person.name}
-                                </Text>
-                            </Stack>
-                            {/* </Flex> */}
-                            <Flex align="center">
-                                {/* <Icon as={icon} mr={1} color={textColor} /> */}
-                                {/* <Text textColor={textColor}> {person.location}</Text> */}
-                                <Stack direction="row" my={1} wrap="wrap">
-                                    {tags}
+                            <Box cursor="pointer">
+                                {/* <Flex align="center"> */}
+                                <Stack direction="row">
+                                    <Center>
+                                        <Badge colorScheme="purple">
+                                            {person.pes}
+                                        </Badge>
+                                    </Center>
+                                    <Text fontWeight="semibold">
+                                        {person.rank} {person.name}
+                                    </Text>
                                 </Stack>
-                            </Flex>
-                        </Box>
-                    </Checkbox>
+
+                                <Flex align="center">
+                                    <Stack direction="row" my={1} wrap="wrap">
+                                        {tags}
+                                    </Stack>
+                                </Flex>
+                            </Box>
+                        </Checkbox>
+                    </Flex>
                 </Flex>
-            </Flex>
-            {/* </SimpleGrid> */}
-            <Divider />
-        </Collapse>
+
+                <Divider />
+            </Collapse>
+            {!!statusesById[person.personnel_ID] && (
+                <StatusModal
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    onOpen={onOpen}
+                    statuses={statusesById[person.personnel_ID]}
+                />
+            )}
+        </>
     );
 };
 

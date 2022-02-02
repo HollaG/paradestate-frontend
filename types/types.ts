@@ -60,7 +60,7 @@ export interface Status {
 
 export interface ExtendedStatus extends Status { 
     personnel_ID: string;
-    start: string;
-    end: string;
+    start: Date|string;
+    end: Date|string;
     type: "perm" | ""
 }
