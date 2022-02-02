@@ -63,8 +63,8 @@ const Confirmed: NextProtectedPage = () => {
                     <Box textAlign="center">
                         <Text>Successfully added</Text>
 
-                        {statuses.map((status) => (
-                            <Tag size="sm" variant="subtle" colorScheme="red">
+                        {statuses.map((status, index) => (
+                            <Tag key={index} size="sm" variant="subtle" colorScheme="red">
                                 <TagLabel>{status.label}</TagLabel>
                             </Tag>
                         ))}
@@ -72,7 +72,7 @@ const Confirmed: NextProtectedPage = () => {
                         <Text> to the below personnel for </Text>
 
                         <Text>
-                            {" "}
+                            
                             {statusDate
                                 .map((date) =>
                                     format(

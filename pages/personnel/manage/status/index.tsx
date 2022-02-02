@@ -48,7 +48,7 @@ import { GroupBase, OptionBase, Select } from "chakra-react-select";
 import { StatusData } from "../../../api/personnel/manage/status";
 import events from "events";
 import { FaChevronDown } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import CustomStatusDateRangePicker from "../../../../components/Dates/CustomStatusDateRangePicker";
 import SearchInput from "../../../../components/Personnel/Status/SearchInput";
@@ -267,8 +267,13 @@ const Confirmed: React.FC<{
             <Box textAlign="center">
                 <Text>Successfully added</Text>
 
-                {statuses.map((status) => (
-                    <Tag size="sm" variant="subtle" colorScheme="red">
+                {statuses.map((status, index) => (
+                    <Tag
+                        key={index}
+                        size="sm"
+                        variant="subtle"
+                        colorScheme="red"
+                    >
                         <TagLabel>{status.label}</TagLabel>
                     </Tag>
                 ))}
@@ -355,13 +360,12 @@ const StatusManager: NextProtectedPage<{
     const [search, setSearch] = useState("");
     console.log(search);
 
-    const defaultIndex = [0];
+    const defaultIndex = useMemo(() => [0], []);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
     const handleAccordion = (index: number[]) => {
         setIndex(index);
     };
 
-    
     useEffect(() => {
         console.log("Helloooo");
         if (search.length && data?.sortedByPlatoon) {
@@ -373,12 +377,11 @@ const StatusManager: NextProtectedPage<{
         } else {
             setIndex(defaultIndex);
         }
-    }, [search, data?.sortedByPlatoon]);
+    }, [search, data?.sortedByPlatoon, defaultIndex]);
 
     const dispatch = useDispatch();
 
-    
-    const router = useRouter()
+    const router = useRouter();
     const onSubmit = async (data: { [key: string]: any }) => {
         console.log("submitted data", { data });
         const responseData = await sendPOST(
@@ -390,7 +393,7 @@ const StatusManager: NextProtectedPage<{
             // setSuccess(true);
             // setResponseData(responseData.data);
             dispatch(statusActions.updateData(responseData.data));
-            router.push("/personnel/manage/status/confirm")
+            router.push("/personnel/manage/status/confirm");
         }
     };
 
