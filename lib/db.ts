@@ -12,10 +12,10 @@ export const db = mysql({
 
 export default async function executeQuery({
     query,
-    values,
+    values = [],
 }: {
     query: string;
-    values: any[];
+    values?: any[];
 }) {
     try {
         const results = await db.query<any>(query, values);

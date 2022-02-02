@@ -40,6 +40,7 @@ import {
 } from "../components/Dashboard/ConfirmEvent";
 import DashboardHeading from "../components/Dashboard/Heading";
 import Layout from "../components/Sidebar";
+import { NextProtectedPage } from "../lib/auth";
 import { capitalizeFirstLetter } from "../lib/custom";
 import fetcher, { sendPOST } from "../lib/fetcher";
 import { dashboardActions } from "../store/dashboard-slice";
@@ -149,7 +150,7 @@ const ResultFields: React.FC<{
     }
 };
 
-const Confirm: NextPage = () => {
+const Confirm: NextProtectedPage = () => {
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
     );
@@ -460,19 +461,7 @@ const Confirm: NextPage = () => {
                                                         }
                                                     </Text>
                                                 </Box>
-                                                {/* <IconButton
-                                                    colorScheme="red"
-                                                    fontSize="20px"
-                                                    icon={<Icon as={IoTrash} />}
-                                                    aria-label="Edit entry"
-                                                    // onClick={
-                                                    //     // () =>
-                                                    //     // deleteEntry(
-                                                    //     //     type,
-                                                    //     //     personnel_ID
-                                                    //     // )
-                                                    // }
-                                                /> */}
+                                                
                                             </Flex>
 
                                             <ResultFields
@@ -496,4 +485,5 @@ const Confirm: NextPage = () => {
     return <Layout content={confirmedDashboardData ? Confirmed : Verify} />;
 };
 
+Confirm.requireAuth = true
 export default Confirm;

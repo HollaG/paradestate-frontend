@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { RootState } from "../types/types";
 import dashboardSlice from "./dashboard-slice";
+import statusSlice from "./status-slice";
 
 
 const saveState = (state: RootState) => {
@@ -13,7 +14,8 @@ const saveState = (state: RootState) => {
 };
 const store = configureStore({
     reducer: {       
-        dashboard: dashboardSlice.reducer
+        dashboard: dashboardSlice.reducer,
+        status: statusSlice.reducer
     }
 })
 

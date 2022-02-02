@@ -221,7 +221,7 @@ const DefaultLink: React.FC<{
     );
 };
 
-const PersonAccordianItem: React.FC<{
+const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
 }> = ({ person, selectedDate }) => {
@@ -229,7 +229,7 @@ const PersonAccordianItem: React.FC<{
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
     );
-
+        
     const icon =
         person.location === "In camp"
             ? IoCheckmarkDoneCircleOutline
@@ -630,7 +630,7 @@ const PlatoonAccordianItem: React.FC<{
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
                 {personnel.map((person, index) => (
-                    <PersonAccordianItem
+                    <PersonAccordionItem
                         selectedDate={selectedDate}
                         key={index}
                         person={person}
@@ -659,6 +659,7 @@ const Dashboard: NextProtectedPage<{
 
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
+  
     const dispatch = useDispatch();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -676,7 +677,7 @@ const Dashboard: NextProtectedPage<{
         watch,
         formState: { errors },
     } = methods;
-
+   
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
         setIsSubmitting(true);

@@ -63,6 +63,7 @@ import {
     IoSettingsOutline,
     IoTrendingUp,
 } from "react-icons/io5";
+import { Session } from "next-auth";
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -93,11 +94,11 @@ const LinkItems: (
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
     // { name: "Overview", icon: IoCalendarOutline, url: "/overview" },
     // { name: "Analytics", icon: IoAnalyticsOutline, url: "/analytics" },
-    // {
-    //     name: "Manage statuses (medical)",
-    //     icon: IoMedicalOutline,
-    //     url: "/personnel/manage/status",
-    // },
+    {
+        name: "Manage statuses (medical)",
+        icon: IoMedicalOutline,
+        url: "/personnel/manage/status",
+    },
 
     // {
     //     name: "Parade state",
@@ -191,7 +192,13 @@ const SignInInfo: React.FC = () => {
 };
 
 const Sidebar = (props: any) => {
-    const { data: session } = useSession();
+    let session: Session|null;
+    const { data }= useSession();
+    if (props.session) session = props.session
+    else { 
+        session = data;
+    } 
+
     const sidebar = useDisclosure();
 
     const discloures = {

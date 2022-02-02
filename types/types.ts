@@ -1,9 +1,16 @@
+import { StatusOption } from "../pages/personnel/manage/status";
 import { Personnel } from "./database";
 
 export interface RootState {
     dashboard: DashboardState;
+    status: StatusState
 }
-
+export interface StatusState {
+    isPerm: boolean;
+    sortedByPlatoon: { [key: string]: any };
+    statusDate: [string, string];
+    statuses: StatusOption[];
+}
 export interface DashboardState {
     data: EventData;
     personnelMap: { [key: number]: Personnel };
@@ -43,4 +50,17 @@ export interface HighlightedDay {
     day: number,
     badgeText: string,
     disabled: boolean
+}
+
+export interface Status {
+    status_ID: string;
+    status_name: string
+    
+}
+
+export interface ExtendedStatus extends Status { 
+    personnel_ID: string;
+    start: string;
+    end: string;
+    type: "perm" | ""
 }
