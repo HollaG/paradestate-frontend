@@ -2,7 +2,7 @@ import { Box, Button, Center, Heading } from "@chakra-ui/react";
 import React from "react";
 import CustomStepper from "./CustomStepper";
 
-const DashboardHeading: React.FC<{ step: 0 | 1 | 2 }> = React.memo(({
+const DashboardHeading: React.FC<{ step: 0 | 1 | 2 }> = ({
     children,
     step,
 }) => {
@@ -18,6 +18,6 @@ const DashboardHeading: React.FC<{ step: 0 | 1 | 2 }> = React.memo(({
             </Center>
         </Box>
     );
-});
+};
 
-export default DashboardHeading;
+export default React.memo(DashboardHeading);
