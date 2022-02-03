@@ -14,7 +14,7 @@ export function AuthGuard({ children }: { children: JSX.Element }) {
             if (!user) {
                 // remember the page that user tried to access
                 // console.log("im here")
-                
+
                 setRedirect(router.route);
                 // redirect
                 router.push("/login");
@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: JSX.Element }) {
 
     /* show loading indicator while the auth provider is still initializing */
     if (initializing) {
-        return <Layout content={<> Loading data... </>}></Layout>;
+        return <> Loading data... </>;
     }
 
     // if auth initialized with a valid user show protected page
