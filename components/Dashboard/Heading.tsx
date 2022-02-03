@@ -20,4 +20,4 @@ const DashboardHeading: React.FC<{ step: 0 | 1 | 2 }> = ({
     );
 };
 
-export default React.memo(DashboardHeading);
+export default (DashboardHeading);
