@@ -44,7 +44,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: JSX.Element }) {
-    console.log("Auth providier rerendering")
+    // console.log("Auth providier rerendering")
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<{ message: string } | null>(null);
     const [initializing, setInitializing] = useState(true);

@@ -2,12 +2,12 @@ import { Box, Button, Center, Heading } from "@chakra-ui/react";
 import CustomStatusStepper from "./CustomStatusStepper";
 
 
-const StatusHeading: React.FC<{ step: 0 | 1}> = ({
+const StatusHeading: React.FC<{ step: 0 | 1 | 2}> = ({
     children,
     step,
 }) => {
     return (
-        <Box mb={2}>
+        <Box>
             <Center w="100%">{children}</Center>
             <Center mt={2}>
                 

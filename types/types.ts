@@ -1,14 +1,16 @@
 import { StatusOption } from "../pages/personnel/manage/status";
-import { Personnel } from "./database";
+import { ExtendedPersonnel, Personnel } from "./database";
 
 export interface RootState {
     dashboard: DashboardState;
     status: StatusState
 }
 export interface StatusState {
+    sortedByPlatoon: {
+        [key: string]: ExtendedPersonnel[];
+    };
     isPerm: boolean;
-    sortedByPlatoon: { [key: string]: any };
-    statusDate: [string, string];
+    statusDate: string[];
     statuses: StatusOption[];
 }
 export interface DashboardState {

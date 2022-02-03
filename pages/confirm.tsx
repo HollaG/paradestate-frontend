@@ -186,6 +186,8 @@ const Confirm: NextProtectedPage = () => {
             setConfirmedDashboardData(responseData.data)
 
             dispatch(dashboardActions.clearData());
+        } else { 
+            alert(responseData.error)
         }
     };
 

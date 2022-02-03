@@ -121,7 +121,7 @@ const CustomDateRangePicker: React.FC<{
     const fetchDisabledDates = useCallback((date: Date) => {
         const formattedDate = format(date, Assignments.mysqldateformat);
         const url = `/api/dashboard/activeEvents?personnel_ID=${personnel_ID}&type=${type}&date=${formattedDate}`;
-        console.log({ url });
+        // console.log({ url });
         fetch(url)
             .then((res) => res.json())
             .then((data: HighlightedDay[]) => {                
@@ -141,7 +141,7 @@ const CustomDateRangePicker: React.FC<{
     }, [memoized, setIsLoading]);
 
     const disableDateHandler = (date: Date) => {
-        console.log("running",);
+        // console.log("running",);
         const highlightedDay = highlightedDays.find(
             (highlightedDay) => highlightedDay.day === date.getDate()
         );

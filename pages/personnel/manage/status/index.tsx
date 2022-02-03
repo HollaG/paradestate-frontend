@@ -207,9 +207,9 @@ const PersonAccordionItem: React.FC<{
                             size="md"
                             // isChecked={isChecked}
                             // onChange={(e) => setIsChecked(e.target.checked)}
-                            flexDirection="row-reverse"
+                            // flexDirection="row-reverse"
                             w="100%"
-                            className="checkbox-reversed"
+                            className="checkbox-custom"
                             {...register(
                                 `status-personnel-${person.personnel_ID}`
                             )}
@@ -305,7 +305,7 @@ const StatusManager: NextProtectedPage<{
     // console.log({ data });
     // console.log("rerendered");
     const [search, setSearch] = useState("");
-    console.log({ search });
+
 
     const defaultIndex = useMemo(() => [0], []);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
@@ -314,7 +314,7 @@ const StatusManager: NextProtectedPage<{
     };
 
     useEffect(() => {
-        console.log("Helloooo");
+
         if (search.length && data?.sortedByPlatoon) {
             // do stuff
             // Open all the tabs
@@ -330,22 +330,24 @@ const StatusManager: NextProtectedPage<{
 
     const router = useRouter();
     const onSubmit = async (data: { [key: string]: any }) => {
-        console.log("submitted data", { data });
+
         const responseData = await sendPOST(
-            "/api/personnel/manage/status",
+            "/api/personnel/manage/status/confirm",
             data
         );
-        // console.log({ responseData }, "--------------------------------");
+
         if (responseData.success) {
             // setSuccess(true);
             // setResponseData(responseData.data);
             dispatch(statusActions.updateData(responseData.data));
             router.push("/personnel/manage/status/confirm");
+        } else { 
+            alert(responseData.error)
         }
     };
 
     const Content = (
-        <>
+        <Stack direction="column">
             <StatusHeading step={0}>
                 <Heading>{format(selectedDate, "eee d LLL yyyy")}</Heading>
                 <Button
@@ -394,7 +396,7 @@ const StatusManager: NextProtectedPage<{
                     </form>
                 </FormProvider>
             )}
-        </>
+        </Stack>
     );
     return Content;
 };

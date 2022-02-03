@@ -7,7 +7,7 @@ const DashboardHeading: React.FC<{ step: 0 | 1 | 2 }> = React.memo(({
     step,
 }) => {
     return (
-        <Box mb={2}>
+        <Box>
             <Center w="100%">{children}</Center>
             <Center mt={2}>
                 {/* <Text>

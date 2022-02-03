@@ -4,7 +4,7 @@ import StepLabel from "@mui/material/StepLabel";
 
 import makeStyles from "@mui/styles/makeStyles";
 
-const CustomStatusStepper:React.FC<{step: 0|1}> = ({step}) => {
+const CustomStatusStepper:React.FC<{step: 0|1|2}> = ({step}) => {
     const useStyles = makeStyles(() => ({
         root: {
             // "& .MuiStepIcon-completed": { color: "green" },
@@ -29,9 +29,9 @@ const CustomStatusStepper:React.FC<{step: 0|1}> = ({step}) => {
             <Step>
                 <StepLabel sx={{ mt: 0 }}>Add statuses</StepLabel>
             </Step>
-            {/* <Step>
+            <Step>
                 <StepLabel sx={{ mt: 0 }}>Confirm statuses</StepLabel>
-            </Step> */}
+            </Step>
             <Step>
                 <StepLabel sx={{ mt: 0 }}>Success</StepLabel>
             </Step>

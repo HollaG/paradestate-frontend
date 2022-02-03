@@ -33,7 +33,7 @@ export const onClickUrl =
         openInNewTab(url);
 
 export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
-    console.log({ outOfOffice });
+    // console.log({ outOfOffice });
     const start =
         typeof outOfOffice.date[0] === "string"
             ? new Date(outOfOffice.date[0])
@@ -51,7 +51,7 @@ export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
     );
 
     let halfDays = hours / 12;
-    console.log({ days, halfDays });
+    // console.log({ days, halfDays });
     return days + halfDays / 2;
     // If start time is AM, add 24 hours
     // if start time is PM, add 12 hours

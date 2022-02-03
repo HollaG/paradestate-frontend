@@ -705,7 +705,7 @@ const Dashboard: NextProtectedPage<{
         dispatch(dashboardActions.clearData());
     };
     return (
-        <>
+        <Stack direction="column">
             <DashboardHeading step={0}>
                 <Heading>{format(selectedDate, "eee d LLL yyyy")}</Heading>
                 <Button
@@ -741,7 +741,7 @@ const Dashboard: NextProtectedPage<{
                     </form>
                 </FormProvider>
             </Accordion>
-        </>
+        </Stack>
     );
 };
 

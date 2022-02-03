@@ -14,7 +14,7 @@ const SearchInput:React.FC<{
     const [isWaiting, setIsWaiting] = useState(false)
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            console.log("time out")
+            // console.log("time out")
 
             // Run search query
             // if (searchValue.length)
@@ -25,7 +25,7 @@ const SearchInput:React.FC<{
     return (
         <InputGroup size="sm" my={2}>
             <InputLeftAddon children="Search" />
-            <Input placeholder="Search for personnel" value={searchValue} onChange={handleSearch}></Input>
+            <Input placeholder="Search for personnel to add statuses for..." value={searchValue} onChange={handleSearch}></Input>
         </InputGroup>
     );
 };

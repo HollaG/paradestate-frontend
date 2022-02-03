@@ -5,9 +5,10 @@ import {
     Box,
     Checkbox,
     Collapse,
+    Text,
 } from "@chakra-ui/react";
 import { Select, GroupBase, OptionBase } from "chakra-react-select";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { StatusData } from "../../../pages/api/personnel/manage/status";
 import CustomStatusDateRangePicker from "../../Dates/CustomStatusDateRangePicker";
@@ -23,8 +24,21 @@ const StatusInputs: React.FC<{
 }> = ({ data, selectedDate, setSearch }) => {
     // const [perm, setPerm] = useState(false);
 
-    const { register, watch, setValue, control } = useFormContext();
-    const watchCheckbox = watch("status-perm") // todo- this is causing parent rerenders, can we fix it?
+    const {
+        register,
+        watch,
+        setValue,
+        control,
+        formState: { errors },
+    } = useFormContext();
+    const watchCheckbox = watch("status-perm"); // todo- this is causing parent rerenders, can we fix it?
+    useEffect(() => {
+        if (errors["status-selected"]) window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        })
+    }, [errors]);
+
     // console.log({watchCheckbox})
     return (
         <>
@@ -62,11 +76,22 @@ const StatusInputs: React.FC<{
                     // isChecked={perm}
                     // onChange={(e) => setPerm(e.target.checked)}
                     {...register("status-perm")}
-                    colorScheme='teal'
+                    colorScheme="teal"
                 >
                     Perm
                 </Checkbox>
             </Flex>
+            {errors["status-selected"] && (
+                <Text
+                    ml={2}
+                    fontSize="xs"
+                    color="red.500"
+                    fontWeight="semibold"
+                >
+                    {" "}
+                    Please select at least one status{" "}
+                </Text>
+            )}
 
             <Collapse in={!watchCheckbox}>
                 <Box mt={2}>
