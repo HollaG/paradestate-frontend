@@ -458,7 +458,7 @@ const Sidebar = (props: any) => {
                 {/* TODO - change this to Just 1 container? */}
                 <Box as="main" p="4">
                     <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
-                        {props.content}
+                        {props.children}
                     </Container>
                 </Box>
             </Box>

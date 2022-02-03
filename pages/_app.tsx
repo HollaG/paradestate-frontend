@@ -1,4 +1,8 @@
-import { ChakraProvider, extendTheme, withDefaultColorScheme } from "@chakra-ui/react";
+import {
+    ChakraProvider,
+    extendTheme,
+    withDefaultColorScheme,
+} from "@chakra-ui/react";
 import { AppProps } from "next/dist/shared/lib/router/router";
 import { SessionProvider } from "next-auth/react";
 import DateFnsAdapter from "@mui/lab/AdapterDateFns";
@@ -12,6 +16,8 @@ import { AuthGuard } from "../components/Auth/AuthGuard";
 import { NextPage } from "next/types";
 import { NextProtectedPage } from "../lib/auth";
 import "../styles/globals.css";
+
+import Layout from "../components/Sidebar";
 const muiTheme = createTheme({
     // typography: {
     //     fontFamily: "Inter", //Custom Font
@@ -26,7 +32,6 @@ const muiTheme = createTheme({
     // stepper:  {
     //     iconColor: "red"
     // }
-    
 });
 
 const chakraTheme = extendTheme(
@@ -50,17 +55,19 @@ function App({
             <ChakraProvider resetCSS theme={theme}>
                 <Provider store={store}>
                     <SessionProvider session={session}>
-                        <LocalizationProvider dateAdapter={DateFnsAdapter}>
-                            <AuthProvider>
-                                {Component.requireAuth ? (
-                                    <AuthGuard>
+                        <Layout>
+                            <LocalizationProvider dateAdapter={DateFnsAdapter}>
+                                <AuthProvider>
+                                    {Component.requireAuth ? (
+                                        <AuthGuard>
+                                            <Component {...pageProps} />
+                                        </AuthGuard>
+                                    ) : (
                                         <Component {...pageProps} />
-                                    </AuthGuard>
-                                ) : (
-                                    <Component {...pageProps} />
-                                )}
-                            </AuthProvider>
-                        </LocalizationProvider>
+                                    )}
+                                </AuthProvider>
+                            </LocalizationProvider>
+                        </Layout>
                     </SessionProvider>
                 </Provider>
             </ChakraProvider>

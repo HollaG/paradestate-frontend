@@ -180,7 +180,13 @@ const DefaultLink: React.FC<{
             {/* <Badge colorScheme="red">On {type}</Badge> */}
 
             {/* <Link> */}
-            <Tag size="sm" variant="subtle" colorScheme="red" onClick={onOpen} sx={{cursor: 'pointer'}}>
+            <Tag
+                size="sm"
+                variant="subtle"
+                colorScheme="red"
+                onClick={onOpen}
+                sx={{ cursor: "pointer" }}
+            >
                 {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
 
                 <TagLabel>
@@ -196,11 +202,13 @@ const DefaultLink: React.FC<{
                     <ModalHeader>{capitalizeFirstLetter(type)}</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <Text> {person.rank} {person.name} </Text>
+                        <Text>
+                            {" "}
+                            {person.rank} {person.name}{" "}
+                        </Text>
                         <Text> {person.platoon} </Text>
                         {modalContents}
-                        
-                        </ModalBody>
+                    </ModalBody>
 
                     <ModalFooter>
                         <Button
@@ -225,11 +233,12 @@ const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
 }> = ({ person, selectedDate }) => {
+    console.log("Person accordion item rerender");
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
     );
-        
+
     const icon =
         person.location === "In camp"
             ? IoCheckmarkDoneCircleOutline
@@ -277,14 +286,13 @@ const PersonAccordionItem: React.FC<{
         !buttonStates.ma &&
         !buttonStates.others;
 
-    const defaultExtrasChecked: string[] = useMemo( () => {
-        const temp = []
-        if (person.ma_row_ID ) temp.push("ma");
+    const defaultExtrasChecked: string[] = useMemo(() => {
+        const temp = [];
+        if (person.ma_row_ID) temp.push("ma");
         if (person.others_row_ID) temp.push("others");
         if (person.course_row_ID) temp.push("course");
-        return temp
-    }, [person])
-
+        return temp;
+    }, [person]);
 
     // Override type checking TODO
     const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
@@ -293,7 +301,6 @@ const PersonAccordionItem: React.FC<{
 
     const handleExtras = (checked: string | string[]) => {
         setExtrasChecked(checked);
-     
 
         // Handle setting the button states
         let tempArray: string[] = []; // Convert to array (if one option is selected, then it's a string, not an array)
@@ -362,7 +369,6 @@ const PersonAccordionItem: React.FC<{
 
     // Handle setting the values for saved inputs from redux store
     useEffect(() => {
-       
         setButtonStates((prevState) => ({
             // Only set the button states if dashboardData.[whatever] exists
             off: defaultState.off || dashboardData.off[person.personnel_ID],
@@ -401,14 +407,12 @@ const PersonAccordionItem: React.FC<{
             incamp: prevState.incamp,
         }));
         // reset the extrasChecked state to the intial value
-     
-        
-       
-        const temp = []
+
+        const temp = [];
         if (dashboardData.ma[person.personnel_ID]) temp.push("ma");
         if (dashboardData.others[person.personnel_ID]) temp.push("others");
         if (dashboardData.course[person.personnel_ID]) temp.push("course");
-        setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])])
+        setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])]);
     }, [dashboardData, person, defaultState, defaultExtrasChecked]);
 
     // Function to clear all selectins
@@ -656,10 +660,10 @@ const Dashboard: NextProtectedPage<{
         selectedDate: Date;
     };
 }> = ({ data }) => {
-
+    console.log("main page rerendering");
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
-  
+
     const dispatch = useDispatch();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -677,12 +681,11 @@ const Dashboard: NextProtectedPage<{
         watch,
         formState: { errors },
     } = methods;
-   
+
     const onSubmit = (data: { [key: string]: any }) => {
         if (!Object.keys(data).length) return alert("No data was entered");
         setIsSubmitting(true);
         // dispatch(dashboardActions.updateForm(data));
-
 
         fetch("/api/dashboard/confirm", {
             method: "POST",
@@ -702,51 +705,43 @@ const Dashboard: NextProtectedPage<{
         dispatch(dashboardActions.clearData());
     };
     return (
-        <Layout
-            content={
-                <>
-                    <DashboardHeading step={0}>
-                        <Heading>
-                            {format(selectedDate, "eee d LLL yyyy")}
-                        </Heading>
-                        <Button
-                            colorScheme="teal"
-                            size="xs"
-                            ml={2}
-                            onClick={() => clearSelection()}
-                        >
-                            Clear
-                        </Button>
-                    </DashboardHeading>
+        <>
+            <DashboardHeading step={0}>
+                <Heading>{format(selectedDate, "eee d LLL yyyy")}</Heading>
+                <Button
+                    colorScheme="teal"
+                    size="xs"
+                    ml={2}
+                    onClick={() => clearSelection()}
+                >
+                    Clear
+                </Button>
+            </DashboardHeading>
 
-                    <Accordion defaultIndex={[0]} allowMultiple allowToggle>
-                        <FormProvider {...methods}>
-                            <form onSubmit={methods.handleSubmit(onSubmit)}>
-                                {Object.keys(sortedByPlatoon).map(
-                                    (platoon, index) => (
-                                        <PlatoonAccordianItem
-                                            selectedDate={selectedDate}
-                                            key={index}
-                                            personnel={sortedByPlatoon[platoon]}
-                                            platoon={platoon}
-                                        />
-                                    )
-                                )}
-                                <Center mt={3}>
-                                    <Button
-                                        type="submit"
-                                        colorScheme="teal"
-                                        isLoading={isSubmitting}
-                                    >
-                                        Submit
-                                    </Button>
-                                </Center>
-                            </form>
-                        </FormProvider>
-                    </Accordion>
-                </>
-            }
-        ></Layout>
+            <Accordion defaultIndex={[0]} allowMultiple allowToggle>
+                <FormProvider {...methods}>
+                    <form onSubmit={methods.handleSubmit(onSubmit)}>
+                        {Object.keys(sortedByPlatoon).map((platoon, index) => (
+                            <PlatoonAccordianItem
+                                selectedDate={selectedDate}
+                                key={index}
+                                personnel={sortedByPlatoon[platoon]}
+                                platoon={platoon}
+                            />
+                        ))}
+                        <Center mt={3}>
+                            <Button
+                                type="submit"
+                                colorScheme="teal"
+                                isLoading={isSubmitting}
+                            >
+                                Submit
+                            </Button>
+                        </Center>
+                    </form>
+                </FormProvider>
+            </Accordion>
+        </>
     );
 };
 
@@ -843,7 +838,6 @@ export const getServerSideProps = async (
 
             selectedDate, // TO CHANGE
         };
-
 
         return {
             props: {

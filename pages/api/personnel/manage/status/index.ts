@@ -36,12 +36,12 @@ export default async function handler(
     res: NextApiResponse<StatusData | StatusAddedData | { error: any }>
 ) {
     const session = await getSession({ req });
-    console.log({ session });
+    // console.log({ session });
     if (!session) return res.status(401);
 
     if (req.method === "GET") {
         const selectedDate = req.query.date as string;
-
+        console.log("requested gets")
         try {
             // Select personnel along with `status_row_ID` --> null if not on status, number if on status
             const query =
@@ -82,7 +82,7 @@ export default async function handler(
                 query: query2,
                 values: values2,
             });
-            console.log({ statuses });
+            // console.log({ statuses });
             // Arrange by key
             const statusesById = statuses.reduce<any>((r, a) => {
                 r[a.personnel_ID as any] = [
@@ -167,7 +167,7 @@ export default async function handler(
                 label: status.status_name,
                 value: status.status_ID,
             }));
-            console.log({ personnel });
+            // console.log({ personnel });
 
             // Group by personnelID for easy lookup when we iterate
 

@@ -482,7 +482,7 @@ const Confirm: NextProtectedPage = () => {
             </Accordion>
         </>
     );
-    return <Layout content={confirmedDashboardData ? Confirmed : Verify} />;
+    return confirmedDashboardData ? Confirmed : Verify
 };
 
 Confirm.requireAuth = true

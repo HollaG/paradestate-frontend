@@ -43,6 +43,7 @@ import {
     Stack,
     Tag,
     TagLabel,
+    TagRightIcon,
     Text,
     useDisclosure,
 } from "@chakra-ui/react";
@@ -66,6 +67,8 @@ import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 import statusSlice, { statusActions } from "../../../../store/status-slice";
 import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
+import { IoOpenOutline } from "react-icons/io5";
+import React from "react";
 
 export interface StatusOption extends OptionBase {
     label: string;
@@ -78,7 +81,7 @@ const StatusModal: React.FC<{
     onOpen: () => void;
     onClose: () => void;
 }> = ({ statuses, isOpen, onOpen, onClose }) => {
-    console.log({ statuses }, "----------------------------------");
+    // console.log({ statuses }, "----------------------------------");
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
@@ -118,15 +121,22 @@ const PersonAccordionItem: React.FC<{
     statusesById: { [key: string]: ExtendedStatus[] };
     search: string;
 }> = ({ person, selectedDate, statusesById, search }) => {
+    console.log("Person accordion item rerendering");
     const { register } = useFormContext();
 
     const isVisible =
         search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const modalOpenHandler = (e: any) => { // TODO 
-
-    }
+    const modalOpenHandler = (
+        e: React.MouseEvent<HTMLSpanElement, MouseEvent>
+    ) => {
+        // TODO
+        e.stopPropagation();
+        e.preventDefault();
+        e.nativeEvent.stopImmediatePropagation();
+        onOpen();
+    };
     let tags;
     if (!statusesById[person.personnel_ID]) {
         tags = (
@@ -142,7 +152,7 @@ const PersonAccordionItem: React.FC<{
                     size="sm"
                     variant="subtle"
                     colorScheme="red"
-                    onClick={onOpen}
+                    onClick={modalOpenHandler}
                 >
                     {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
                     <TagLabel>
@@ -154,23 +164,29 @@ const PersonAccordionItem: React.FC<{
                     size="sm"
                     variant="subtle"
                     colorScheme="red"
-                    onClick={onOpen}
+                    onClick={modalOpenHandler}
                 >
                     {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
                     <TagLabel>
                         {" "}
                         + {statusesById[person.personnel_ID].length - 1} more...
                     </TagLabel>
+                    <TagRightIcon as={IoOpenOutline} />
                 </Tag>
             </>
         );
     } else {
         tags = (
-            <Tag size="sm" variant="subtle" colorScheme="red" onClick={onOpen}>
-                {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+            <Tag
+                size="sm"
+                variant="subtle"
+                colorScheme="red"
+                onClick={modalOpenHandler}
+            >
                 <TagLabel>
                     {statusesById[person.personnel_ID][0].status_name}
                 </TagLabel>
+                <TagRightIcon as={IoOpenOutline} />
             </Tag>
         );
     }
@@ -234,6 +250,7 @@ const PersonAccordionItem: React.FC<{
         </>
     );
 };
+const MemoizedPersonAccordionItem = React.memo(PersonAccordionItem);
 
 const PlatoonAccordionItem: React.FC<{
     personnel: ExtendedPersonnel[];
@@ -242,6 +259,7 @@ const PlatoonAccordionItem: React.FC<{
     selectedDate: Date;
     search: string;
 }> = ({ personnel, platoon, selectedDate, statusesById, search }) => {
+    // console.log("Platoon accordion item rerendering");
     return (
         <AccordionItem>
             <Text>
@@ -254,7 +272,7 @@ const PlatoonAccordionItem: React.FC<{
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
                 {personnel.map((person, index) => (
-                    <PersonAccordionItem
+                    <MemoizedPersonAccordionItem
                         selectedDate={selectedDate}
                         key={index}
                         person={person}
@@ -266,135 +284,28 @@ const PlatoonAccordionItem: React.FC<{
         </AccordionItem>
     );
 };
-
-const Confirmed: React.FC<{
-    isPerm: boolean;
-    sortedByPlatoon: { [key: string]: any };
-    statusDate: [string, string];
-    statuses: StatusOption[];
-}> = ({ isPerm, sortedByPlatoon, statusDate, statuses }) => {
-    const [secondsLeft, setSecondsLeft] = useState(10);
-    const router = useRouter();
-    useEffect(() => {
-        if (secondsLeft <= 0) {
-            // router.push("/personnel/manage/status");
-            return;
-        }
-        const timeout = setTimeout(() => {
-            setSecondsLeft((prevSecs) => prevSecs - 1);
-        }, 1000);
-        return () => clearTimeout(timeout);
-    }, [secondsLeft, setSecondsLeft, router]);
-    return (
-        <>
-            <StatusHeading step={1}>
-                <Heading> Statuses added </Heading>
-                <Link href="/" passHref>
-                    <Button
-                        colorScheme="teal"
-                        size="xs"
-                        ml={2}
-                        onClick={() => {}}
-                    >
-                        Back to home ({secondsLeft}s)
-                    </Button>
-                </Link>
-            </StatusHeading>
-            <Box textAlign="center">
-                <Text>Successfully added</Text>
-
-                {statuses.map((status, index) => (
-                    <Tag
-                        key={index}
-                        size="sm"
-                        variant="subtle"
-                        colorScheme="red"
-                    >
-                        <TagLabel>{status.label}</TagLabel>
-                    </Tag>
-                ))}
-
-                <Text> to the below personnel for </Text>
-
-                <Text>
-                    {" "}
-                    {statusDate
-                        .map((date) =>
-                            format(
-                                parse(
-                                    date,
-                                    Assignments.mysqldateformat,
-                                    new Date()
-                                ),
-                                "eee d LLL yyyy" // TODO
-                            )
-                        )
-                        .join(" to ")}
-                </Text>
-            </Box>
-            <Accordion
-                defaultIndex={Object.keys(sortedByPlatoon).map(
-                    (_, index) => index
-                )}
-                allowMultiple
-                allowToggle
-            >
-                {Object.keys(sortedByPlatoon).map((platoon, index1) => (
-                    <AccordionItem key={index1}>
-                        <Text>
-                            <AccordionButton
-                                _expanded={{
-                                    bg: "gray.200",
-                                }}
-                            >
-                                <Box flex={1} textAlign="left">
-                                    {platoon} ({sortedByPlatoon[platoon].length}
-                                    )
-                                </Box>
-                            </AccordionButton>
-                        </Text>
-                        <AccordionPanel
-                            borderColor="gray.200"
-                            borderWidth={2}
-                            pb={4}
-                        >
-                            {sortedByPlatoon[platoon].map(
-                                (person: Personnel, index2: number) => (
-                                    <Box key={index2}>
-                                        <Text fontWeight="semibold">
-                                            {person.rank} {person.name}
-                                        </Text>
-
-                                        <Text>{person.platoon}</Text>
-                                    </Box>
-                                )
-                            )}
-                        </AccordionPanel>
-                    </AccordionItem>
-                ))}
-            </Accordion>
-        </>
-    );
-};
+const MemoizedPlatoonAccordionItem = React.memo(PlatoonAccordionItem)
 
 const StatusManager: NextProtectedPage<{
     // selectedDate: Date;
     // session: Session;
 }> = ({}) => {
+    // console.log("Rerendering statusmanager page");
     const { data: session } = useSession();
     let selectedDate = new Date();
     let formatted = format(selectedDate, Assignments.mysqldateformat);
-    const { data, error } = useSWRImmutable<StatusData>(
+    const { data, error } = useSWR<StatusData>(
         `/api/personnel/manage/status?date=${formatted}`,
-        fetcher
+        fetcher,
+        
     );
 
     const methods = useForm({ shouldUnregister: true });
 
-    console.log({ data });
-    console.log("rerendered");
+    // console.log({ data });
+    // console.log("rerendered");
     const [search, setSearch] = useState("");
-    console.log(search);
+    console.log({ search });
 
     const defaultIndex = useMemo(() => [0], []);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
@@ -424,7 +335,7 @@ const StatusManager: NextProtectedPage<{
             "/api/personnel/manage/status",
             data
         );
-        console.log({ responseData }, "--------------------------------");
+        // console.log({ responseData }, "--------------------------------");
         if (responseData.success) {
             // setSuccess(true);
             // setResponseData(responseData.data);
@@ -464,7 +375,7 @@ const StatusManager: NextProtectedPage<{
                         >
                             {Object.keys(data.sortedByPlatoon).map(
                                 (platoon, index) => (
-                                    <PlatoonAccordionItem
+                                    <MemoizedPlatoonAccordionItem
                                         selectedDate={selectedDate}
                                         key={index}
                                         personnel={
@@ -485,7 +396,7 @@ const StatusManager: NextProtectedPage<{
             )}
         </>
     );
-    return <Layout content={Content} session={session}></Layout>;
+    return Content;
 };
 
 // export const getServerSideProps = async (

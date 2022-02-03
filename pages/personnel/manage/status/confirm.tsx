@@ -44,93 +44,93 @@ const Confirmed: NextProtectedPage = () => {
         return () => clearTimeout(timeout);
     }, [secondsLeft, setSecondsLeft, router]);
     return (
-        <Layout
-            content={
-                <>
-                    <StatusHeading step={1}>
-                        <Heading> Statuses added </Heading>
-                        <Link href="/" passHref>
-                            <Button
-                                colorScheme="teal"
-                                size="xs"
-                                ml={2}
-                                onClick={() => {}}
-                            >
-                                Back to home ({secondsLeft}s)
-                            </Button>
-                        </Link>
-                    </StatusHeading>
-                    <Box textAlign="center">
-                        <Text>Successfully added</Text>
-
-                        {statuses.map((status, index) => (
-                            <Tag key={index} size="sm" variant="subtle" colorScheme="red">
-                                <TagLabel>{status.label}</TagLabel>
-                            </Tag>
-                        ))}
-
-                        <Text> to the below personnel for </Text>
-
-                        <Text>
-                            
-                            {statusDate
-                                .map((date) =>
-                                    format(
-                                        parse(
-                                            date,
-                                            Assignments.mysqldateformat,
-                                            new Date()
-                                        ),
-                                        "eee d LLL yyyy" // TODO
-                                    )
-                                )
-                                .join(" to ")}
-                        </Text>
-                    </Box>
-                    <Accordion
-                        defaultIndex={Object.keys(sortedByPlatoon).map(
-                            (_, index) => index
-                        )}
-                        allowMultiple
-                        allowToggle
+        <>
+            <StatusHeading step={1}>
+                <Heading> Statuses added </Heading>
+                <Link href="/" passHref>
+                    <Button
+                        colorScheme="teal"
+                        size="xs"
+                        ml={2}
+                        onClick={() => {}}
                     >
-                        {Object.keys(sortedByPlatoon).map((platoon, index1) => (
-                            <AccordionItem key={index1}>
-                                <Text>
-                                    <AccordionButton
-                                        _expanded={{
-                                            bg: "gray.200",
-                                        }}
-                                    >
-                                        <Box flex={1} textAlign="left">
-                                            {platoon} (
-                                            {sortedByPlatoon[platoon].length})
-                                        </Box>
-                                    </AccordionButton>
-                                </Text>
-                                <AccordionPanel
-                                    borderColor="gray.200"
-                                    borderWidth={2}
-                                    pb={4}
-                                >
-                                    {sortedByPlatoon[platoon].map(
-                                        (person: Personnel, index2: number) => (
-                                            <Box key={index2}>
-                                                <Text fontWeight="semibold">
-                                                    {person.rank} {person.name}
-                                                </Text>
+                        Back to home ({secondsLeft}s)
+                    </Button>
+                </Link>
+            </StatusHeading>
+            <Box textAlign="center">
+                <Text>Successfully added</Text>
 
-                                                <Text>{person.platoon}</Text>
-                                            </Box>
-                                        )
-                                    )}
-                                </AccordionPanel>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                </>
-            }
-        />
+                {statuses.map((status, index) => (
+                    <Tag
+                        key={index}
+                        size="sm"
+                        variant="subtle"
+                        colorScheme="red"
+                    >
+                        <TagLabel>{status.label}</TagLabel>
+                    </Tag>
+                ))}
+
+                <Text> to the below personnel for </Text>
+
+                <Text>
+                    {statusDate
+                        .map((date) =>
+                            format(
+                                parse(
+                                    date,
+                                    Assignments.mysqldateformat,
+                                    new Date()
+                                ),
+                                "eee d LLL yyyy" // TODO
+                            )
+                        )
+                        .join(" to ")}
+                </Text>
+            </Box>
+            <Accordion
+                defaultIndex={Object.keys(sortedByPlatoon).map(
+                    (_, index) => index
+                )}
+                allowMultiple
+                allowToggle
+            >
+                {Object.keys(sortedByPlatoon).map((platoon, index1) => (
+                    <AccordionItem key={index1}>
+                        <Text>
+                            <AccordionButton
+                                _expanded={{
+                                    bg: "gray.200",
+                                }}
+                            >
+                                <Box flex={1} textAlign="left">
+                                    {platoon} ({sortedByPlatoon[platoon].length}
+                                    )
+                                </Box>
+                            </AccordionButton>
+                        </Text>
+                        <AccordionPanel
+                            borderColor="gray.200"
+                            borderWidth={2}
+                            pb={4}
+                        >
+                            {sortedByPlatoon[platoon].map(
+                                (person: Personnel, index2: number) => (
+                                    <Box key={index2}>
+                                        <Text fontWeight="semibold">
+                                            {person.rank} {person.name}
+                                        </Text>
+
+                                        <Text>{person.platoon}</Text>
+                                    </Box>
+                                )
+                            )}
+                        </AccordionPanel>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+        </>
     );
 };
 Confirmed.requireAuth = true;
