@@ -1,0 +1,194 @@
+extends ../backbone
+
+block content
+	.container
+		
+
+		.row#status-container
+			.card.p-3
+				.card-body.p-3
+					.d-flex.flex-wrap.align-items-center
+						h3#label.me-auto.my-0 Loading...
+						.input-group.dateinput-with-icon-sides.p-0
+							button.btn-sm.btn.btn-outline-secondary.generate(type='button' onclick="changeDate('backward')") <
+							//- span.input-group-text
+							//- 	i.fas.fa-calendar
+							input#select-date.form-control.text-center.generate(type='text' value=selDate)
+							button.btn-sm.btn.btn-outline-secondary.generate(type='button' onclick="changeDate('forward')") >
+					
+					.d-flex.mt-2.flex-wrap-reverse.align-items-center
+						p.fw-light.me-auto.my-0#generate-timing Loading...
+						.div
+							button.btn.btn-primary(onclick="CopyToClipboard('contents')") Copy
+							button.btn.btn-primary.ms-2(onclick="share('contents')") Share
+
+						
+					.row
+						.container#contents.p-3.no-text-margins
+
+	script.
+
+		var assignments = !{stringify(assignments)}
+		var company = !{stringify(user.company)} // is this a security issue?
+
+		const urlParams = new URLSearchParams(window.location.search);
+
+		
+
+		$(document).ready(function() {
+			// On load, generate the status list for TODAY.
+			$("#select-date").bootstrapMaterialDatePicker(assignments.datepickers.single_no_time)
+			$("#select-date").change(generate)
+
+			var curDict;
+			function generate() {
+				changing = true
+				// Disable the input and buttons
+				$(".generate").prop("disabled", true)
+				//- $('.generate').addClass('disabled')
+
+
+				//- $("#status-container").collapse("hide")
+
+				//- var platoon = select.selected() // PL1, PL2, HQ, Company
+				var date = $("#select-date").val()
+
+				$.get("/deliverables/status-list/generate", {
+					date
+				}, result => {
+					curDict = result.dict
+
+					// delete the old stuff
+					$("#contents").empty()
+					$("#contents").append(result.string) // Update container
+					$("#label").html(`${company} Status List`) // update header
+					$("#generate-timing").html(`Generated ${moment().format(assignments.datetimeformat)}`) // update timing generated
+
+					setTimeout(function() { 
+						$(".generate").prop('disabled', false)
+						changing = false
+					}, 2000)
+					//- $("#label").html(`Status List`)
+					//- $("#status-container").collapse("show")
+					// If user selected the autogen option
+			
+					const sharable = urlParams.get('direct_share');
+					const target = urlParams.get('target')
+					if (sharable == "true") {
+						if (target == "whatsapp") {
+							const text = getText('contents');
+							const url = 'whatsapp://send?text=' + encodeURI(text)
+							console.log(url)
+							location.href = url
+						}
+					}
+				})
+			}
+
+
+			let changing = false
+			changeDate = function(type) {
+				if (changing) return 
+				if (type == 'backward') {
+					$("#select-date").val(
+						moment($("#select-date").val(), assignments.dateformat).subtract('1', 'days').format(assignments.dateformat)
+					).change() // trigger
+				} else if (type == 'forward') {
+					$("#select-date").val(
+						moment($("#select-date").val(), assignments.dateformat).add('1', 'days').format(assignments.dateformat)
+					).change() // trigger
+					
+				}
+				
+			}
+			
+
+			generate()
+
+		})
+		async function CopyToClipboard(id) {
+			
+			await copyTextToClipboard(getText(id))
+			return
+
+		}
+		function getText(id) {
+			let e = document.getElementById(id)
+
+			let textArr = []
+			e.children.forEach(child => {
+				if (child.nodeName == "BR") textArr.push('') // Push empty string so that there is an extra \n when joining here. Don't push \n as it will result in triple \n
+				else textArr.push(child.innerText)
+			})
+			console.log(textArr)
+			return textArr.join('\n')
+		}
+		function fallbackCopyTextToClipboard(text) {
+			var textArea = document.createElement("textarea");
+			textArea.value = text;
+
+			// Avoid scrolling to bottom
+			textArea.style.top = "0";
+			textArea.style.left = "0";
+			textArea.style.position = "fixed";
+
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log('Fallback: Copying text command was ' + msg);
+				swal("Copied! (OLD)")
+
+			} catch (err) {
+				console.error('Fallback: Oops, unable to copy', err);
+			}
+
+			document.body.removeChild(textArea);
+		}
+		async function copyTextToClipboard(text) {
+			if (!navigator.clipboard) {
+				fallbackCopyTextToClipboard(text);
+				return;
+			}
+			try {
+				let res = await navigator.clipboard.writeText(text)
+				swal("Copied! (ASYNC)")
+				console.log('Async: Copying to clipboard was successful!');
+				return true
+			} catch (e) {
+				console.error('Async: Could not copy text: ', e);
+				return false
+			}
+
+		}
+
+		async function share(id) {
+			let e = document.getElementById(id)
+
+			let textArr = []
+			e.children.forEach(child => {
+				if (child.nodeName == "BR") textArr.push('') // Push empty string so that there is an extra \n when joining here. Don't push \n as it will result in triple \n
+				else textArr.push(child.innerText)
+			})
+			console.log(textArr)
+
+			let text = textArr.join("\n")
+			let title = $(".title").text().replaceAll("*", "")
+			//- let url = document.location.href
+			try { 
+				if (navigator.share) {
+					await navigator.share({
+						title,
+						//- url,
+						text
+					})
+				} else {
+					return swal("Sorry, your browser does not support direct share. Please copy-and-paste manually.")
+				}
+			} catch (e) {
+				//- swal("There was an unknown error sharing: "+ e)
+			}
+		}

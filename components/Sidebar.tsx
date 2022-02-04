@@ -105,7 +105,7 @@ const LinkItems: (
         icon: IoMailOutline,
         url: "/deliverables/parade-state",
     },
-    // { name: "Status list", icon: IoMailOutline, url: "/" },
+    { name: "Status list", icon: IoMailOutline, url: "/deliverables/status-list" },
     // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
     // {
     //     name: "Personnel",
@@ -250,6 +250,7 @@ const Sidebar = (props: any) => {
         };
         w?: string;
         borderRight?: string;
+        onClose?: () => void
     }> = (props) => (
         <Box
             as="nav"
@@ -311,6 +312,7 @@ const Sidebar = (props: any) => {
                                             pl="12"
                                             py="2"
                                             icon={IoArrowForward}
+                                            onClick={props.onClose || null}
                                         >
                                             <NextLink href={child.url} passHref>
                                                 <Link>{child.name}</Link>
@@ -322,7 +324,7 @@ const Sidebar = (props: any) => {
                         );
                     } else
                         return (
-                            <NavItem key={index} icon={link.icon}>
+                            <NavItem key={index} icon={link.icon} onClick={props.onClose || null}>
                                 <NextLink href={link.url || "/"} passHref>
                                     <Link>{link.name}</Link>
                                 </NextLink>
@@ -349,7 +351,7 @@ const Sidebar = (props: any) => {
             >
                 <DrawerOverlay />
                 <DrawerContent>
-                    <SidebarContent w="full" borderRight="none" />
+                    <SidebarContent w="full" borderRight="none" onClose={sidebar.onClose}/>
                 </DrawerContent>
             </Drawer>
             <Box ml={{ base: 0, md: 60 }} transition=".3s ease">

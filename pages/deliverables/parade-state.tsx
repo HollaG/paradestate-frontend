@@ -240,4 +240,5 @@ const ParadeState: NextProtectedPage = () => {
         </Stack>
     );
 };
+ParadeState.requireAuth = true
 export default ParadeState;
