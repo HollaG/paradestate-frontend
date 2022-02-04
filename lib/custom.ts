@@ -1,6 +1,14 @@
-import { differenceInBusinessDays, format } from "date-fns";
+import {
+    addDays,
+    differenceInBusinessDays,
+    format,
+    isAfter,
+    isBefore,
+    isSameDay,
+} from "date-fns";
 
 import Assignments from "../config/assignments.json";
+import { ExtendedStatus } from "../types/types";
 export const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -134,6 +142,164 @@ const getHoursBetweenStartAndEndTimes = (
         hours -= 0;
     }
     return hours;
+};
+
+export const changeTo2Digit = (input: number) => {
+    if (Number(input) < 10 && Number(input) > -1) {
+        return "0" + input.toString();
+    } else {
+        return input;
+    }
+};
+export const replaceSlash = (string: string) => {
+    return string.replace(/\//gm, "");
+};
+interface TempAttc {
+    personnel_ID: string;
+    start: Date;
+    end: Date;
+    [key: string]: any;
+}
+export const attcFilterer = (attc: TempAttc[]) => {
+    let filtered: TempAttc[] = [];
+    let dupes: TempAttc[] = [];
+    attc.forEach((attc) => {
+        // console.log(filtered)
+        if (
+            filtered.some(
+                (addedAttc) =>
+                    addedAttc.personnel_ID === attc.personnel_ID &&
+                    isSameDay(addedAttc.start, attc.start) &&
+                    isSameDay(addedAttc.end, attc.end)
+            )
+        ) {
+            dupes.push(attc);
+        } else {
+            filtered.push(attc);
+        }
+    });
+
+    return [filtered, dupes];
+};
+
+interface OutOfOffices {
+    start: Date;
+    end: Date;
+    personnel_ID: string;
+    start_time: "AM" | "PM";
+    end_time: "AM" | "PM";
+    [key: string]: any;
+}
+export const filterer = (outOfOffices: OutOfOffices[]) => {
+    let filtered: OutOfOffices[] = [];
+    let dupes: OutOfOffices[] = [];
+    outOfOffices.forEach((outOfOffice) => {
+        // console.log(filtered)
+        if (
+            filtered.some(
+                (addedOutOfOffice) =>
+                    addedOutOfOffice.personnel_ID ===
+                        outOfOffice.personnel_ID &&
+                    isSameDay(addedOutOfOffice.start, outOfOffice.start) &&
+                    isSameDay(addedOutOfOffice.end, outOfOffice.end) &&
+                    addedOutOfOffice.start_time === outOfOffice.start_time &&
+                    addedOutOfOffice.end_time === outOfOffice.end_time
+            )
+        ) {
+            dupes.push(outOfOffice);
+        } else {
+            filtered.push(outOfOffice);
+        }
+    });
+    return [filtered, dupes];
+};
+
+export const sortActiveInactiveStatus = (
+    statuses: ExtendedStatus[],
+    date: Date
+) => {
+    return new Promise(async (resolve, reject) => {
+        var active: ExtendedStatus[] = [];
+        var inactive: ExtendedStatus[] = [];
+        var duplicates: ExtendedStatus[] = [];
+
+        var timeSel = date;
+
+        try {
+            for (var i = 0; i < statuses.length; i++) {
+                var status = statuses[i];
+                var p_ID = status.personnel_ID;
+                // if status type is 'perm', is always active
+                if (status.type == "perm") {
+                    active.push(status);
+                } else if (
+                    (isSameDay(new Date(status.start), timeSel) ||
+                        isBefore(new Date(status.start), timeSel)) &&
+                    (isSameDay(new Date(status.end), timeSel) ||
+                        isAfter(new Date(status.end), timeSel))
+                    // moment(status.end, assignments.dateformat).isSameOrAfter(
+                    //     timeSel
+                    // ) &&
+                    // moment(status.start, assignments.dateformat).isSameOrBefore(
+                    //     timeSel
+                    // )
+                ) {
+                    // These are all active statuses whos START is before today and END is after today
+
+                    // See if the active array already consists of a status which is the same type, same start, same end
+                    if (
+                        active.some(
+                            (oldStatus) =>
+                                isSameDay(
+                                    new Date(status.start),
+                                    new Date(oldStatus.start)
+                                ) &&
+                                isSameDay(
+                                    new Date(status.end),
+                                    new Date(oldStatus.end)
+                                ) &&
+                                oldStatus.status_ID === status.status_ID &&
+                                oldStatus.personnel_ID === status.personnel_ID
+                        )
+                    ) {
+                        duplicates.push(status);
+                    } else {
+                        active.push(status);
+                    }
+                } else {
+                    // end date is earlier than now
+                    if (
+                        inactive.some(
+                            (oldStatus) =>
+                                isSameDay(
+                                    new Date(status.start),
+                                    new Date(oldStatus.start)
+                                ) &&
+                                isSameDay(
+                                    new Date(status.end),
+                                    new Date(oldStatus.end)
+                                ) &&
+                                oldStatus.status_ID === status.status_ID &&
+                                oldStatus.personnel_ID === status.personnel_ID
+                        )
+                    ) {
+                        duplicates.push(status);
+                    } else {
+                        inactive.push(status);
+                    }
+                }
+            }
+            resolve([active, inactive, duplicates]);
+        } catch (e) {
+            reject(e);
+        }
+    });
+};
+
+export const changeToNextDayIfPastNoon = (date: Date) => {
+    if (format(date, "aaa") === "pm")
+        date = addDays(date, 1);
+    return date
 };
 
 // const testTimes: { startTime: "AM" | "PM"; endTime: "AM" | "PM" }[] = [

@@ -121,7 +121,7 @@ const PersonAccordionItem: React.FC<{
     statusesById: { [key: string]: ExtendedStatus[] };
     search: string;
 }> = ({ person, selectedDate, statusesById, search }) => {
-    console.log("Person accordion item rerendering");
+    // console.log("Person accordion item rerendering");
     const { register } = useFormContext();
 
     const isVisible =
@@ -298,8 +298,7 @@ const StatusManager: NextProtectedPage<{
         `/api/personnel/manage/status?date=${formatted}`,
         fetcher,
         
-    );
-
+    );   
     const methods = useForm({ shouldUnregister: true });
 
     // console.log({ data });

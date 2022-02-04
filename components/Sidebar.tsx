@@ -100,11 +100,11 @@ const LinkItems: (
         url: "/personnel/manage/status",
     },
 
-    // {
-    //     name: "Parade state",
-    //     icon: IoMailOutline,
-    //     url: "/deliverables/parade-state",
-    // },
+    {
+        name: "Parade state",
+        icon: IoMailOutline,
+        url: "/deliverables/parade-state",
+    },
     // { name: "Status list", icon: IoMailOutline, url: "/" },
     // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
     // {

@@ -86,6 +86,8 @@ import {
     AddedOthers,
 } from "../components/Dashboard/AddedEvent";
 import { capitalizeFirstLetter, onClickUrl } from "../lib/custom";
+import useSWRImmutable from "swr/immutable";
+import fetcher from "../lib/fetcher";
 
 const DefaultLink: React.FC<{
     url: string;
@@ -233,7 +235,7 @@ const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
 }> = ({ person, selectedDate }) => {
-    console.log("Person accordion item rerender");
+    // console.log("Person accordion item rerender");
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
@@ -645,22 +647,14 @@ const PlatoonAccordianItem: React.FC<{
     );
 };
 
-const Dashboard: NextProtectedPage<{
-    data?: {
-        sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
-        // personnelTally: {
-        //     [key: string]: any;
-        //     total: number;
-        //     incamp: number;
-        // };
-        // personnelNotInCamp: {
-        //     personnel_ID: number;
-        //     type: "off" | "leave" | "ma" | "attc" | "course" | "others";
-        // }[];
-        selectedDate: Date;
-    };
-}> = ({ data }) => {
+const Dashboard: NextProtectedPage = () => {
     console.log("main page rerendering");
+
+    const { data, error } = useSWRImmutable<{
+        sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
+        selectedDate: string;
+    }>("/api/dashboard", fetcher);
+    
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
 
@@ -669,11 +663,11 @@ const Dashboard: NextProtectedPage<{
 
     const router = useRouter();
     if (!data) {
-        return <h1> erorr</h1>;
+        return <>Loading data...</>;
     }
 
-    const { sortedByPlatoon, selectedDate } = data;
-
+    const { sortedByPlatoon, selectedDate: selectedDateString } = data;
+    const selectedDate = new Date(selectedDateString)
     const {
         register,
         handleSubmit,
@@ -745,112 +739,22 @@ const Dashboard: NextProtectedPage<{
     );
 };
 
-export const getServerSideProps = async (
-    context: GetServerSidePropsContext
-) => {
-    const session = await getSession(context);
+// export const getServerSideProps = async (
+//     context: GetServerSidePropsContext
+// ) => {
+//     const session = await getSession(context);
 
-    if (!session || !session.user)
-        return {
-            redirect: {
-                destination: "/login",
-                permanent: false,
-            },
-        };
+//     if (!session || !session.user)
+//         return {
+//             redirect: {
+//                 destination: "/login",
+//                 permanent: false,
+//             },
+//         };
 
-    let selectedDate = new Date();
-    let formattedDate = format(selectedDate, Assignments.mysqldateformat);
+//     let selectedDate = new Date();
 
-    if (format(selectedDate, "aaa") === "pm")
-        selectedDate = addDays(selectedDate, 1);
-
-    const opts = {
-        unit: session.user.unit,
-        company: session.user.company,
-        selDate: selectedDate,
-    };
-
-    try {
-        const query = queryBuilder(
-            "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE unit = :unit AND company = :company AND DATE(ord) >= DATE(:selDate) AND DATE(post_in) <= DATE(:selDate) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
-            opts
-        );
-        // console.log(query);
-        const personnel: ExtendedPersonnel[] = await executeQuery({
-            query: query.sql,
-            values: query.values,
-        });
-
-        const objectified = [...personnel];
-
-        if (!objectified) return { props: {} };
-
-        const hasEvent: any[] = [];
-        const noEvent: any[] = [];
-        objectified.forEach((x) => {
-            const strArr = [];
-            let hasAnEvent = false;
-            if (x.attc_row_ID) strArr.push("On AttC");
-            if (x.course_row_ID) strArr.push("On course");
-            if (x.leave_row_ID) strArr.push("On leave");
-            if (x.off_row_ID) strArr.push("On off");
-            if (x.ma_row_ID) {
-                if (x.ma_in_camp) {
-                    strArr.push("On MA (In camp)");
-                } else {
-                    strArr.push("On MA");
-                }
-            }
-            if (x.others_row_ID) {
-                if (x.others_in_camp) {
-                    strArr.push("Others (In camp)");
-                } else {
-                    strArr.push("Others");
-                }
-            }
-
-            if (!strArr.length) {
-                strArr.push("In camp");
-                hasAnEvent = true;
-            }
-
-            const str = strArr.join(", ");
-            x.location = str;
-
-            // Remove null values
-            const cleansed = Object.fromEntries(
-                Object.entries(x).filter(([_, v]) => v != null)
-            ) as ExtendedPersonnel;
-            if (hasAnEvent) hasEvent.push(cleansed);
-            else noEvent.push(cleansed);
-        });
-
-        const edited = [...hasEvent, ...noEvent];
-
-        const sortedByPlatoon: { [key: string]: ExtendedPersonnel } =
-            edited.reduce((r: any, a) => {
-                r[a.platoon] = [...(r[a.platoon] || []), a];
-                return r;
-            }, {});
-
-        const data = {
-            sortedByPlatoon,
-
-            selectedDate, // TO CHANGE
-        };
-
-        return {
-            props: {
-                data,
-            },
-        };
-    } catch (e) {
-        console.log(e);
-        return {
-            props: { error: JSON.stringify(e) },
-        };
-    }
-};
+// };
 
 Dashboard.requireAuth = true;
 

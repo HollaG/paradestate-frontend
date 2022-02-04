@@ -65,4 +65,12 @@ export interface ExtendedStatus extends Status {
     start: Date|string;
     end: Date|string;
     type: "perm" | ""
+    [key:string]: any
+}
+
+export interface GenericEvent { 
+    row_ID: string;
+    start: Date
+    end: Date
+    [key:string]: any
 }
