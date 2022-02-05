@@ -27,21 +27,31 @@ import { useState, useEffect } from "react";
 import { StatusOption } from ".";
 import StatusHeading from "../../../../components/Personnel/Status/Heading";
 import { NextProtectedPage } from "../../../../lib/auth";
-import { Personnel } from "../../../../types/database";
+import { ExtendedPersonnel, Personnel } from "../../../../types/database";
 import Assignments from "../../../../config/assignments.json";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState, StatusState } from "../../../../types/types";
+import {
+    PersonnelMap,
+    RootState,
+    SelectedPersonStatuses,
+    StatusState,
+} from "../../../../types/types";
 import { statusActions } from "../../../../store/status-slice";
 
 import Layout from "../../../../components/Sidebar";
 
 import { IoTrash } from "react-icons/io5";
 import { sendPOST } from "../../../../lib/fetcher";
+import StatusInputs from "../../../../components/Personnel/Status/StatusInputs";
+import { FormProvider, useForm } from "react-hook-form";
+import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
 
 const PersonAccordionItem: React.FC<{
     person: Personnel;
     confirmed: boolean;
-}> = ({ person, confirmed }) => {
+    selectedStatuses: SelectedPersonStatuses;
+    statuses: StatusOption[];
+}> = ({ person, confirmed, selectedStatuses, statuses }) => {
     const dispatch = useDispatch();
     const deleteEntry = (personnel_ID: number) => {
         // setIsOpen(false);
@@ -52,11 +62,11 @@ const PersonAccordionItem: React.FC<{
     };
 
     // const [isOpen, setIsOpen] = useState(true);
-
+    console.log({ selectedStatuses });
     return (
         // <Collapse in={isOpen} animateOpacity> // TODO make animateion
         <>
-            <Flex alignItems="center" my={3}>
+            <Flex alignItems="center">
                 <Box flexGrow="1">
                     <Text fontWeight="semibold">
                         {person.rank} {person.name}
@@ -64,6 +74,7 @@ const PersonAccordionItem: React.FC<{
 
                     <Text>{person.platoon}</Text>
                 </Box>
+
                 {!confirmed && (
                     <IconButton
                         colorScheme="red"
@@ -74,6 +85,44 @@ const PersonAccordionItem: React.FC<{
                     />
                 )}
             </Flex>
+            <Box p={2}>
+                {Object.keys(selectedStatuses).map((num, index) => {
+                    const statusGroup = selectedStatuses[num];
+                    if (!confirmed)
+                        return (
+                            <StatusInputs
+                                selectedDate={
+                                    statusGroup.date.map(
+                                        (dateStr) => new Date(dateStr)
+                                    ) as [Date, Date]
+                                }
+                                formattedStatusList={statuses}
+                                personnel_ID={person.personnel_ID}
+                                num={Number(num)}
+                                key={index}
+                                defaultStatuses={statusGroup.selected}
+                                defaultPerm={statusGroup.perm}
+                            />
+                        );
+                    else
+                        return statusGroup.selected.map((status, index) => (
+                            <Box key={index} my={3}>
+                                <StatusEntry
+                                    status={{
+                                        start: statusGroup.date[0],
+                                        end: statusGroup.date[1],
+                                        type: statusGroup.perm ? "perm" : "",
+                                        personnel_ID:
+                                            person.personnel_ID.toString(),
+                                        status_ID: status.value,
+                                        status_name: status.label,
+                                    }}
+                                />
+                                <Divider />
+                            </Box>
+                        ));
+                })}{" "}
+            </Box>
             <Divider />
         </>
         // </Collapse>
@@ -82,8 +131,10 @@ const PersonAccordionItem: React.FC<{
 
 const AccordionWrapper: React.FC<{
     sortedByPlatoon: { [key: string]: Personnel[] };
+    personnelMap: PersonnelMap;
+    statuses?: StatusOption[];
     confirmed?: boolean;
-}> = ({ sortedByPlatoon, confirmed = false }) => (
+}> = ({ sortedByPlatoon, confirmed = false, personnelMap, statuses = [] }) => (
     <Accordion
         defaultIndex={Object.keys(sortedByPlatoon).map((_, index) => index)}
         allowMultiple
@@ -106,9 +157,13 @@ const AccordionWrapper: React.FC<{
                     {sortedByPlatoon[platoon].map(
                         (person: Personnel, index2: number) => (
                             <PersonAccordionItem
-                            key={index2}
+                                key={index2}
                                 person={person}
                                 confirmed={confirmed}
+                                selectedStatuses={
+                                    personnelMap[person.personnel_ID]
+                                }
+                                statuses={statuses}
                             />
                         )
                     )}
@@ -119,9 +174,13 @@ const AccordionWrapper: React.FC<{
 );
 
 const Confirmed: NextProtectedPage = () => {
+    const methods = useForm();
     const dispatch = useDispatch();
     const data = useSelector((state: RootState) => state.status);
-    const { isPerm, sortedByPlatoon, statusDate, statuses } = data;
+    // const { isPerm, sortedByPlatoon, statusDate, statuses } = data;
+
+    const { personnelMap, sortedByPlatoon, statuses } = data;
+
     const [secondsLeft, setSecondsLeft] = useState(10);
     const [success, setSuccess] = useState(false);
     const router = useRouter();
@@ -141,29 +200,37 @@ const Confirmed: NextProtectedPage = () => {
 
     if (
         !success &&
-        (!Object.keys(data.sortedByPlatoon).length || !data.statuses.length)
+        (!Object.keys(data.sortedByPlatoon).length ||
+            !Object.keys(data.personnelMap).length)
     )
         // only push if success is false (when success is true, we clear the state, but we don't want to immediately redirect)
         router.push("/personnel/manage/status");
 
     const deleteSelectedStatusHandler = (value: string) => {
-        dispatch(statusActions.deleteSelectedStatus(value));
+        // dispatch(statusActions.deleteSelectedStatus(value));
     };
 
-    const [confirmedStatusData, setConfirmedStatusData] =
-        useState<StatusState>();
-    const submit = async () => {
+    const [confirmedStatusData, setConfirmedStatusData] = useState<{
+        sortedByPlatoon: {
+            [key: string]: ExtendedPersonnel[];
+        };
+        personnelMap: PersonnelMap;
+    }>();
+    const submit = async (data: any) => {
+        console.log({ data });
+
         const responseData = await sendPOST(
             "/api/personnel/manage/status/submit",
             data
         );
         console.log({ responseData });
+
         if (responseData.success) {
             setConfirmedStatusData(responseData.data);
             setSuccess(true);
             dispatch(statusActions.clearData());
-        } else { 
-            alert(responseData.error)
+        } else {
+            alert(responseData.error);
         }
     };
 
@@ -182,40 +249,10 @@ const Confirmed: NextProtectedPage = () => {
                     </Button>
                 </Link>
             </StatusHeading>
-            <Box textAlign="center">
-                <Center>
-                    {confirmedStatusData.isPerm ? (
-                        <Text fontWeight="semibold"> Permanent status </Text>
-                    ) : (
-                        <>
-                            <Text fontWeight="semibold">
-                                {confirmedStatusData.statusDate[0]}{" "}
-                            </Text>
-                            <Text mx={2}> to </Text>
-                            <Text fontWeight="semibold">
-                                {confirmedStatusData.statusDate[1]}{" "}
-                            </Text>
-                        </>
-                    )}
-                </Center>
-                <Center>
-                    <Wrap mt={2}>
-                        {confirmedStatusData.statuses.map((status, index) => (
-                            <WrapItem key={index}>
-                                <Tag
-                                    size="sm"
-                                    variant="subtle"
-                                    colorScheme="red"
-                                >
-                                    <TagLabel>{status.label}</TagLabel>
-                                </Tag>
-                            </WrapItem>
-                        ))}
-                    </Wrap>
-                </Center>
-            </Box>
+
             <AccordionWrapper
                 sortedByPlatoon={confirmedStatusData.sortedByPlatoon}
+                personnelMap={confirmedStatusData.personnelMap}
                 confirmed={true}
             />
         </Stack>
@@ -223,22 +260,24 @@ const Confirmed: NextProtectedPage = () => {
         <></>
     );
     const Verify = !confirmedStatusData ? (
-        <Stack direction="column">
-            <StatusHeading step={1}>
-                <Heading> Confirm </Heading>
-                <Link href="/" passHref>
-                    <Button
-                        colorScheme="teal"
-                        size="xs"
-                        ml={2}
-                        onClick={() => {}}
-                    >
-                        Clear
-                    </Button>
-                </Link>
-            </StatusHeading>
-            <Box textAlign="center">
-                <Center>
+        <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(submit)}>
+                <Stack direction="column">
+                    <StatusHeading step={1}>
+                        <Heading> Confirm </Heading>
+                        <Link href="/" passHref>
+                            <Button
+                                colorScheme="teal"
+                                size="xs"
+                                ml={2}
+                                onClick={() => {}}
+                            >
+                                Clear
+                            </Button>
+                        </Link>
+                    </StatusHeading>
+                    <Box textAlign="center">
+                        {/* <Center>
                     {isPerm ? (
                         <Text fontWeight="semibold"> Permanent status </Text>
                     ) : (
@@ -248,8 +287,8 @@ const Confirmed: NextProtectedPage = () => {
                             <Text fontWeight="semibold">{statusDate && statusDate[1]} </Text>
                         </>
                     )}
-                </Center>
-                <Center>
+                </Center> */}
+                        {/* <Center>
                     <Wrap mt={2}>
                         {statuses.map((status, index) => (
                             <WrapItem key={index}>
@@ -270,14 +309,22 @@ const Confirmed: NextProtectedPage = () => {
                             </WrapItem>
                         ))}
                     </Wrap>
-                </Center>
-            </Box>
-            <AccordionWrapper sortedByPlatoon={sortedByPlatoon} />
-            <Center>
-                <Button onClick={() => submit()}> Submit </Button>
-            </Center>
-        </Stack>
-    ) : <></>;
+                </Center> */}
+                    </Box>
+                    <AccordionWrapper
+                        sortedByPlatoon={sortedByPlatoon}
+                        personnelMap={personnelMap}
+                        statuses={statuses}
+                    />
+                    <Center>
+                        <Button type="submit"> Submit </Button>
+                    </Center>
+                </Stack>
+            </form>
+        </FormProvider>
+    ) : (
+        <></>
+    );
 
     return confirmedStatusData ? Confirmed : Verify;
 };

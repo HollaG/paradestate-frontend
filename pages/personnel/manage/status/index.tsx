@@ -80,7 +80,7 @@ const StatusModal: React.FC<{
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
-}> = ({ statuses, isOpen, onOpen, onClose }) => {
+}> = React.memo(({ statuses, isOpen, onOpen, onClose }) => {
     // console.log({ statuses }, "----------------------------------");
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
@@ -113,14 +113,17 @@ const StatusModal: React.FC<{
             </ModalContent>
         </Modal>
     );
-};
+});
+
+const StatusInput = () => {};
 
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
-    selectedDate: Date;
+    selectedDate: [Date, Date];
     statusesById: { [key: string]: ExtendedStatus[] };
     search: string;
-}> = ({ person, selectedDate, statusesById, search }) => {
+    formattedStatusList: StatusOption[];
+}> = ({ person, selectedDate, statusesById, search, formattedStatusList }) => {
     // console.log("Person accordion item rerendering");
     const { register } = useFormContext();
 
@@ -193,50 +196,106 @@ const PersonAccordionItem: React.FC<{
 
     const [isChecked, setIsChecked] = useState(false);
 
+    const [isAdding, setIsAdding] = useState(false);
+    const [numInputs, setNumInputs] = useState(1);
+    const changeNumInputHandler = (type: "add" | "remove") => {
+        if (type === "add") {
+            setNumInputs((prev) => prev + 1);
+        } else {
+            setNumInputs((prev) => {
+                if (prev === 1) return 1;
+                return prev - 1;
+            });
+        }
+    };
     return (
         <>
             <Collapse in={isVisible} animateOpacity>
-                <Flex my={3} w="100%">
+                <SimpleGrid
+                    columns={{ sm: 1, lg: 2 }}
+                    spacing="6px"
+                    my={3}
+                    w="100%"
+                >
                     <Flex
                         alignItems="center"
-                        m={{ lg: "unset", base: "auto" }}
-                        w="100%"
+                        // m={{ lg: "unset", base: "auto" }}
                     >
-                        <Checkbox
-                            colorScheme="teal"
-                            size="md"
-                            // isChecked={isChecked}
-                            // onChange={(e) => setIsChecked(e.target.checked)}
-                            // flexDirection="row-reverse"
-                            w="100%"
-                            className="checkbox-custom"
-                            {...register(
-                                `status-personnel-${person.personnel_ID}`
-                            )}
-                        >
-                            <Box cursor="pointer">
-                                {/* <Flex align="center"> */}
-                                <Stack direction="row">
-                                    <Center>
-                                        <Badge colorScheme="purple">
-                                            {person.pes}
-                                        </Badge>
-                                    </Center>
-                                    <Text fontWeight="semibold">
-                                        {person.rank} {person.name}
-                                    </Text>
+                        <Box cursor="pointer">
+                            {/* <Flex align="center"> */}
+                            <Stack direction="row">
+                                <Center>
+                                    <Badge colorScheme="purple">
+                                        {person.pes}
+                                    </Badge>
+                                </Center>
+                                <Text fontWeight="semibold">
+                                    {person.rank} {person.name}
+                                </Text>
+                            </Stack>
+
+                            <Flex align="center">
+                                <Stack direction="row" my={1} wrap="wrap">
+                                    {tags}
                                 </Stack>
-
-                                <Flex align="center">
-                                    <Stack direction="row" my={1} wrap="wrap">
-                                        {tags}
-                                    </Stack>
-                                </Flex>
-                            </Box>
-                        </Checkbox>
+                            </Flex>
+                        </Box>
                     </Flex>
-                </Flex>
-
+                    <Flex alignItems="center" m={{ lg: "unset", base: "auto" }}>
+                        {/* <ButtonGroup isAttached size="xs" ml={{ lg: "auto" }}> */}
+                        {/* <Button
+                                variant='solid'
+                                // onClick={() => toggleHandler("off")}
+                                // disabled={!!person.off_row_ID}
+                            >
+                                No status
+                            </Button> */}
+                        <Button
+                            variant={isAdding ? "solid" : "outline"}
+                            size="xs"
+                            ml={{ lg: "auto" }}
+                            onClick={() => setIsAdding((prev) => !prev)}
+                            // disabled={!!person.leave_row_ID}
+                        >
+                            Add status
+                        </Button>
+                        {/* </ButtonGroup> */}
+                    </Flex>
+                </SimpleGrid>
+                <Box p={2}>
+                    <Collapse in={isAdding} animateOpacity unmountOnExit>
+                        {[...Array.from(Array(numInputs).keys())].map(
+                            (num, index) => (
+                                <StatusInputs
+                                    formattedStatusList={formattedStatusList}
+                                    selectedDate={selectedDate}
+                                    personnel_ID={person.personnel_ID}
+                                    num={num}
+                                    key={index}
+                                />
+                            )
+                        )}
+                        <Center mb={2}>
+                            <Button
+                                size="sm"
+                                onClick={() => changeNumInputHandler("add")}
+                            >
+                                Add more
+                            </Button>
+                            {numInputs !== 1 && (
+                                <Button
+                                    ml={2}
+                                    size="sm"
+                                    onClick={() =>
+                                        changeNumInputHandler("remove")
+                                    }
+                                >
+                                    Remove last
+                                </Button>
+                            )}
+                        </Center>
+                    </Collapse>
+                </Box>
                 <Divider />
             </Collapse>
             {!!statusesById[person.personnel_ID] && (
@@ -256,9 +315,17 @@ const PlatoonAccordionItem: React.FC<{
     personnel: ExtendedPersonnel[];
     statusesById: { [key: string]: ExtendedStatus[] };
     platoon: string;
-    selectedDate: Date;
+    selectedDate: [Date, Date];
     search: string;
-}> = ({ personnel, platoon, selectedDate, statusesById, search }) => {
+    formattedStatusList: StatusOption[];
+}> = ({
+    personnel,
+    platoon,
+    selectedDate,
+    statusesById,
+    search,
+    formattedStatusList,
+}) => {
     // console.log("Platoon accordion item rerendering");
     return (
         <AccordionItem>
@@ -278,33 +345,33 @@ const PlatoonAccordionItem: React.FC<{
                         person={person}
                         statusesById={statusesById}
                         search={search}
+                        formattedStatusList={formattedStatusList}
                     />
                 ))}
             </AccordionPanel>
         </AccordionItem>
     );
 };
-const MemoizedPlatoonAccordionItem = React.memo(PlatoonAccordionItem)
+const MemoizedPlatoonAccordionItem = React.memo(PlatoonAccordionItem);
 
 const StatusManager: NextProtectedPage<{
     // selectedDate: Date;
     // session: Session;
-}> = ({}) => {
+}> = React.memo(({}) => {
     // console.log("Rerendering statusmanager page");
     const { data: session } = useSession();
     let selectedDate = new Date();
+    let dates: [Date, Date] = [selectedDate, selectedDate];
     let formatted = format(selectedDate, Assignments.mysqldateformat);
     const { data, error } = useSWR<StatusData>(
         `/api/personnel/manage/status?date=${formatted}`,
-        fetcher,
-        
-    );   
+        fetcher
+    );
     const methods = useForm({ shouldUnregister: true });
 
     // console.log({ data });
     // console.log("rerendered");
     const [search, setSearch] = useState("");
-
 
     const defaultIndex = useMemo(() => [0], []);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
@@ -313,7 +380,6 @@ const StatusManager: NextProtectedPage<{
     };
 
     useEffect(() => {
-
         if (search.length && data?.sortedByPlatoon) {
             // do stuff
             // Open all the tabs
@@ -329,19 +395,20 @@ const StatusManager: NextProtectedPage<{
 
     const router = useRouter();
     const onSubmit = async (data: { [key: string]: any }) => {
-
+        console.log({ data });
         const responseData = await sendPOST(
             "/api/personnel/manage/status/confirm",
             data
         );
+        console.log({ responseData });
 
         if (responseData.success) {
             // setSuccess(true);
             // setResponseData(responseData.data);
             dispatch(statusActions.updateData(responseData.data));
             router.push("/personnel/manage/status/confirm");
-        } else { 
-            alert(responseData.error)
+        } else {
+            alert(responseData.error);
         }
     };
 
@@ -358,15 +425,16 @@ const StatusManager: NextProtectedPage<{
                     Clear
                 </Button>
             </StatusHeading>
+            <SearchInput setSearch={setSearch} />
             {!data && <>Loading data...</>}
             {data && (
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
-                        <StatusInputs
+                        {/* <StatusInputs
                             data={data}
                             selectedDate={selectedDate}
-                            setSearch={setSearch}
-                        />
+                            // setSearch={setSearch}
+                        /> */}
                         <Accordion
                             defaultIndex={[0]}
                             allowMultiple
@@ -377,7 +445,7 @@ const StatusManager: NextProtectedPage<{
                             {Object.keys(data.sortedByPlatoon).map(
                                 (platoon, index) => (
                                     <MemoizedPlatoonAccordionItem
-                                        selectedDate={selectedDate}
+                                        selectedDate={dates}
                                         key={index}
                                         personnel={
                                             data.sortedByPlatoon[platoon]
@@ -385,6 +453,9 @@ const StatusManager: NextProtectedPage<{
                                         platoon={platoon}
                                         statusesById={data.statusesById}
                                         search={search}
+                                        formattedStatusList={
+                                            data.formattedStatusList
+                                        }
                                     />
                                 )
                             )}
@@ -398,7 +469,7 @@ const StatusManager: NextProtectedPage<{
         </Stack>
     );
     return Content;
-};
+});
 
 // export const getServerSideProps = async (
 //     context: GetServerSidePropsContext

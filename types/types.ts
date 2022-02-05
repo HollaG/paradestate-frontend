@@ -3,16 +3,27 @@ import { ExtendedPersonnel, Personnel } from "./database";
 
 export interface RootState {
     dashboard: DashboardState;
-    status: StatusState
+    status: StatusState;
 }
 export interface StatusState {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
-    };
-    isPerm: boolean;
-    statusDate: string[];
+    };   
+    personnelMap: PersonnelMap;
     statuses: StatusOption[];
 }
+export interface PersonnelMap {
+    [key: string]: SelectedPersonStatuses;
+}
+
+export interface SelectedPersonStatuses {
+    [key: string]: {
+        perm: boolean;
+        selected: StatusOption[];
+        date: [string, string];
+    };
+}
+
 export interface DashboardState {
     data: EventData;
     personnelMap: { [key: number]: Personnel };
@@ -48,29 +59,28 @@ export interface Data {
     others: any;
 }
 
-export interface HighlightedDay { 
-    day: number,
-    badgeText: string,
-    disabled: boolean
+export interface HighlightedDay {
+    day: number;
+    badgeText: string;
+    disabled: boolean;
 }
 
 export interface Status {
     status_ID: string;
-    status_name: string
-    
+    status_name: string;
 }
 
-export interface ExtendedStatus extends Status { 
+export interface ExtendedStatus extends Status {
     personnel_ID: string;
-    start: Date|string;
-    end: Date|string;
-    type: "perm" | ""
-    [key:string]: any
+    start: Date | string;
+    end: Date | string;
+    type: "perm" | "";
+    [key: string]: any;
 }
 
-export interface GenericEvent { 
+export interface GenericEvent {
     row_ID: string;
-    start: Date
-    end: Date
-    [key:string]: any
+    start: Date;
+    end: Date;
+    [key: string]: any;
 }

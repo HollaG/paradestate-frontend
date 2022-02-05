@@ -39,16 +39,17 @@ const CustomStatusDateRangePicker: React.FC<{
     startPlaceholder: string;
     endLeftAdorn: string;
     endPlaceholder: string;
-
+    personnel_ID: number;
     defaultValues?: [Date, Date];
+    num: number
 }> = ({
     startLeftAdorn,
     startPlaceholder,
     endLeftAdorn,
     endPlaceholder,
-
+    personnel_ID,
     defaultValues,
-
+    num,
     // isLoading = false,
     // handleMonthChange = () => {},
     // highlightedDays = [],
@@ -114,7 +115,7 @@ const CustomStatusDateRangePicker: React.FC<{
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
-                name={`status-date`}
+                name={`${personnel_ID}-${num}-status-date`}
                 control={control}
                 defaultValue={defaultValues || [currentDate, currentDate]}
                 rules={{
