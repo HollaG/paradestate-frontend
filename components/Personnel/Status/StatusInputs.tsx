@@ -14,7 +14,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { StatusData } from "../../../pages/api/personnel/manage/status";
 import CustomStatusDateRangePicker from "../../Dates/CustomStatusDateRangePicker";
-import SearchInput from "./SearchInput";
+import SearchInput from "../../SearchInput";
 interface StatusOption extends OptionBase {
     label: string;
     value: string;
@@ -59,7 +59,7 @@ const StatusInputs: React.FC<{
                 isClosable: true,
             });
         }
-    }, [errors]);
+    }, [errors, toast]);
 
     // console.log({watchCheckbox})
     return (

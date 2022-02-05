@@ -60,7 +60,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { useEffect, useMemo, useState } from "react";
 
 import CustomStatusDateRangePicker from "../../../../components/Dates/CustomStatusDateRangePicker";
-import SearchInput from "../../../../components/Personnel/Status/SearchInput";
+import SearchInput from "../../../../components/SearchInput";
 import useSWRImmutable from "swr/immutable";
 import StatusInputs from "../../../../components/Personnel/Status/StatusInputs";
 import { useRouter } from "next/router";
@@ -114,8 +114,7 @@ const StatusModal: React.FC<{
         </Modal>
     );
 });
-
-const StatusInput = () => {};
+StatusModal.displayName = "StatusModal";
 
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
@@ -124,7 +123,7 @@ const PersonAccordionItem: React.FC<{
     search: string;
     formattedStatusList: StatusOption[];
 }> = ({ person, selectedDate, statusesById, search, formattedStatusList }) => {
-    // console.log("Person accordion item rerendering");
+    console.log("Person accordion item rerendering");
     const { register } = useFormContext();
 
     const isVisible =
@@ -326,7 +325,12 @@ const PlatoonAccordionItem: React.FC<{
     search,
     formattedStatusList,
 }) => {
-    // console.log("Platoon accordion item rerendering");
+    const { data: session } = useSession();
+    const [rendered, setRendered] = useState(platoon === session?.user.platoon);
+    // don't render the accordion panel by default, only render when use rclicks
+    // This allows the page to be more performant as there is less stuff to hydrate
+    // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
+
     return (
         <AccordionItem>
             <Text>
@@ -338,7 +342,7 @@ const PlatoonAccordionItem: React.FC<{
                 </AccordionButton>
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                {personnel.map((person, index) => (
+                {rendered && personnel.map((person, index) => (
                     <MemoizedPersonAccordionItem
                         selectedDate={selectedDate}
                         key={index}
@@ -470,62 +474,7 @@ const StatusManager: NextProtectedPage<{
     );
     return Content;
 });
-
-// export const getServerSideProps = async (
-//     context: GetServerSidePropsContext
-// ) => {
-//     const session = await getSession(context);
-
-//     if (!session || !session.user)
-//         return {
-//             redirect: {
-//                 destination: "/login",
-//                 permanent: false,
-//             },
-//         };
-
-//     let selectedDate = new Date();
-//     try {
-//         const query = `SELECT status_tracker.*, status_list.*, personnel.personnel_ID, personnel.name, personnel.pes, personnel.platoon FROM status_tracker LEFT JOIN status_list ON status_tracker.status_ID = status_list.status_ID LEFT JOIN personnel ON personnel.personnel_ID = status_tracker.personnel_ID WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(?) AND DATE(status_tracker.start) <= DATE(?) AND DATE(status_tracker.end) >= DATE(?)`;
-//         const values = [
-//             session.user.unit,
-//             session.user.company,
-//             selectedDate,
-//             selectedDate,
-//             selectedDate,
-//         ];
-
-//         const statusQuery = `SELECT status_ID, status_name FROM status_list`
-
-//         const personnel: ExtendedPersonnel[] = await executeQuery({
-//             query,
-//             values,
-//         });
-//         const statusList: Status[] = await executeQuery({
-//             query: statusQuery,
-//         })
-//         console.log({ personnel });
-//         // Group by platoon
-//         // TODO: type this better
-//         const groupedByPlatoon = personnel.reduce<any>((r, a) => {
-//             r[a.platoon as any] = [...(r[a.platoon as any] || []), a];
-//             return r;
-//         }, {});
-
-//         console.log({ groupedByPlatoon });
-//         return {
-//             props: {
-//                 session,
-//                 // personnel,
-//                 groupedByPlatoon,
-//                 selectedDate,
-//                 statusList
-//             },
-//         };
-//     } catch (e) {
-//         console.log(e);
-//     }
-// };
+StatusManager.displayName = "StatusManager";
 
 StatusManager.requireAuth = true;
 

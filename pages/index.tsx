@@ -88,6 +88,7 @@ import {
 import { capitalizeFirstLetter, onClickUrl } from "../lib/custom";
 import useSWRImmutable from "swr/immutable";
 import fetcher from "../lib/fetcher";
+import SearchInput from "../components/SearchInput";
 
 const DefaultLink: React.FC<{
     url: string;
@@ -234,12 +235,15 @@ const DefaultLink: React.FC<{
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
-}> = ({ person, selectedDate }) => {
-    // console.log("Person accordion item rerender");
+    search: string;
+}> = ({ person, selectedDate, search }) => {
+    console.log("Person accordion item rerender");
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data
     );
+    const isVisible =
+        search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
     const icon =
         person.location === "In camp"
@@ -434,7 +438,7 @@ const PersonAccordionItem: React.FC<{
     )[] = ["off", "leave", "attc", "course", "ma", "others"];
 
     return (
-        <>
+        <Collapse in={isVisible} animateOpacity>
             <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px">
                 <Box>
                     {/* <Flex align="center"> */}
@@ -616,33 +620,46 @@ const PersonAccordionItem: React.FC<{
             )}
 
             <Divider />
-        </>
+        </Collapse>
     );
 };
 const PlatoonAccordianItem: React.FC<{
     personnel: ExtendedPersonnel[];
     platoon: string;
     selectedDate: Date;
-}> = ({ personnel, platoon, selectedDate }) => {
+    search: string;
+}> = ({ personnel, platoon, selectedDate, search }) => {
+    const { data: session } = useSession();
+    const [rendered, setRendered] = useState(platoon === session?.user.platoon);
+    // don't render the accordion panel by default, only render when use rclicks
+    // This allows the page to be more performant as there is less stuff to hydrate
+    // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
     return (
         <AccordionItem>
-            <Text>
-                <AccordionButton _expanded={{ bg: "gray.200" }}>
-                    <Box flex={1} textAlign="left">
-                        {platoon} ({personnel.length})
-                    </Box>
-                    <AccordionIcon />
-                </AccordionButton>
-            </Text>
-            <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                {personnel.map((person, index) => (
-                    <PersonAccordionItem
-                        selectedDate={selectedDate}
-                        key={index}
-                        person={person}
-                    />
-                ))}
-            </AccordionPanel>
+            <>
+                <Text>
+                    <AccordionButton
+                        _expanded={{ bg: "gray.200" }}
+                        onClick={() => setRendered(true)}
+                    >
+                        <Box flex={1} textAlign="left">
+                            {platoon} ({personnel.length})
+                        </Box>
+                        <AccordionIcon />
+                    </AccordionButton>
+                </Text>
+                <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
+                    {rendered &&
+                        personnel.map((person, index) => (
+                            <PersonAccordionItem
+                                selectedDate={selectedDate}
+                                key={index}
+                                person={person}
+                                search={search}
+                            />
+                        ))}
+                </AccordionPanel>
+            </>
         </AccordionItem>
     );
 };
@@ -654,7 +671,7 @@ const Dashboard: NextProtectedPage = () => {
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
         selectedDate: string;
     }>("/api/dashboard", fetcher);
-    
+
     // const { data: session } = useSession();
     const methods = useForm({ shouldUnregister: true });
 
@@ -662,12 +679,28 @@ const Dashboard: NextProtectedPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
-    if (!data) {
-        return <>Loading data...</>;
-    }
+    const defaultIndex = useMemo(() => [0], []);
+    const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
+    const handleAccordion = (index: number[]) => {
+        setIndex(index);
+    };
+    const [search, setSearch] = useState("");
 
-    const { sortedByPlatoon, selectedDate: selectedDateString } = data;
-    const selectedDate = new Date(selectedDateString)
+    useEffect(() => {
+        if (search.length && data?.sortedByPlatoon) {
+            // do stuff
+            // Open all the tabs
+            setIndex(
+                Object.keys(data.sortedByPlatoon).map((_, index) => index)
+            );
+        } else {
+            setIndex(defaultIndex);
+        }
+    }, [search, data?.sortedByPlatoon, defaultIndex]);
+
+    const selectedDate = data?.selectedDate
+        ? new Date(data?.selectedDate)
+        : new Date();
     const {
         register,
         handleSubmit,
@@ -698,6 +731,7 @@ const Dashboard: NextProtectedPage = () => {
     const clearSelection = () => {
         dispatch(dashboardActions.clearData());
     };
+
     return (
         <Stack direction="column">
             <DashboardHeading step={0}>
@@ -711,30 +745,44 @@ const Dashboard: NextProtectedPage = () => {
                     Clear
                 </Button>
             </DashboardHeading>
-
-            <Accordion defaultIndex={[0]} allowMultiple allowToggle>
-                <FormProvider {...methods}>
-                    <form onSubmit={methods.handleSubmit(onSubmit)}>
-                        {Object.keys(sortedByPlatoon).map((platoon, index) => (
-                            <PlatoonAccordianItem
-                                selectedDate={selectedDate}
-                                key={index}
-                                personnel={sortedByPlatoon[platoon]}
-                                platoon={platoon}
-                            />
-                        ))}
-                        <Center mt={3}>
-                            <Button
-                                type="submit"
-                                colorScheme="teal"
-                                isLoading={isSubmitting}
-                            >
-                                Submit
-                            </Button>
-                        </Center>
-                    </form>
-                </FormProvider>
-            </Accordion>
+            <SearchInput setSearch={setSearch} />
+            {!data && <>Loading data...</>}
+            {data && (
+                <Accordion
+                    defaultIndex={[0]}
+                    allowMultiple
+                    allowToggle
+                    index={index}
+                    onChange={(e) => handleAccordion(e as number[])}
+                >
+                    <FormProvider {...methods}>
+                        <form onSubmit={methods.handleSubmit(onSubmit)}>
+                            {Object.keys(data.sortedByPlatoon).map(
+                                (platoon, index) => (
+                                    <PlatoonAccordianItem
+                                        selectedDate={selectedDate}
+                                        key={index}
+                                        personnel={
+                                            data.sortedByPlatoon[platoon]
+                                        }
+                                        platoon={platoon}
+                                        search={search}
+                                    />
+                                )
+                            )}
+                            <Center mt={3}>
+                                <Button
+                                    type="submit"
+                                    colorScheme="teal"
+                                    isLoading={isSubmitting}
+                                >
+                                    Submit
+                                </Button>
+                            </Center>
+                        </form>
+                    </FormProvider>
+                </Accordion>
+            )}
         </Stack>
     );
 };

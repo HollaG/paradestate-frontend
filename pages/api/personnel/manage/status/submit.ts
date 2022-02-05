@@ -29,7 +29,7 @@ export interface StatusAddedData {
     success: boolean;
     data: {
         sortedByPlatoon: any;
-        personnelMap: any
+        personnelMap: any;
     };
 }
 
@@ -121,11 +121,12 @@ export default async function handler(
                     error: "Illegal operation - user has no perms to edit this personnel",
                 });
 
-            const sortedByPlatoon: { [key: string]: ExtendedPersonnel[] } =
-                personnel.reduce((r: any, a: any) => {
-                    r[a.platoon as any] = [...(r[a.platoon as any] || []), a];
-                    return r;
-                }, {});
+            const sortedByPlatoon = personnel.reduce<{
+                [key: string]: Personnel[];
+            }>((r, a) => {
+                r[a.platoon] = [...(r[a.platoon] || []), a];
+                return r;
+            }, {});
 
             const oldGroupID = await executeQuery({
                 query: `SELECT MAX(group_ID) as max FROM audit_log`,
@@ -183,12 +184,12 @@ export default async function handler(
                 });
             });
             txn.rollback(console.log);
-            txn.commit();            
+            txn.commit();
             const response = {
                 success: true,
                 data: {
                     sortedByPlatoon,
-                    personnelMap
+                    personnelMap,
                 },
             };
             res.status(200).json(response);

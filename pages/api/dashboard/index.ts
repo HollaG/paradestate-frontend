@@ -90,8 +90,8 @@ export default async function handler(
 
                 const edited = [...hasEvent, ...noEvent];
 
-                const sortedByPlatoon: { [key: string]: ExtendedPersonnel } =
-                    edited.reduce((r: any, a) => {
+                const sortedByPlatoon =
+                    edited.reduce<{ [key: string]: ExtendedPersonnel[] }>((r, a) => {
                         r[a.platoon] = [...(r[a.platoon] || []), a];
                         return r;
                     }, {});

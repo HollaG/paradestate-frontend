@@ -47,7 +47,7 @@ export default async function handler(
                 date: string;
                 platoon: string;
             }; // date format is yyyy-MM-dd
-            if (!platoon) platoon = session.user.platoon || "Company"
+            if (!platoon) platoon = session.user.platoon || "Company";
             const { unit, company } = session.user;
 
             const parsedDate = parse(
@@ -59,7 +59,7 @@ export default async function handler(
             const selectedDate = format(parsedDate, Assignments.dateformat);
             const mysqlFormatted = date;
 
-            let personnel = null;
+            let personnel: Personnel[] = [];
             if (platoon == "Company") {
                 // if is to generate for the whole company
                 personnel = await executeQuery({
@@ -82,11 +82,12 @@ export default async function handler(
             // Sort personnel by platoon
             // get personnel_IDs to query later
             const personnel_IDs: string[] = [];
-            const sortedByPlatoon: { [key: string]: Personnel[] } =
-                personnel.reduce((r: any, a: any) => {
-                    r[a.platoon] = [...(r[a.platoon] || []), a];
-                    return r;
-                }, {});
+            const sortedByPlatoon = personnel.reduce<{
+                [key: string]: Personnel[];
+            }>((r, a) => {
+                r[a.platoon] = [...(r[a.platoon] || []), a];
+                return r;
+            }, {});
 
             let accounter: { [key: string]: any } = {};
 
@@ -140,7 +141,7 @@ export default async function handler(
 
             if (!personnel_IDs.length) return 0;
 
-            let dict:DictFormat = {
+            let dict: DictFormat = {
                 // Is the parade state being generated for the company? if so, use the user's company, if not, set it to the platoon name
                 "PLATOON-NAME":
                     platoon == "Company"
@@ -502,11 +503,12 @@ export default async function handler(
             const activeStatuses = funcResultArr[0];
 
             // Order by person
-            const groupedByPersonnel_ID: { [key: string]: ExtendedStatus[] } =
-                activeStatuses.reduce((r: any, a) => {
-                    r[a.personnel_ID] = [...(r[a.personnel_ID] || []), a];
-                    return r;
-                }, {});
+            const groupedByPersonnel_ID = activeStatuses.reduce<{
+                [key: string]: ExtendedStatus[];
+            }>((r, a) => {
+                r[a.personnel_ID] = [...(r[a.personnel_ID] || []), a];
+                return r;
+            }, {});
 
             for (let personnel_ID of Object.keys(groupedByPersonnel_ID)) {
                 let statuses = groupedByPersonnel_ID[personnel_ID];
@@ -572,7 +574,9 @@ export default async function handler(
                     START: replaceSlash(
                         format(person.start, Assignments.dateformat)
                     ),
-                    END: replaceSlash(format(person.end, Assignments.dateformat)),
+                    END: replaceSlash(
+                        format(person.end, Assignments.dateformat)
+                    ),
                     COURSE_NAME: person.course_name,
                 });
                 // if person is already subtracted, we don't do anything:
@@ -693,25 +697,17 @@ export default async function handler(
             // Tally some numbers, the pax for MA / off etc
             dict["ATTC-PAX"] = changeTo2Digit(dict["INCLUDE-ATTC"].length);
             dict["OFF-PAX"] = changeTo2Digit(dict["INCLUDE-OFF"].length);
-            dict["LEAVE-PAX"] = changeTo2Digit(
-                dict["INCLUDE-LEAVE"].length
-            );
+            dict["LEAVE-PAX"] = changeTo2Digit(dict["INCLUDE-LEAVE"].length);
             dict["MA-PAX"] = changeTo2Digit(dict["INCLUDE-MA"].length);
-            dict["STATUS-PAX"] = changeTo2Digit(
-                dict["INCLUDE-STATUS"].length
-            );
-            dict["COURSE-PAX"] = changeTo2Digit(
-                dict["INCLUDE-COURSE"].length
-            );
-            dict["OTHERS-PAX"] = changeTo2Digit(
-                dict["INCLUDE-OTHERS"].length
-            );
+            dict["STATUS-PAX"] = changeTo2Digit(dict["INCLUDE-STATUS"].length);
+            dict["COURSE-PAX"] = changeTo2Digit(dict["INCLUDE-COURSE"].length);
+            dict["OTHERS-PAX"] = changeTo2Digit(dict["INCLUDE-OTHERS"].length);
             dict["TOTAL-PRESENT"] = totalPresent;
             dict["TOTAL-PAX"] = totalPax;
             res.status(200).json({
                 success: true,
                 data: dict,
-            })
+            });
         } else {
             res.json({});
         }

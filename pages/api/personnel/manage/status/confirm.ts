@@ -71,9 +71,9 @@ export default async function handler(
                 error: "Illegal operation - user has no perms to edit this personnel",
             });
 
-        const sortedByPlatoon: { [key: string]: ExtendedPersonnel[] } =
-            personnel.reduce((r: any, a: any) => {
-                r[a.platoon as any] = [...(r[a.platoon as any] || []), a];
+        const sortedByPlatoon =
+            personnel.reduce<{ [key: string]: Personnel[] }>((r, a) => {
+                r[a.platoon] = [...(r[a.platoon] || []), a];
                 return r;
             }, {});
 

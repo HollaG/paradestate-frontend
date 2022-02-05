@@ -95,7 +95,7 @@ const LinkItems: (
     // { name: "Overview", icon: IoCalendarOutline, url: "/overview" },
     // { name: "Analytics", icon: IoAnalyticsOutline, url: "/analytics" },
     {
-        name: "Manage statuses (medical)",
+        name: "Add statuses (medical)",
         icon: IoMedicalOutline,
         url: "/personnel/manage/status",
     },
@@ -107,16 +107,16 @@ const LinkItems: (
     },
     { name: "Status list", icon: IoMailOutline, url: "/deliverables/status-list" },
     // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
-    // {
-    //     name: "Personnel",
-    //     isGroup: true,
-    //     disclosure: "personnel",
-    //     icon: IoPeopleOutline,
-    //     children: [
-    //         { name: "Manage personnel", icon: FiSettings, url: "/" },
-    //         { name: "Manage website", icon: FiSettings, url: "/" },
-    //     ],
-    // },
+    {
+        name: "Personnel",
+        isGroup: true,
+        disclosure: "personnel",
+        icon: IoPeopleOutline,
+        children: [
+            { name: "Manage personnel", icon: FiSettings, url: "/personnel/manage" },
+            // { name: "Manage website", icon: FiSettings, url: "/" },
+        ],
+    },
     // {
     //     name: "Event Managers",
     //     isGroup: true,

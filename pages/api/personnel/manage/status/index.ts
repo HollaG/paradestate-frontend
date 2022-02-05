@@ -41,7 +41,7 @@ export default async function handler(
 
     if (req.method === "GET") {
         const selectedDate = req.query.date as string;
-        console.log("requested gets")
+        console.log("requested gets");
         try {
             // Select personnel along with `status_row_ID` --> null if not on status, number if on status
             const query =
@@ -61,8 +61,10 @@ export default async function handler(
             });
 
             // Sort into platoon
-            const sortedByPlatoon = personnel.reduce<any>((r, a) => {
-                r[a.platoon as any] = [...(r[a.platoon as any] || []), a];
+            const sortedByPlatoon = personnel.reduce<{
+                [key: string]: ExtendedPersonnel[];
+            }>((r, a) => {
+                r[a.platoon] = [...(r[a.platoon] || []), a];
                 return r;
             }, {});
 
@@ -84,11 +86,10 @@ export default async function handler(
             });
             // console.log({ statuses });
             // Arrange by key
-            const statusesById = statuses.reduce<any>((r, a) => {
-                r[a.personnel_ID as any] = [
-                    ...(r[a.personnel_ID as any] || []),
-                    a,
-                ];
+            const statusesById = statuses.reduce<{
+                [key: string]: ExtendedStatus[];
+            }>((r, a) => {
+                r[a.personnel_ID] = [...(r[a.personnel_ID] || []), a];
                 return r;
             }, {});
 
@@ -183,6 +184,5 @@ export default async function handler(
         }
         // res.status(200).json(data);
     } else if (req.method === "POST") {
-        
     }
 }
