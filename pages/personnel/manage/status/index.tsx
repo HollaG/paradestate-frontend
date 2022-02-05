@@ -124,7 +124,7 @@ const PersonAccordionItem: React.FC<{
     formattedStatusList: StatusOption[];
 }> = ({ person, selectedDate, statusesById, search, formattedStatusList }) => {
     console.log("Person accordion item rerendering");
-    const { register } = useFormContext();
+    // const { register } = useFormContext();
 
     const isVisible =
         search.length === 0 ? true : person.name.includes(search.toUpperCase());
@@ -211,7 +211,7 @@ const PersonAccordionItem: React.FC<{
         <>
             <Collapse in={isVisible} animateOpacity>
                 <SimpleGrid
-                    columns={{ sm: 1, lg: 2 }}
+                    columns={{ base: 1, lg: 2 }}
                     spacing="6px"
                     my={3}
                     w="100%"
@@ -330,7 +330,9 @@ const PlatoonAccordionItem: React.FC<{
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
-
+    useEffect(() => {
+        if (search.length) setRendered(true)
+    }, [search])
     return (
         <AccordionItem>
             <Text>

@@ -634,6 +634,10 @@ const PlatoonAccordianItem: React.FC<{
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
+    
+    useEffect(() => {
+        if (search.length) setRendered(true)
+    }, [search])
     return (
         <AccordionItem>
             <>

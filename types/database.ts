@@ -32,5 +32,6 @@ export interface User {
 
 export interface ExtendedPersonnel extends Personnel { 
     location: string;
-    [key:string]: string|number|Date
+    locationArr: string[]
+    [key:string]: any
 }
