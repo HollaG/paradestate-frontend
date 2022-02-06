@@ -150,14 +150,16 @@ const ParadeStateFormat = React.forwardRef<
             <Text as="div">*_OTHERS ({data["OTHERS-PAX"]} Pax)_*</Text>
             {!!data["INCLUDE-OTHERS"].length &&
                 data["INCLUDE-OTHERS"].map((others, index) => (
-                    <Link
-                        href={`/personnel/manage/${others["PID"]}`}
-                        isExternal
-                        key={index}
-                    >
-                        {others["INDEX"]}. {others["RANK"]} {others["NAME"]} (
-                        {others["OTHERS_NAME"]})
-                    </Link>
+                    <Box key={index}>
+                        <Link
+                            href={`/personnel/manage/${others["PID"]}`}
+                            isExternal
+                        >
+                            {others["INDEX"]}. {others["RANK"]} {others["NAME"]}{" "}
+                            ({others["OTHERS_NAME"]})
+                        </Link>
+                        <br />
+                    </Box>
                 ))}
             <br />
         </Box>
