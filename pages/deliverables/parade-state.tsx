@@ -98,11 +98,11 @@ const ParadeState: NextProtectedPage = () => {
         });
         setTimeout(() => setHasCopied(false), delay);
     };
-    console.log(copyRef.current?.innerText.replaceAll("\n\n", "\n"));
+    console.log(copyRef.current?.innerText);
 
     const share = async () => {
         const data = psData.data;
-        const text = copyRef.current?.innerText.replaceAll("\n\n", " \n");
+        const text = copyRef.current?.innerText;
         if (!text) {
             toast({
                 title: "Error sharing",

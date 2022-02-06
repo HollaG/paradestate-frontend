@@ -44,7 +44,7 @@ ${attc["START"]} - ${attc["END"]}`
             //     {index !== data["INCLUDE-MA"].length - 1 && <br />}
             // </Box>
             `${ma["INDEX"]}. ${ma["RANK"]} ${ma["NAME"]}
-${ma["MA_NAME"]} @ ${ma["LOCATION"]} ${ma["TIME"]}`
+${ma["MA_NAME"]} @ ${ma["LOCATION"]} ${ma["TIME"]}HRS`
     );
 
     const INCLUDE_STATUS = data["INCLUDE-STATUS"].map(
