@@ -21,5 +21,5 @@ const ClickedContainerWrapper = React.forwardRef<
         </Box>
     );
 });
-
+ClickedContainerWrapper.displayName = "ClickedContainerWrapper";
 export default React.memo(ClickedContainerWrapper);

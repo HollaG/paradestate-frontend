@@ -6,6 +6,7 @@ const StatusListFormat = React.forwardRef<
     HTMLDivElement,
     { data: StatusListFormatInterface }
 >(({ data }, ref) => {
+    console.log({data})
     return (
         <Box ref={ref}>
             <Text as="div">

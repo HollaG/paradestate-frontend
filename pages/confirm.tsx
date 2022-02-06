@@ -14,10 +14,11 @@ import {
     Icon,
     IconButton,
     Text,
+    Link,
 } from "@chakra-ui/react";
 import { format } from "date-fns";
 import { NextPage } from "next";
-import Link from "next/link";
+
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -45,6 +46,7 @@ import { capitalizeFirstLetter } from "../lib/custom";
 import fetcher, { sendPOST } from "../lib/fetcher";
 import { dashboardActions } from "../store/dashboard-slice";
 import { DashboardState, EventData, RootState } from "../types/types";
+import NextLink from "next/link";
 const tempObj = {
     off: {
         "33": {
@@ -183,11 +185,11 @@ const Confirm: NextProtectedPage = () => {
         console.log({ responseData });
         if (responseData.success) {
             setSuccess(true);
-            setConfirmedDashboardData(responseData.data)
+            setConfirmedDashboardData(responseData.data);
 
             dispatch(dashboardActions.clearData());
-        } else { 
-            alert(responseData.error)
+        } else {
+            alert(responseData.error);
         }
     };
 
@@ -297,16 +299,21 @@ const Confirm: NextProtectedPage = () => {
                                                     >
                                                         <Box>
                                                             <Text fontWeight="semibold">
-                                                                {
-                                                                    dashboardPersonnel[
-                                                                        personnel_ID
-                                                                    ].rank
-                                                                }{" "}
-                                                                {
-                                                                    dashboardPersonnel[
-                                                                        personnel_ID
-                                                                    ].name
-                                                                }
+                                                                <Link
+                                                                    isExternal
+                                                                    href={`/personnel/manage/${personnel_ID}`}
+                                                                >
+                                                                    {
+                                                                        dashboardPersonnel[
+                                                                            personnel_ID
+                                                                        ].rank
+                                                                    }{" "}
+                                                                    {
+                                                                        dashboardPersonnel[
+                                                                            personnel_ID
+                                                                        ].name
+                                                                    }
+                                                                </Link>
                                                             </Text>
 
                                                             <Text>
@@ -463,7 +470,6 @@ const Confirm: NextProtectedPage = () => {
                                                         }
                                                     </Text>
                                                 </Box>
-                                                
                                             </Flex>
 
                                             <ResultFields
@@ -484,8 +490,8 @@ const Confirm: NextProtectedPage = () => {
             </Accordion>
         </>
     );
-    return confirmedDashboardData ? Confirmed : Verify
+    return confirmedDashboardData ? Confirmed : Verify;
 };
 
-Confirm.requireAuth = true
+Confirm.requireAuth = true;
 export default Confirm;

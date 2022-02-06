@@ -1,9 +1,13 @@
 import { DictFormat } from "../pages/api/deliverables/parade-state/generate";
 import { Text, Link, Box } from "@chakra-ui/react";
+import NextLink from "next/link";
 import { RefObject } from "react";
 import React from "react";
 
-const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>(({data}, ref) => {
+const ParadeStateFormat = React.forwardRef<
+    HTMLDivElement,
+    { data: DictFormat }
+>(({ data }, ref) => {
     return (
         <Box ref={ref}>
             <Text as="div">
@@ -39,7 +43,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-ATTC"].map((attc, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/attc/${attc["PID"]}`}
+                            href={`/personnel/manage/${attc["PID"]}`}
                             isExternal
                         >
                             {attc["INDEX"]}. {attc["RANK"]} {attc["NAME"]}
@@ -58,7 +62,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-OFF"].map((off, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/off/${off["PID"]}`}
+                            href={`/personnel/manage/${off["PID"]}`}
                             isExternal
                         >
                             {off["INDEX"]}. {off["RANK"]} {off["NAME"]}{" "}
@@ -72,7 +76,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-LEAVE"].map((leave, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/leave/${leave["PID"]}`}
+                            href={`/personnel/manage/${leave["PID"]}`}
                             isExternal
                         >
                             {leave["INDEX"]}. {leave["RANK"]} {leave["NAME"]}{" "}
@@ -87,7 +91,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-MA"].map((ma, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/ma/${ma["PID"]}`}
+                            href={`/personnel/manage/${ma["PID"]}`}
                             isExternal
                         >
                             {ma["INDEX"]}. {ma["RANK"]} {ma["NAME"]}
@@ -106,16 +110,18 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-STATUS"].map((person, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/status/${person["PID"]}`}
+                            href={`/personnel/manage/${person["PID"]}`}
                             isExternal
                         >
                             {person["INDEX"]}. {person["RANK"]} {person["NAME"]}
                         </Link>
-                        {person["INCLUDE-STATUSES"].map((status: any, index: number) => (
-                            <Text as="div" key={index}>
-                                •{status["NAME"]} ({status["STRING"]})
-                            </Text>
-                        ))}
+                        {person["INCLUDE-STATUSES"].map(
+                            (status: any, index: number) => (
+                                <Text as="div" key={index}>
+                                    •{status["NAME"]} ({status["STRING"]})
+                                </Text>
+                            )
+                        )}
                         <br />
                     </Box>
                 ))
@@ -127,7 +133,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
                 data["INCLUDE-COURSE"].map((course, index) => (
                     <Box key={index}>
                         <Link
-                            href={`/personnel/manage/course/${course["PID"]}`}
+                            href={`/personnel/manage/${course["PID"]}`}
                             isExternal
                         >
                             {course["INDEX"]}. {course["RANK"]} {course["NAME"]}
@@ -145,7 +151,7 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
             {!!data["INCLUDE-OTHERS"].length &&
                 data["INCLUDE-OTHERS"].map((others, index) => (
                     <Link
-                        href={`/personnel/manage/others/${others["PID"]}`}
+                        href={`/personnel/manage/${others["PID"]}`}
                         isExternal
                         key={index}
                     >
@@ -156,6 +162,6 @@ const ParadeStateFormat = React.forwardRef<HTMLDivElement, { data: DictFormat }>
             <br />
         </Box>
     );
-})
+});
 
 export default ParadeStateFormat;

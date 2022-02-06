@@ -447,7 +447,12 @@ const PersonAccordionItem: React.FC<{
                             <Badge colorScheme="purple">{person.pes}</Badge>
                         </Center>
                         <Text fontWeight="semibold">
-                            {person.rank} {person.name}
+                            <Link
+                                isExternal
+                                href={`/personnel/manage/${person.personnel_ID}`}
+                            >
+                                {person.rank} {person.name}
+                            </Link>
                         </Text>
                     </Stack>
                     {/* </Flex> */}
@@ -634,10 +639,10 @@ const PlatoonAccordianItem: React.FC<{
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
-    
+
     useEffect(() => {
-        if (search.length) setRendered(true)
-    }, [search])
+        if (search.length) setRendered(true);
+    }, [search]);
     return (
         <AccordionItem>
             <>

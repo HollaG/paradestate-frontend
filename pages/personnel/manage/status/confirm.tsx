@@ -16,12 +16,13 @@ import {
     Flex,
     Icon,
     IconButton,
+    Link,
     Divider,
     Collapse,
     TagCloseButton,
 } from "@chakra-ui/react";
 import { format, parse } from "date-fns";
-import Link from "next/link";
+
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { StatusOption } from ".";
@@ -45,7 +46,7 @@ import { sendPOST } from "../../../../lib/fetcher";
 import StatusInputs from "../../../../components/Personnel/Status/StatusInputs";
 import { FormProvider, useForm } from "react-hook-form";
 import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
-
+import NextLink from "next/link";
 const PersonAccordionItem: React.FC<{
     person: Personnel;
     confirmed: boolean;
@@ -69,7 +70,12 @@ const PersonAccordionItem: React.FC<{
             <Flex alignItems="center">
                 <Box flexGrow="1">
                     <Text fontWeight="semibold">
-                        {person.rank} {person.name}
+                        <Link
+                            isExternal
+                            href={`/personnel/manage/${person.personnel_ID}`}
+                        >
+                            {person.rank} {person.name}
+                        </Link>
                     </Text>
 
                     <Text>{person.platoon}</Text>

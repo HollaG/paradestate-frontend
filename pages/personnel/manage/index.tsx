@@ -28,7 +28,6 @@ import SearchInput from "../../../components/SearchInput";
 import { NextProtectedPage } from "../../../lib/auth";
 import fetcher from "../../../lib/fetcher";
 import { ExtendedPersonnel, Personnel } from "../../../types/database";
-
 interface ResponseData {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
@@ -112,7 +111,7 @@ const PersonAccordionItem: React.FC<{
                 my={3}
                 w="100%"
             >
-                <PersonBasicDetails person={person}>
+                <PersonBasicDetails person={person} handleClick={handleClick}>
                     {!ord && <MemoizedTags person={person} />}
                     {ord && (
                         <Tag

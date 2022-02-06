@@ -69,7 +69,7 @@ import statusSlice, { statusActions } from "../../../../store/status-slice";
 import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
 import { IoOpenOutline } from "react-icons/io5";
 import React from "react";
-
+import NextLink from "next/link";
 export interface StatusOption extends OptionBase {
     label: string;
     value: string;
@@ -229,7 +229,12 @@ const PersonAccordionItem: React.FC<{
                                     </Badge>
                                 </Center>
                                 <Text fontWeight="semibold">
-                                    {person.rank} {person.name}
+                                    <Link
+                                        isExternal
+                                        href={`/personnel/manage/${person.personnel_ID}`}
+                                    >
+                                        {person.rank} {person.name}
+                                    </Link>
                                 </Text>
                             </Stack>
 
@@ -261,7 +266,7 @@ const PersonAccordionItem: React.FC<{
                         {/* </ButtonGroup> */}
                     </Flex>
                 </SimpleGrid>
-                <Box p={2}>
+                <Box>
                     <Collapse in={isAdding} animateOpacity unmountOnExit>
                         {[...Array.from(Array(numInputs).keys())].map(
                             (num, index) => (
@@ -331,8 +336,8 @@ const PlatoonAccordionItem: React.FC<{
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
     useEffect(() => {
-        if (search.length) setRendered(true)
-    }, [search])
+        if (search.length) setRendered(true);
+    }, [search]);
     return (
         <AccordionItem>
             <Text>
@@ -344,16 +349,17 @@ const PlatoonAccordionItem: React.FC<{
                 </AccordionButton>
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                {rendered && personnel.map((person, index) => (
-                    <MemoizedPersonAccordionItem
-                        selectedDate={selectedDate}
-                        key={index}
-                        person={person}
-                        statusesById={statusesById}
-                        search={search}
-                        formattedStatusList={formattedStatusList}
-                    />
-                ))}
+                {rendered &&
+                    personnel.map((person, index) => (
+                        <MemoizedPersonAccordionItem
+                            selectedDate={selectedDate}
+                            key={index}
+                            person={person}
+                            statusesById={statusesById}
+                            search={search}
+                            formattedStatusList={formattedStatusList}
+                        />
+                    ))}
             </AccordionPanel>
         </AccordionItem>
     );
