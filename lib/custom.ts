@@ -1,14 +1,19 @@
 import {
     addDays,
     differenceInBusinessDays,
+    differenceInDays,
+    differenceInMonths,
     format,
     isAfter,
     isBefore,
     isSameDay,
 } from "date-fns";
+import { queryBuilder } from "mysql-query-placeholders";
 
 import Assignments from "../config/assignments.json";
+import { ExtendedPersonnel } from "../types/database";
 import { ExtendedStatus } from "../types/types";
+import executeQuery from "./db";
 export const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -39,6 +44,28 @@ export const onClickUrl =
     (url: string): (() => void) =>
     () =>
         openInNewTab(url);
+
+export const calculateMonthsToOrFrom = (date: [Date, Date]) => {
+    const diff = differenceInMonths(date[0], date[1]); // If date[1] is in the future, then this will be negative
+    const days = differenceInDays(date[0], date[1]);
+    if (diff > 0) {
+        if (diff <= 1) {
+            // one month left, return days
+            return `${days} days left`;
+        } else {
+            // more than one month left, return months
+            return `${diff} months left`;
+        }
+    } else if (diff < 0) {
+        if (Math.abs(diff) <= 1) {
+            // one month ago, return days
+            return `${days} days ago`;
+        } else {
+            // More than 1 month ago, return months
+            return `${Math.abs(diff)} months ago`;
+        }
+    }
+};
 
 export const calculateOutOfOfficeDuration = (outOfOffice: OutOfOffice) => {
     // console.log({ outOfOffice });
@@ -218,88 +245,162 @@ export const sortActiveInactiveStatus = (
     statuses: ExtendedStatus[],
     date: Date
 ) => {
-    return new Promise(async (resolve, reject) => {
-        var active: ExtendedStatus[] = [];
-        var inactive: ExtendedStatus[] = [];
-        var duplicates: ExtendedStatus[] = [];
+    return new Promise<[ExtendedStatus[], ExtendedStatus[], ExtendedStatus[]]>(
+        async (resolve, reject) => {
+            var active: ExtendedStatus[] = [];
+            var inactive: ExtendedStatus[] = [];
+            var duplicates: ExtendedStatus[] = [];
 
-        var timeSel = date;
+            var timeSel = date;
 
-        try {
-            for (var i = 0; i < statuses.length; i++) {
-                var status = statuses[i];
-                var p_ID = status.personnel_ID;
-                // if status type is 'perm', is always active
-                if (status.type == "perm") {
-                    active.push(status);
-                } else if (
-                    (isSameDay(new Date(status.start), timeSel) ||
-                        isBefore(new Date(status.start), timeSel)) &&
-                    (isSameDay(new Date(status.end), timeSel) ||
-                        isAfter(new Date(status.end), timeSel))
-                    // moment(status.end, assignments.dateformat).isSameOrAfter(
-                    //     timeSel
-                    // ) &&
-                    // moment(status.start, assignments.dateformat).isSameOrBefore(
-                    //     timeSel
-                    // )
-                ) {
-                    // These are all active statuses whos START is before today and END is after today
-
-                    // See if the active array already consists of a status which is the same type, same start, same end
-                    if (
-                        active.some(
-                            (oldStatus) =>
-                                isSameDay(
-                                    new Date(status.start),
-                                    new Date(oldStatus.start)
-                                ) &&
-                                isSameDay(
-                                    new Date(status.end),
-                                    new Date(oldStatus.end)
-                                ) &&
-                                oldStatus.status_ID === status.status_ID &&
-                                oldStatus.personnel_ID === status.personnel_ID
-                        )
-                    ) {
-                        duplicates.push(status);
-                    } else {
+            try {
+                for (var i = 0; i < statuses.length; i++) {
+                    var status = statuses[i];
+                    var p_ID = status.personnel_ID;
+                    // if status type is 'perm', is always active
+                    if (status.type == "perm") {
                         active.push(status);
-                    }
-                } else {
-                    // end date is earlier than now
-                    if (
-                        inactive.some(
-                            (oldStatus) =>
-                                isSameDay(
-                                    new Date(status.start),
-                                    new Date(oldStatus.start)
-                                ) &&
-                                isSameDay(
-                                    new Date(status.end),
-                                    new Date(oldStatus.end)
-                                ) &&
-                                oldStatus.status_ID === status.status_ID &&
-                                oldStatus.personnel_ID === status.personnel_ID
-                        )
+                    } else if (
+                        (isSameDay(new Date(status.start), timeSel) ||
+                            isBefore(new Date(status.start), timeSel)) &&
+                        (isSameDay(new Date(status.end), timeSel) ||
+                            isAfter(new Date(status.end), timeSel))
+                        // moment(status.end, assignments.dateformat).isSameOrAfter(
+                        //     timeSel
+                        // ) &&
+                        // moment(status.start, assignments.dateformat).isSameOrBefore(
+                        //     timeSel
+                        // )
                     ) {
-                        duplicates.push(status);
+                        // These are all active statuses whos START is before today and END is after today
+
+                        // See if the active array already consists of a status which is the same type, same start, same end
+                        if (
+                            active.some(
+                                (oldStatus) =>
+                                    isSameDay(
+                                        new Date(status.start),
+                                        new Date(oldStatus.start)
+                                    ) &&
+                                    isSameDay(
+                                        new Date(status.end),
+                                        new Date(oldStatus.end)
+                                    ) &&
+                                    oldStatus.status_ID === status.status_ID &&
+                                    oldStatus.personnel_ID ===
+                                        status.personnel_ID
+                            )
+                        ) {
+                            duplicates.push(status);
+                        } else {
+                            active.push(status);
+                        }
                     } else {
-                        inactive.push(status);
+                        // end date is earlier than now
+                        if (
+                            inactive.some(
+                                (oldStatus) =>
+                                    isSameDay(
+                                        new Date(status.start),
+                                        new Date(oldStatus.start)
+                                    ) &&
+                                    isSameDay(
+                                        new Date(status.end),
+                                        new Date(oldStatus.end)
+                                    ) &&
+                                    oldStatus.status_ID === status.status_ID &&
+                                    oldStatus.personnel_ID ===
+                                        status.personnel_ID
+                            )
+                        ) {
+                            duplicates.push(status);
+                        } else {
+                            inactive.push(status);
+                        }
                     }
                 }
+                resolve([active, inactive, duplicates]);
+            } catch (e) {
+                reject(e);
             }
-            resolve([active, inactive, duplicates]);
-        } catch (e) {
-            reject(e);
         }
-    });
+    );
 };
 
 export const changeToNextDayIfPastNoon = (date: Date) => {
-    if (format(date, "aaa") === "pm")
-        date = addDays(date, 1);
-    return date
+    if (format(date, "aaa") === "pm") date = addDays(date, 1);
+    return date;
+};
+
+export const convertToAMPM = (time: string) => {
+    // 1000 or 1200 or 1535
+    const arr = time.split("");
+    const hours = Number(`${arr[0]}${arr[1]}`);
+    const minutes = Number(`${arr[2]}${arr[3]}`);
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+
+    if (hours > 12) {
+        return `${hours - 12}:${formattedMinutes} PM`;
+    } else {
+        return `${hours}:${formattedMinutes} AM`;
+    }
+};
+
+export const getLocation = async (personnel_ID: string | number) => {
+    // const opts = {
+    //     selDate: format(new Date(), Assignments.mysqldateformat),
+    //     pID: personnel_ID,
+    // };
+    // const query = queryBuilder(
+    //     "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE personnel_ID = :pID",
+    //     opts
+    // );
+    // // console.log(query);
+    // const personnel: ExtendedPersonnel[] = await executeQuery({
+    //     query: query.sql,
+    //     values: query.values,
+    // });
+
+    // if (!personnel) return null;
+    // const person = personnel[0];
+
+    // const hasEvent: any[] = [];
+    // const noEvent: any[] = [];
+
+    // const strArr = [];
+    // let hasAnEvent = false;
+    // if (person.attc_row_ID) strArr.push("On AttC");
+    // if (person.course_row_ID) strArr.push("On course");
+    // if (person.leave_row_ID) strArr.push("On leave");
+    // if (person.off_row_ID) strArr.push("On off");
+    // if (person.ma_row_ID) {
+    //     if (person.ma_in_camp) {
+    //         strArr.push("On MA (In camp)");
+    //     } else {
+    //         strArr.push("On MA");
+    //     }
+    // }
+    // if (person.others_row_ID) {
+    //     if (person.others_in_camp) {
+    //         strArr.push("Others (In camp)");
+    //     } else {
+    //         strArr.push("Others");
+    //     }
+    // }
+
+    // if (!strArr.length) {
+    //     strArr.push("In camp");
+    //     hasAnEvent = true;
+    // }
+
+    // const str = strArr.join(", ");
+    // person.location = str;
+
+    // // Remove null values
+    // const cleansed = Object.fromEntries(
+    //     Object.entries(person).filter(([_, v]) => v != null)
+    // ) as ExtendedPersonnel;
+    // return cleansed;
 };
 
 // const testTimes: { startTime: "AM" | "PM"; endTime: "AM" | "PM" }[] = [

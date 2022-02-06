@@ -8,7 +8,7 @@ export interface RootState {
 export interface StatusState {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
-    };   
+    };
     personnelMap: PersonnelMap;
     statuses: StatusOption[];
 }
@@ -80,7 +80,33 @@ export interface ExtendedStatus extends Status {
 
 export interface GenericEvent {
     row_ID: string;
+    personnel_ID: string;
+    editor_ID:string;
     start: Date;
     end: Date;
     [key: string]: any;
+}
+
+export interface OffOrLeaveEvent extends GenericEvent {
+    start_time: "AM" | "PM";
+    end_time: "AM" | "PM";
+    reason: string;
+}
+
+export interface MAEvent {
+    location: string;
+    ma_name: string;
+    in_camp: boolean;
+    time: string;
+    row_ID: string;
+    date: Date;
+    personnel_ID: string;
+
+    [key: string]: any;
+}
+
+export interface OtherEvent extends GenericEvent {
+    others_name: string;
+    location: string;
+    in_camp: boolean;
 }

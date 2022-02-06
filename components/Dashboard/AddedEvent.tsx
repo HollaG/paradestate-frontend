@@ -19,6 +19,7 @@ import Assignments from "../../config/assignments.json";
 import { differenceInCalendarDays, format } from "date-fns";
 import { parse } from "path/posix";
 import { calculateOutOfOfficeDuration } from "../../lib/custom";
+import EventBasicDetails from "../Common/EventBasicDetails";
 
 export const AddedLeaveOrOff: React.FC<{
     data: {
@@ -26,21 +27,19 @@ export const AddedLeaveOrOff: React.FC<{
         date: [string, string];
         "start-time": "AM" | "PM";
         "end-time": "AM" | "PM";
-        days: number;
+        days?: number;
     };
 }> = ({ data }) => {
-    console.log({data})
+
     const convertedDate = data.date.map((date) => new Date(date));
     return (
-        <SimpleGrid p={2} columns={1} spacing={2}>
-            <Text>{data.reason || "Unspecified reason"}</Text>
-            <Text fontWeight="light">
-                {format(convertedDate[0], Assignments.dateformat)} (
-                {data["start-time"]}) -{" "}
-                {format(convertedDate[1], Assignments.dateformat)} (
-                {data["end-time"]}) ({calculateOutOfOfficeDuration(data)} days)
-            </Text>
-        </SimpleGrid>
+        <EventBasicDetails
+            top={data.reason || "Unspecified reason"}
+            bottom={`${format(convertedDate[0], Assignments.dateformat)} 
+            (${data["start-time"]}) -
+            ${format(convertedDate[1], Assignments.dateformat)} 
+            (${data["end-time"]}) (${calculateOutOfOfficeDuration(data)} days)`}
+        />
     );
 };
 
@@ -59,15 +58,15 @@ export const AddedAttCOrCourse: React.FC<{
     if (data.name) string = data.name;
     else string = "Unspecified name";
     return (
-        <SimpleGrid p={2} columns={1} spacing={2}>
-            <Text>{string}</Text>
-            <Text fontWeight="light">
-                {format(convertedDate[0], Assignments.dateformat)} -{" "}
-                {format(convertedDate[1], Assignments.dateformat)} (
-                {differenceInCalendarDays(convertedDate[1], convertedDate[0])}{" "}
-                days)
-            </Text>
-        </SimpleGrid>
+        <EventBasicDetails
+            top={string}
+            bottom={`${format(convertedDate[0], Assignments.dateformat)} -
+            ${format(convertedDate[1], Assignments.dateformat)} 
+            (${differenceInCalendarDays(
+                convertedDate[1],
+                convertedDate[0]
+            )} days)`}
+        />
     );
 };
 
@@ -85,15 +84,13 @@ export const AddedMA: React.FC<{
         format(new Date(data["date-time"] || ""), Assignments.datetimeformat);
 
     return (
-        <SimpleGrid p={2} columns={1} spacing={2}>
-            <Text>
-                {data.name || "Unspecified name"} @{" "}
-                {data.location || "Unspecified location"}
-            </Text>
-            <Text fontWeight="light">
-                {convertedDate} ({data.incamp ? "In Camp" : "Out of Camp"})
-            </Text>
-        </SimpleGrid>
+        <EventBasicDetails
+            top={`${data.name || "`nspecified name"} @
+        ${data.location || "Unspecified location"}`}
+            bottom={`${convertedDate} (${
+                data.incamp ? "In Camp" : "Out of Camp"
+            })`}
+        />
     );
 };
 
@@ -107,14 +104,12 @@ export const AddedOthers: React.FC<{
     const convertedDate = data.date.map((date) => new Date(date));
 
     return (
-        <SimpleGrid p={2} columns={1} spacing={2}>
-            <Text>{data.name || "Unspecified name"}</Text>
-            <Text fontWeight="light">
-                {format(convertedDate[0], Assignments.dateformat)} -{" "}
-                {format(convertedDate[1], Assignments.dateformat)} (
-                {differenceInCalendarDays(convertedDate[1], convertedDate[0])}{" "}
-                days) ({data.incamp ? "In Camp" : "Out of Camp"})
-            </Text>
-        </SimpleGrid>
+        <EventBasicDetails
+            top={`${data.name || "Unspecified name"}`}
+            bottom={`${format(convertedDate[0], Assignments.dateformat)} -
+            ${format(convertedDate[1], Assignments.dateformat)} 
+            (${differenceInCalendarDays(convertedDate[1], convertedDate[0])}
+            days) (${data.incamp ? "In Camp" : "Out of Camp"})`}
+        />
     );
 };
