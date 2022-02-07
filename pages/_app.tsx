@@ -35,10 +35,10 @@ const muiTheme = createTheme({
 });
 
 const chakraTheme = extendTheme(
-    withDefaultColorScheme({
-        colorScheme: "teal",
-        components: ["Button"],
-    })
+    // withDefaultColorScheme({
+    //     colorScheme: "teal",
+    //     components: ["Button"],
+    // })
 );
 
 const theme = deepmerge(chakraTheme, muiTheme);

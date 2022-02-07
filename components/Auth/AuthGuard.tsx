@@ -17,7 +17,7 @@ export function AuthGuard({ children }: { children: JSX.Element }) {
 
                 setRedirect(router.route);
                 // redirect
-                router.push("/login");
+                router.push("/auth/login");
             }
         }
     }, [initializing, router, user, setRedirect]);
@@ -28,8 +28,16 @@ export function AuthGuard({ children }: { children: JSX.Element }) {
     }
 
     // if auth initialized with a valid user show protected page
-    if (!initializing && user) {
+    console.log({initializing , user })
+    if (!initializing && user && user.unit && user.company) {
+        
         return children;
+    } else if (!initializing && user && !user.unit && !user.company && !user.platoon) {
+        router.push("/auth/registration")
+    } 
+    else if (!initializing && user && user.unit && user.company && !user.platoon) {
+        router.push("/auth/registration")
+
     }
 
     /* otherwise don't return anything, will do a redirect from useEffect */

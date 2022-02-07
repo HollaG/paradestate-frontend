@@ -57,8 +57,9 @@ export default NextAuth({
         async session({session, token}) { 
             
             const userResult:User[] = await executeQuery({query: `SELECT * FROM users WHERE email = ?`, values: [session.user?.email]})
+            
             session.user = userResult[0] 
-        
+            // console.log({session}, '----------------')
             // set('user', userResult[0])
             // console.log({session})
             return session
