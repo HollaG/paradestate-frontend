@@ -71,7 +71,7 @@ const StatusList: NextProtectedPage = () => {
 
     const share = async () => {
         const data = slData.data;
-        const text = copyRef.current?.innerText.replaceAll("\n\n", " \n");
+        const text = copyRef.current?.innerText
         if (!text) {
             toast({
                 title: "Error sharing",

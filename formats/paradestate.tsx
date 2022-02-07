@@ -66,13 +66,6 @@ ${person["INCLUDE-STATUSES"]
 
     const INCLUDE_OTHERS = data["INCLUDE-OTHERS"].map(
         (others, index) =>
-            // <Box key={index}>
-            //     <Link href={`/personnel/manage/${others["PID"]}`} isExternal>
-            //         {others["INDEX"]}. {others["RANK"]} {others["NAME"]} (
-            //         {others["OTHERS_NAME"]})
-            //     </Link>
-            //     <br />
-            // </Box>
             `${others["INDEX"]}. ${others["RANK"]} ${others["NAME"]} (${others["OTHERS_NAME"]})`
     );
     const text = `*${data["PLATOON-NAME"]} PARADE STATE AS OF ${
@@ -82,8 +75,9 @@ Total: ${data["TOTAL-PRESENT"]}/${data["TOTAL-PAX"]}
 
 ${INCLUDE_PLATOONS.join("\n\n")}
 
-*_ATTC (${data["ATTC-PAX"]} Pax)_*
-${INCLUDE_ATTC.join("\n\n")}
+*_ATTC (${data["ATTC-PAX"]} Pax)_*${
+        !!INCLUDE_ATTC.length ? `\n${INCLUDE_ATTC.join("\n\n")}` : ""
+    }
 
 *_OFF (${data["OFF-PAX"]} Pax)_*${
         !!INCLUDE_OFF.length ? `\n${INCLUDE_OFF.join("\n")}` : ""
@@ -105,13 +99,15 @@ ${INCLUDE_ATTC.join("\n\n")}
         INCLUDE_COURSE.length ? `\n${INCLUDE_COURSE.join("\n\n")}` : ""
     }
 
-*_OTHERS (${data["OTHERS-PAX"]} Pax)_*${INCLUDE_OTHERS.length ? `\n${INCLUDE_OTHERS.join("\n")}` : ""}
+*_OTHERS (${data["OTHERS-PAX"]} Pax)_*${
+        INCLUDE_OTHERS.length ? `\n${INCLUDE_OTHERS.join("\n")}` : ""
+    }
 `;
 
     return (
-        <Box ref={ref}>
-            <pre style={{whiteSpace: 'pre-wrap'}}>{text}</pre>
-        </Box>
+        <Text whiteSpace="pre-wrap" ref={ref}>
+            {text}
+        </Text>
     );
     //     return (
     //         <Box ref={ref}>

@@ -6,9 +6,9 @@ const StatusListFormat = React.forwardRef<
     HTMLDivElement,
     { data: StatusListFormatInterface }
 >(({ data }, ref) => {
-    console.log({data})
+    console.log({ data });
     return (
-        <Box ref={ref}>
+        <Text whiteSpace="pre-wrap" ref={ref}>
             <Text as="div">
                 *{data["COMPANY-NAME"]} STATUS LIST AS OF{" "}
                 {data["SELECTED-DATE"]}*
@@ -30,7 +30,6 @@ const StatusListFormat = React.forwardRef<
                                     {personnel["INCLUDE-STATUSES"].map(
                                         (status, index) => (
                                             <Text as="div" key={index}>
-                                                {" "}
                                                 •{status["NAME"]} (
                                                 {status["STRING"]})
                                             </Text>
@@ -42,11 +41,7 @@ const StatusListFormat = React.forwardRef<
                         )}
                     </Box>
                 ))}
-            <Text as="div"></Text>
-            <Text as="div"> </Text>
-            <Text as="div"> </Text>
-            <Text as="div"> </Text>
-        </Box>
+        </Text>
     );
 });
 
