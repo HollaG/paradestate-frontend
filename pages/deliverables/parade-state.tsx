@@ -87,7 +87,7 @@ const ParadeState: NextProtectedPage = () => {
     const onCopy = () => {
         setHasCopied(true);
         navigator.clipboard.writeText(
-            copyRef.current?.innerText.replaceAll("\n", " \n") || ""
+            copyRef.current?.innerText || ""
         );
         toast({
             title: "Copied",

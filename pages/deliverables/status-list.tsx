@@ -56,7 +56,7 @@ const StatusList: NextProtectedPage = () => {
     const onCopy = () => {
         setHasCopied(true);
         navigator.clipboard.writeText(
-            copyRef.current?.innerText.replaceAll("\n\n", " \n") || ""
+            copyRef.current?.innerText.replaceAll("\n\n", " \n") || "" // TODO - change format to use pre tag
         );
         toast({
             title: "Copied",
