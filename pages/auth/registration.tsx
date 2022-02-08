@@ -289,8 +289,12 @@ const SetCompany: React.FC<{
                     setUnit={setUnit}
                 />
             )}
-           
-            <Button colorScheme="purple" size="sm" onClick={noCompanyOrUnit}>{addNewCompany ? "My company already exists" : "I can't find my company or unit"}</Button>
+
+            <Button colorScheme="purple" size="sm" onClick={noCompanyOrUnit}>
+                {addNewCompany
+                    ? "My company already exists"
+                    : "I can't find my company or unit"}
+            </Button>
 
             {/* </Stack> */}
         </Stack>
@@ -431,7 +435,7 @@ const Completed: React.FC<{
         // router.push(url);
         // router.reload();
     };
-    console.log({platoon}) 
+    console.log({ platoon });
     return (
         <Stack direction="column" align="center">
             <AuthHeading step={2} skippedOpt={platoon === "skipped"}>
@@ -463,8 +467,9 @@ const Completed: React.FC<{
                 <StatLabel>Platoon</StatLabel>
                 <StatNumber>
                     <Badge fontSize="lg" colorScheme="purple">
-                        {session?.user?.platoon ||
-                            (platoon === "skipped" ? "Not yet set" : platoon)}
+                        {platoon === "skipped"
+                            ? session?.user?.platoon || "Not yet set"
+                            : platoon}
                     </Badge>
                 </StatNumber>
             </Stat>
