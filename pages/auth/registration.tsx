@@ -301,6 +301,7 @@ const SetCompany: React.FC<{
         // </form>
     );
 });
+SetCompany.displayName = "SetCompany"
 
 interface PlatoonOption extends OptionBase {
     label: string;
