@@ -1,4 +1,4 @@
-import React, { ReactNode, ReactPropTypes } from "react";
+import React, { ReactNode, ReactPropTypes, useEffect, useState } from "react";
 import {
     IconButton,
     Avatar,
@@ -30,6 +30,9 @@ import {
     InputGroup,
     InputLeftElement,
     Container,
+    AlertIcon,
+    Alert,
+    useToast,
 } from "@chakra-ui/react";
 import {
     FiHome,
@@ -64,6 +67,7 @@ import {
     IoTrendingUp,
 } from "react-icons/io5";
 import { Session } from "next-auth";
+import { useRouter } from "next/router";
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -105,7 +109,11 @@ const LinkItems: (
         icon: IoMailOutline,
         url: "/deliverables/parade-state",
     },
-    { name: "Status list", icon: IoMailOutline, url: "/deliverables/status-list" },
+    {
+        name: "Status list",
+        icon: IoMailOutline,
+        url: "/deliverables/status-list",
+    },
     // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
     {
         name: "Personnel",
@@ -113,7 +121,11 @@ const LinkItems: (
         disclosure: "personnel",
         icon: IoPeopleOutline,
         children: [
-            { name: "Manage personnel", icon: FiSettings, url: "/personnel/manage" },
+            {
+                name: "Manage personnel",
+                icon: FiSettings,
+                url: "/personnel/manage",
+            },
             // { name: "Manage website", icon: FiSettings, url: "/" },
         ],
     },
@@ -177,27 +189,13 @@ const LinkItems: (
     // { name: "FAQ", icon: FiSettings, url: "/" },
 ];
 
-const SignInInfo: React.FC = () => {
-    return (
-        <Box justify="center" align="center">
-            <Text fontSize="2xl" textAlign="center">
-                You are not signed in. Please sign in to access this website.
-            </Text>
-
-            <Button colorScheme="teal" onClick={() => signIn()}>
-                Sign in
-            </Button>
-        </Box>
-    );
-};
-
 const Sidebar = (props: any) => {
-    let session: Session|null;
-    const { data }= useSession();
-    if (props.session) session = props.session
-    else { 
+    let session: Session | null;
+    const { data } = useSession();
+    if (props.session) session = props.session;
+    else {
         session = data;
-    } 
+    }
 
     const sidebar = useDisclosure();
 
@@ -250,7 +248,7 @@ const Sidebar = (props: any) => {
         };
         w?: string;
         borderRight?: string;
-        onClose?: () => void
+        onClose?: () => void;
     }> = (props) => (
         <Box
             as="nav"
@@ -324,7 +322,11 @@ const Sidebar = (props: any) => {
                         );
                     } else
                         return (
-                            <NavItem key={index} icon={link.icon} onClick={props.onClose || null}>
+                            <NavItem
+                                key={index}
+                                icon={link.icon}
+                                onClick={props.onClose || null}
+                            >
                                 <NextLink href={link.url || "/"} passHref>
                                     <Link>{link.name}</Link>
                                 </NextLink>
@@ -337,6 +339,39 @@ const Sidebar = (props: any) => {
     const whiteGray900 = useColorModeValue("white", "gray.900");
     const gray200Gray700 = useColorModeValue("gray.200", "gray.700");
 
+    const [platoonHintShowing, setPlatoonHintShowing] = useState(false);
+    const [hasChosenToHide, setHasChosenToHide] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        // This page will always hide the alert
+        if (router.pathname === "/auth/registration") {
+            setPlatoonHintShowing(false);
+        } else if (
+            // Only set to show when 1) user is logged in but no platoon 2) user is NOT on /auth/registration 3) user has NOT chosen to hide
+            session &&
+            session.user &&
+            !session.user.platoon &&
+            !hasChosenToHide
+        )
+            setPlatoonHintShowing(true);
+        else if (session && session.user && session.user.platoon)
+            setPlatoonHintShowing(false);
+    }, [session, router, hasChosenToHide]);
+    const toast = useToast();
+    const closeHint = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPlatoonHintShowing(false);
+        setHasChosenToHide(true);
+        toast({
+            title: "Reminder",
+            description:
+                "Change your platoon in future by clicking on your profile icon, then 'Change platoon'",
+            status: "info",
+            isClosable: true,
+        });
+        e.stopPropagation();
+    };
+    const goToSetPlatoon = () => router.push("/auth/registration");
     return (
         <Box
             as="section"
@@ -351,7 +386,11 @@ const Sidebar = (props: any) => {
             >
                 <DrawerOverlay />
                 <DrawerContent>
-                    <SidebarContent w="full" borderRight="none" onClose={sidebar.onClose}/>
+                    <SidebarContent
+                        w="full"
+                        borderRight="none"
+                        onClose={sidebar.onClose}
+                    />
                 </DrawerContent>
             </Drawer>
             <Box ml={{ base: 0, md: 60 }} transition=".3s ease">
@@ -441,7 +480,14 @@ const Sidebar = (props: any) => {
                                     >
                                         <MenuItem>Profile</MenuItem>
                                         <MenuItem>Settings</MenuItem>
-                                        <MenuItem>Billing</MenuItem>
+                                        <MenuItem>
+                                            <NextLink
+                                                href="/auth/registration?change=1"
+                                                passHref
+                                            >
+                                                <Link>Change platoon</Link>
+                                            </NextLink>
+                                        </MenuItem>
                                         <MenuDivider />
                                         <MenuItem onClick={() => signOut()}>
                                             Sign out
@@ -450,14 +496,33 @@ const Sidebar = (props: any) => {
                                 </Menu>
                             </Flex>
                         ) : (
-                            <Button colorScheme="teal" onClick={() => signIn()}>
-                                Sign in
-                            </Button>
+                            // <Button colorScheme="teal" onClick={() => signIn()}>
+                            //     Sign in
+                            // </Button>
+                            <></>
                         )}
                     </HStack>
                 </Flex>
 
                 {/* TODO - change this to Just 1 container? */}
+                <Collapse in={platoonHintShowing}>
+                    <Alert
+                        status="info"
+                        cursor="pointer"
+                        onClick={goToSetPlatoon}
+                    >
+                        <Container maxW="container.lg">
+                            <Flex alignItems="center">
+                                <AlertIcon />
+                                <Text flexGrow={1}>
+                                    You have not yet set your platoon. Set it by
+                                    clicking on this alert.
+                                </Text>
+                                <CloseButton onClick={closeHint} />
+                            </Flex>
+                        </Container>
+                    </Alert>
+                </Collapse>
                 <Box as="main" p="4">
                     <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
                         {props.children}

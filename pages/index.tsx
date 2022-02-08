@@ -494,6 +494,7 @@ const PersonAccordionItem: React.FC<{
                             variant={buttonStates.off ? "solid" : "outline"}
                             onClick={() => toggleHandler("off")}
                             disabled={!!person.off_row_ID}
+                            colorScheme="blue"
                         >
                             Off
                         </Button>
@@ -501,6 +502,7 @@ const PersonAccordionItem: React.FC<{
                             variant={buttonStates.leave ? "solid" : "outline"}
                             onClick={() => toggleHandler("leave")}
                             disabled={!!person.leave_row_ID}
+                            colorScheme="blue"
                         >
                             Leave
                         </Button>
@@ -508,6 +510,7 @@ const PersonAccordionItem: React.FC<{
                             variant={buttonStates.attc ? "solid" : "outline"}
                             onClick={() => toggleHandler("attc")}
                             disabled={!!person.attc_row_ID}
+                            colorScheme="blue"
                         >
                             AttC
                         </Button>
@@ -520,6 +523,7 @@ const PersonAccordionItem: React.FC<{
                                         ? "solid"
                                         : "outline"
                                 }
+                            colorScheme="blue"
                             >
                                 Extras
                             </MenuButton>
@@ -758,7 +762,7 @@ const Dashboard: NextProtectedPage = () => {
             {!data && <>Loading data...</>}
             {data && (
                 <Accordion
-                    defaultIndex={[0]}
+                    // defaultIndex={[0]}
                     allowMultiple
                     allowToggle
                     index={index}

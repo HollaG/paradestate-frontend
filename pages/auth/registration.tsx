@@ -6,6 +6,7 @@ import {
     Input,
     InputGroup,
     InputLeftAddon,
+    Link,
     Select,
     Stack,
     Stat,
@@ -32,12 +33,138 @@ import useSWRImmutable from "swr/immutable";
 import useSWR from "swr";
 import { CreatableSelect, OptionBase } from "chakra-react-select";
 import { NextProtectedPage } from "../../lib/auth";
-const SetCompany: React.FC<{
+import NextLink from "next/link";
+import HelpText from "../../components/Forms/HelpText";
+
+const AddCompany: React.FC<{
     orderedByUnit: { [key: string]: CompanyRow[] };
     setCompany: React.Dispatch<React.SetStateAction<string>>;
     setUnit: React.Dispatch<React.SetStateAction<string>>;
-}> = React.memo(({ orderedByUnit, setCompany, setUnit }) => {
-    console.log({ orderedByUnit });
+}> = ({ orderedByUnit, setCompany, setUnit }) => {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        control,
+        setError,
+    } = useForm();
+    const router = useRouter();
+
+    const [isLoading, setIsLoading] = useState(false);
+    const createCompany = async (data: any) => {
+        setIsLoading(true);
+        console.log({ data });
+        const company = data.company.trim().toUpperCase();
+        const unit = data.unit.value.trim().toUpperCase();
+        const password = data.password;
+
+        const responseData = await sendPOST("/api/auth/company", {
+            company,
+            unit,
+            password,
+        });
+
+        if (responseData.success) {
+            // router.reload();
+            // router.push("/auth/set-platoon");
+            setCompany(responseData.data.company);
+            setUnit(responseData.data.unit);
+        } else {
+            if (responseData.type === "exists") {
+                setError("company", {
+                    type: "exists",
+                    message: "This company already exists!",
+                });
+            }
+        }
+        setIsLoading(false);
+    };
+    return (
+        <form onSubmit={handleSubmit(createCompany)} style={{ width: "100%" }}>
+            <Stack direction="column" align="center">
+                <Box w="100%">
+                    <Controller
+                        name="unit"
+                        control={control}
+                        rules={{
+                            required: true,
+                        }}
+                        render={({ field: { onChange, value = [] } }) => (
+                            <CreatableSelect<PlatoonOption, true>
+                                name="unit"
+                                placeholder="Select or enter a unit..."
+                                options={Object.keys(orderedByUnit).map(
+                                    (key) => ({
+                                        label: key,
+                                        value: key,
+                                    })
+                                )}
+                                value={value}
+                                onChange={onChange}
+                            />
+                        )}
+                    />
+                    <Box alignSelf="start">
+                        {errors?.unit?.type === "required" && (
+                            <ErrorText text="Please select a unit" />
+                        )}
+                    </Box>
+                </Box>
+                <Box w="100%">
+                    <InputGroup>
+                        <InputLeftAddon children="Company" />
+                        <Input
+                            placeholder="Please type the name of your company."
+                            {...register("company", { required: true })}
+                        />
+                    </InputGroup>
+                    {errors.company && (
+                        <ErrorText
+                            text={
+                                errors.company.message ||
+                                "Company name must not be empty."
+                            }
+                        />
+                    )}
+                </Box>
+                <Box w="100%">
+                    <InputGroup>
+                        <InputLeftAddon children="Password" />
+                        <Input
+                            // type="password"
+                            placeholder="Enter a password for this company."
+                            {...register("password", {
+                                required: true,
+                                minLength: 8,
+                            })}
+                        />
+                    </InputGroup>
+
+                    {errors.password ? (
+                        <ErrorText
+                            text={
+                                errors.password.message ||
+                                "Password must be at least 8 characters long!"
+                            }
+                        />
+                    ) : (
+                        <HelpText text="Your password must be at least 8 characters long. This password will be used to authenticate future commanders in your company." />
+                    )}
+                </Box>
+
+                <Button colorScheme="teal" type="submit" isLoading={isLoading}>
+                    Submit
+                </Button>
+            </Stack>
+        </form>
+    );
+};
+
+const ChooseCompany: React.FC<{
+    orderedByUnit: { [key: string]: CompanyRow[] };
+    setCompany: React.Dispatch<React.SetStateAction<string>>;
+    setUnit: React.Dispatch<React.SetStateAction<string>>;
+}> = ({ orderedByUnit, setCompany, setUnit }) => {
     const { data: session } = useSession();
 
     const {
@@ -69,18 +196,9 @@ const SetCompany: React.FC<{
         }
         setIsLoading(false);
     };
-
     return (
-        <form onSubmit={handleSubmit(checkPassword)}>
+        <form onSubmit={handleSubmit(checkPassword)} style={{ width: "100%" }}>
             <Stack direction="column" align="center">
-                <AuthHeading step={0}>
-                    {" "}
-                    Hello, {session?.user?.username}!
-                </AuthHeading>
-                <Text textAlign="center">
-                    As this is your first time logging in, please choose your
-                    unit and company.
-                </Text>
                 <Box w="100%">
                     <Select
                         placeholder="Select your company..."
@@ -96,7 +214,7 @@ const SetCompany: React.FC<{
                                             value={`${unit}${Assignments.separator}${companyRow.company}`}
                                             key={index}
                                         >
-                                            {companyRow.company}
+                                            {unit} {companyRow.company}
                                         </option>
                                     )
                                 )}
@@ -134,6 +252,50 @@ const SetCompany: React.FC<{
             </Stack>
         </form>
     );
+};
+const SetCompany: React.FC<{
+    orderedByUnit: { [key: string]: CompanyRow[] };
+    setCompany: React.Dispatch<React.SetStateAction<string>>;
+    setUnit: React.Dispatch<React.SetStateAction<string>>;
+}> = React.memo(({ orderedByUnit, setCompany, setUnit }) => {
+    console.log({ orderedByUnit });
+    const { data: session } = useSession();
+
+    const [addNewCompany, setAddNewCompany] = useState(false);
+    const noCompanyOrUnit = () => setAddNewCompany((prev) => !prev);
+
+    return (
+        // <form onSubmit={handleSubmit(checkPassword)}>
+        <Stack direction="column" align="center">
+            <AuthHeading step={0}>
+                {" "}
+                Hello, {session?.user?.username}!
+            </AuthHeading>
+            <Text textAlign="center">
+                As this is your first time logging in, please choose your unit
+                and company.
+            </Text>
+            {!addNewCompany && (
+                <ChooseCompany
+                    orderedByUnit={orderedByUnit}
+                    setCompany={setCompany}
+                    setUnit={setUnit}
+                />
+            )}
+            {addNewCompany && (
+                <AddCompany
+                    orderedByUnit={orderedByUnit}
+                    setCompany={setCompany}
+                    setUnit={setUnit}
+                />
+            )}
+           
+            <Button colorScheme="purple" size="sm" onClick={noCompanyOrUnit}>{addNewCompany ? "My company already exists" : "I can't find my company or unit"}</Button>
+
+            {/* </Stack> */}
+        </Stack>
+        // </form>
+    );
 });
 
 interface PlatoonOption extends OptionBase {
@@ -144,7 +306,7 @@ interface PlatoonOption extends OptionBase {
 const SetPlatoon: React.FC<{
     company: string;
     unit: string;
-    defaultPlatoon: string,
+    defaultPlatoon: string;
     setPlatoon: React.Dispatch<React.SetStateAction<string>>;
 }> = ({ company, unit, setPlatoon, defaultPlatoon = "" }) => {
     const { data, error } = useSWR<PlatoonOption[]>(
@@ -155,10 +317,9 @@ const SetPlatoon: React.FC<{
     const { data: session } = useSession();
 
     const [isLoading, setIsLoading] = useState(false);
-
     const { control, handleSubmit } = useForm();
 
-    const skip = () => setPlatoon("Not yet set");
+    const skip = () => setPlatoon("skipped");
     const submit = async (data: any) => {
         setIsLoading(true);
         console.log(data.platoon.value, "asdabsjkd");
@@ -183,6 +344,7 @@ const SetPlatoon: React.FC<{
             alert(responseData.error);
         }
     };
+    console.log({ defaultPlatoon }, "dnjfansjk");
     return (
         <form onSubmit={handleSubmit(submit)}>
             <Stack direction="column" align="center">
@@ -190,8 +352,12 @@ const SetPlatoon: React.FC<{
                     Hello, {session?.user?.username}!
                 </AuthHeading>
                 <Text textAlign="center">
-                    Please enter or select your platoon. This step is optional;
-                    you can always set or change your platoon in the future.
+                    Please select your platoon. This step is optional; you can
+                    always set or change your platoon in the future.
+                </Text>
+                <Text textAlign="center">
+                    If your platoon does not exist, please type the new platoon
+                    name and enter it.
                 </Text>
                 <Box w="100%">
                     <Controller
@@ -200,7 +366,14 @@ const SetPlatoon: React.FC<{
                         rules={{
                             required: true,
                         }}
-                        defaultValue={defaultPlatoon}
+                        defaultValue={
+                            defaultPlatoon
+                                ? {
+                                      value: defaultPlatoon,
+                                      label: defaultPlatoon,
+                                  }
+                                : []
+                        }
                         render={({ field: { onChange, value = [] } }) => (
                             <CreatableSelect<PlatoonOption, true>
                                 name="platoon"
@@ -251,18 +424,21 @@ const Completed: React.FC<{
     }, [timeLeft]);
 
     const router = useRouter();
-
     const redirectToHome = () => {
-        router.push("/auth/complete");
+        location.href = "/"; // need to refresh page to update session
+        // let url = '/auth/complete'
+        // if (change) url += '?change=true'
+        // router.push(url);
         // router.reload();
     };
+    console.log({platoon}) 
     return (
         <Stack direction="column" align="center">
-            <AuthHeading step={2}>
+            <AuthHeading step={2} skippedOpt={platoon === "skipped"}>
                 Hello, {session?.user?.username}!
             </AuthHeading>
             <Text textAlign="center">
-                Signup completed! You will be redirected shortly.
+                Registration completed! You will be redirected shortly.
             </Text>
             <Stack direction="row" spacing={10}>
                 <Stat>
@@ -287,7 +463,8 @@ const Completed: React.FC<{
                 <StatLabel>Platoon</StatLabel>
                 <StatNumber>
                     <Badge fontSize="lg" colorScheme="purple">
-                        {platoon}
+                        {session?.user?.platoon ||
+                            (platoon === "skipped" ? "Not yet set" : platoon)}
                     </Badge>
                 </StatNumber>
             </Stat>
@@ -301,27 +478,32 @@ const Completed: React.FC<{
 
 const RegistrationPage: NextProtectedPage<{
     orderedByUnit: { [key: string]: CompanyRow[] };
-
 }> = ({ orderedByUnit }) => {
-    const {data: session} = useSession();
+    const { data: session } = useSession();
     const [stage, setStage] = useState<0 | 1 | 2>(0);
     const [company, setCompany] = useState("");
     const [unit, setUnit] = useState("");
     const [platoon, setPlatoon] = useState("");
     const [defaultPlatoon, setDefaultPlatoon] = useState("");
+    console.log({ defaultPlatoon });
     useEffect(() => {
         // don't set the platoon yet so that we can allow users to change it later
-        setDefaultPlatoon(session?.user?.platoon || ""); 
+        setDefaultPlatoon(session?.user?.platoon || "");
         setCompany(session?.user?.company || "");
         setUnit(session?.user?.unit || "");
-
-    }, [session, setDefaultPlatoon, setCompany, setUnit])
+    }, [session, setDefaultPlatoon, setCompany, setUnit]);
     if (company && unit && platoon)
         return <Completed company={company} unit={unit} platoon={platoon} />;
     if (company && unit && !platoon)
         return (
-            <SetPlatoon company={company} unit={unit} setPlatoon={setPlatoon} defaultPlatoon={defaultPlatoon} />
+            <SetPlatoon
+                company={company}
+                unit={unit}
+                setPlatoon={setPlatoon}
+                defaultPlatoon={defaultPlatoon}
+            />
         );
+
     return (
         <SetCompany
             orderedByUnit={orderedByUnit}
@@ -339,11 +521,19 @@ export const getServerSideProps = async (
     context: GetServerSidePropsContext
 ) => {
     const session = await getSession(context);
-    console.log({session}, 'hellolhello')
+    const change = context.query.change;
+    if (Boolean(change)) {
+        return {
+            props: {
+                session,
+                orderedByUnit: {},
+            },
+        };
+    }
+
     if (
         session?.user?.company &&
-        session?.user?.unit 
-        &&
+        session?.user?.unit &&
         session?.user?.platoon
     ) {
         // Only block this page if the user has set all company, unit and platoon.

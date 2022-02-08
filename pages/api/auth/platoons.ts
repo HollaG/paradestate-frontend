@@ -22,7 +22,7 @@ export default async function handler(
             const { unit, company } = req.query;
 
             const platoons: { platoon: string }[] = await executeQuery({
-                query: "SELECT DISTINCT platoon FROM personnel WHERE unit = ? AND company = ?",
+                query: "SELECT DISTINCT platoon FROM personnel WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW())",
                 values: [unit, company],
             });
             const mapped = platoons.map((platoon) => ({
@@ -37,7 +37,7 @@ export default async function handler(
 
                 await executeQuery({
                     query: `UPDATE users SET platoon = ? WHERE unit = ? AND company = ? AND email = ?`,
-                    values: [platoon, unit, company, session.user.email],
+                    values: [platoon || "", unit, company, session.user.email],
                 })
     
                 res.status(200).json({

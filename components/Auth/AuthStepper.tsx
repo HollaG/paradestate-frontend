@@ -6,7 +6,7 @@ import StepLabel from "@mui/material/StepLabel";
 import makeStyles from "@mui/styles/makeStyles";
 
 
-const CustomStepper:React.FC<{step: 0|1|2}> = ({step}) => {
+const CustomStepper:React.FC<{step: 0|1|2, skippedOpt:boolean}> = ({step, skippedOpt}) => {
     const useStyles = makeStyles(() => ({
         root: {
             // "& .MuiStepIcon-completed": { color: "green" },
@@ -31,7 +31,7 @@ const CustomStepper:React.FC<{step: 0|1|2}> = ({step}) => {
             <Step>
                 <StepLabel sx={{ mt: 0 }}>Set company and unit</StepLabel>
             </Step>
-            <Step>
+            <Step completed={!skippedOpt && step !== 0}>
                 <StepLabel sx={{ mt: 0 }}>Set platoon (optional)</StepLabel>
             </Step>
             <Step>

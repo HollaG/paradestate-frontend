@@ -189,8 +189,9 @@ const PersonnelListPage: NextProtectedPage = () => {
         "/api/personnel/manage",
         fetcher
     );
-    console.log({ data, error });
-    const defaultIndex = useMemo(() => [0], []);
+    const { data: session } = useSession()
+    
+    const defaultIndex = useMemo(() => [Object.keys(data?.sortedByPlatoon || {}).indexOf(session?.user.platoon || "")], [data, session]);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
     const handleAccordion = (index: number[]) => {
         setIndex(index);
@@ -217,7 +218,7 @@ const PersonnelListPage: NextProtectedPage = () => {
             <SearchInput setSearch={setSearch} />
             {data && (
                 <Accordion
-                    defaultIndex={[0]}
+                    // defaultIndex={[0]}
                     allowMultiple
                     allowToggle
                     index={index}

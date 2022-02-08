@@ -385,7 +385,9 @@ const StatusManager: NextProtectedPage<{
     // console.log("rerendered");
     const [search, setSearch] = useState("");
 
-    const defaultIndex = useMemo(() => [0], []);
+    
+
+    const defaultIndex = useMemo(() => [Object.keys(data?.sortedByPlatoon || {}).indexOf(session?.user.platoon || "")], [data, session]);
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
     const handleAccordion = (index: number[]) => {
         setIndex(index);
@@ -448,7 +450,7 @@ const StatusManager: NextProtectedPage<{
                             // setSearch={setSearch}
                         /> */}
                         <Accordion
-                            defaultIndex={[0]}
+                            // defaultIndex={[0]}
                             allowMultiple
                             allowToggle
                             index={index}

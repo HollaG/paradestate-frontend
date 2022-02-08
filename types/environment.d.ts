@@ -9,6 +9,7 @@ declare global {
             MYSQL_DATABASE: string;
             MYSQL_USER: string;
             MYSQL_PASSWORD: string;
+            SALT_ROUNDS: number
         }
     }
 }
