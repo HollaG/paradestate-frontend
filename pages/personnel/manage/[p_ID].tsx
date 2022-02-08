@@ -102,7 +102,7 @@ const PersonnelPage: NextProtectedPage = () => {
         `/api/personnel/manage/${router.query.p_ID}`,
         fetcher
     );
-    console.count("PersonnelPage");
+    console.log({data});
 
     const [clickedType, setClickedType] = useState(null);
     const [clickedID, setClickedID] = useState(null);
@@ -117,7 +117,7 @@ const PersonnelPage: NextProtectedPage = () => {
         [setClickedType, setClickedID, setRefresher]
     );
     const scrollRef = useRef<HTMLDivElement>(null);
-
+        console.log({clickedType, clickedID})
     useEffect(() => {
         if (scrollRef && scrollRef.current) {
             window.scrollTo({

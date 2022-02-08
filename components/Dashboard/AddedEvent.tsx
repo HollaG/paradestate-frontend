@@ -30,7 +30,6 @@ export const AddedLeaveOrOff: React.FC<{
         days?: number;
     };
 }> = ({ data }) => {
-
     const convertedDate = data.date.map((date) => new Date(date));
     return (
         <EventBasicDetails
@@ -62,10 +61,9 @@ export const AddedAttCOrCourse: React.FC<{
             top={string}
             bottom={`${format(convertedDate[0], Assignments.dateformat)} -
             ${format(convertedDate[1], Assignments.dateformat)} 
-            (${differenceInCalendarDays(
-                convertedDate[1],
-                convertedDate[0]
-            )} days)`}
+            (${
+                differenceInCalendarDays(convertedDate[1], convertedDate[0]) + 1
+            } days)`}
         />
     );
 };
@@ -85,7 +83,7 @@ export const AddedMA: React.FC<{
 
     return (
         <EventBasicDetails
-            top={`${data.name || "`nspecified name"} @
+            top={`${data.name || "Unspecified name"} @
         ${data.location || "Unspecified location"}`}
             bottom={`${convertedDate} (${
                 data.incamp ? "In Camp" : "Out of Camp"
@@ -108,7 +106,7 @@ export const AddedOthers: React.FC<{
             top={`${data.name || "Unspecified name"}`}
             bottom={`${format(convertedDate[0], Assignments.dateformat)} -
             ${format(convertedDate[1], Assignments.dateformat)} 
-            (${differenceInCalendarDays(convertedDate[1], convertedDate[0])}
+            (${differenceInCalendarDays(convertedDate[1], convertedDate[0]) + 1}
             days) (${data.incamp ? "In Camp" : "Out of Camp"})`}
         />
     );
