@@ -7,8 +7,10 @@ import {
     isAfter,
     isBefore,
     isSameDay,
+    parse
 } from "date-fns";
 import { queryBuilder } from "mysql-query-placeholders";
+
 
 import Assignments from "../config/assignments.json";
 import { ExtendedPersonnel } from "../types/database";
@@ -34,6 +36,7 @@ export const formatMySQLDateTimeHelper = (date: string) =>
 
 export const formatMySQLTimeHelper = (date: string) =>
     format(new Date(date), Assignments.mysqltimeformat);
+export const parseMySQLDateHelper = (date: string) => parse(date, Assignments.mysqldateformat, new Date())
 
 export const openInNewTab = (url: string): void => {
     const newWindow = window.open(url, "_blank", "noopener,noreferrer");

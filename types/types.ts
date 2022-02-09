@@ -1,10 +1,20 @@
 import { StatusOption } from "../pages/personnel/manage/status";
-import { ExtendedPersonnel, Personnel } from "./database";
+import { BasicPersonnel, ExtendedPersonnel, Personnel } from "./database";
 
 export interface RootState {
     dashboard: DashboardState;
     status: StatusState;
+    personnel: PersonnelState;
 }
+
+export interface PersonnelState {
+    import: PersonnelImportState
+}
+
+export interface PersonnelImportState {
+    excel: BasicPersonnel[];
+    googleSheets: BasicPersonnel[];
+} 
 export interface StatusState {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];

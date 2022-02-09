@@ -17,3 +17,16 @@ export const sendPOST = async (url: string, data: any) => {
     const responseData = await res.json()
     return responseData
 };
+
+
+export const sendPOSTFormData = async (url: string, data: any) => {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+        body: data
+    });
+    const responseData = await res.json()
+    return responseData
+};

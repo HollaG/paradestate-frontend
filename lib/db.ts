@@ -20,11 +20,12 @@ export default async function executeQuery({
     try {
         const results = await db.query<any>(query, values);
         await db.end();
-
-        const stripped = results.map((rowDataPacket: any) =>
-            Object.assign({}, rowDataPacket)
-        );
-        return stripped;
+        if (Array.isArray(results)) {
+            const stripped = results.map((rowDataPacket: any) =>
+                Object.assign({}, rowDataPacket)
+            );
+            return stripped;
+        } else { return results}
     } catch (error) {
         return { error };
     }
@@ -37,7 +38,7 @@ export const executeTransaction = async (
     try {
         const transaction = await db.transaction();
 
-        const results:any[] = [];
+        const results: any[] = [];
         for (let i = 0; i < queries.length; i++) {
             transaction
                 .query(queries[i], values[i])
@@ -49,11 +50,11 @@ export const executeTransaction = async (
             console.log(e);
             return { error: e };
         });
-        transaction.commit()
-        return results
+        transaction.commit();
+        return results;
 
         // return insertIDs
     } catch (e) {
-        return { error: e}
+        return { error: e };
     }
 };

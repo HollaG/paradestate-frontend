@@ -126,7 +126,16 @@ const LinkItems: (
                 icon: FiSettings,
                 url: "/personnel/manage",
             },
-            // { name: "Manage website", icon: FiSettings, url: "/" },
+            {
+                name: "Add personnel",
+                icon: FiSettings,
+                url: "/personnel/manage/add",
+            },
+            {
+                name: "Import personnel",
+                icon: FiSettings,
+                url: "/personnel/manage/import",
+            },
         ],
     },
     // {
