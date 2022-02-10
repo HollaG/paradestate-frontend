@@ -85,7 +85,7 @@ const ReviewPage: NextProtectedPage = () => {
     const [secondsLeft, setSecondsLeft] = useState(30);
     const redirectToHome = useCallback(() => {
         router.push("/personnel/manage/import")
-    }, []);
+    }, [router]);
     useEffect(() => {
         if (secondsLeft <= 0) {
             redirectToHome();
@@ -160,7 +160,7 @@ const ReviewPage: NextProtectedPage = () => {
         } else { 
             router.push("/personnel/manage/import")
         }
-    }, [data]);
+    }, [data, router, setError]);
 
 
     if (addedPersonnel.length) {
