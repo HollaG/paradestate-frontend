@@ -30,7 +30,12 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { Control, Controller, FieldValues, useFormContext } from "react-hook-form";
+import {
+    Control,
+    Controller,
+    FieldValues,
+    useFormContext,
+} from "react-hook-form";
 import {
     CalendarPickerSkeleton,
     MobileDatePicker,
@@ -51,12 +56,14 @@ const CustomControlledDatePicker: React.FC<{
     name: string;
 
     control: Control<FieldValues, object>;
+    format?: string;
 }> = ({
     placeholder,
     size = "sm",
     defaultValue = new Date(),
     name,
     control,
+    format = Assignments.dateformat,
 }) => {
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -65,16 +72,15 @@ const CustomControlledDatePicker: React.FC<{
                 control={control}
                 defaultValue={defaultValue}
                 rules={{
-                    required: true,
+                    required: "This field is required!",
                 }}
                 render={(
                     { field: { onChange, value } } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDatePicker
-                       
                         value={value}
                         onChange={onChange}
-                        inputFormat={Assignments.dateformat}
+                        inputFormat={format}
                         showTodayButton
                         renderInput={(props) => (
                             <Input

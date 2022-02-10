@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BasicPersonnel, Personnel } from "../types/database";
-import { DashboardState, EventData, PersonnelImportState, PersonnelState } from "../types/types";
+import {
+    DashboardState,
+    EventData,
+    PersonnelImportState,
+    PersonnelState,
+} from "../types/types";
 
 const loadState = () => {
     try {
@@ -12,16 +17,19 @@ const loadState = () => {
     }
 };
 const initialState: PersonnelState = loadState() || {
-    import: {}
-}
+    import: {},
+};
 
 const personnelSlice = createSlice({
     name: "dashboard",
     initialState,
     reducers: {
-        setState(state, action:PayloadAction<PersonnelImportState>) { 
-            state.import = action.payload
-        }
+        setState(state, action: PayloadAction<PersonnelImportState>) {
+            state.import = action.payload;
+        },
+        clearImport(state) {
+            state.import = { excel: [], googleSheets: [] };
+        },
     },
 });
 

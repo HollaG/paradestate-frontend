@@ -158,8 +158,8 @@ const AddPersonnelPage: NextProtectedPage = () => {
                     <>
                         Your personnel {personnelData?.rank || "LCP"}{" "}
                         {personnelData?.name || "testing"} has been added.
-                        <Center mt={1}></Center>
-                        <Stack direction="row" justifyContent="center">
+                        
+                        <Stack direction="row" justifyContent="center" mt={1}>
                             <Button
                                 size="xs"
                                 colorScheme="teal"

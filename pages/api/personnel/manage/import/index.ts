@@ -25,9 +25,18 @@ export default async function handler(
         return res.status(401).json({ message: "Unauthorized" });
 
     if (req.method === "GET") {
+        // get platoon list 
+        const platoonResult:{platoon:string}[] = await executeQuery({
+            query: `SELECT DISTINCT platoon FROM personnel WHERE DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW()) AND unit = ? AND company = ?`,
+            values: [session.user.unit, session.user.company]
+        })
+
+        const platoons = platoonResult.map((platoon) => platoon.platoon)
+        res.status(200).json({platoons})
+
     } else {
         try {
-            console.log(req.body);
+     
             const personnel: BasicPersonnel[] = req.body.personnel;
 
             const final = personnel.map((person) => {
@@ -48,7 +57,7 @@ export default async function handler(
                         .toUpperCase();
                     if (!person[header]) {
                         // Missing header or no values
-                        finalPerson[header] = "error: Missing values!";
+                        finalPerson[header] = "error:Missing values!";
                     }
                 });
 
@@ -62,7 +71,7 @@ export default async function handler(
                     finalPerson.rank = person.rank.trim().toUpperCase();
                 } else {
                     // Rank is not good
-                    finalPerson.rank = `error: Invalid rank! (${person.rank})`;
+                    finalPerson.rank = `error:Invalid rank! (${person.rank})`;
                 }
 
                 // Check name exists
@@ -73,7 +82,7 @@ export default async function handler(
                     finalPerson.pes = person.pes.trim().toUpperCase();
                 } else {
                     // pes is not good
-                    finalPerson.pes = `error: Invalid PES! (${person.pes})`;
+                    finalPerson.pes = `error:Invalid PES! (${person.pes})`;
                 }
 
                 // Check post_in
@@ -153,11 +162,14 @@ export default async function handler(
                         .toUpperCase();
                 } else {
                     // svc status is not good
-                    finalPerson.svc_status = `error: Invalid Service Status! (${person.svc_status})`;
+                    finalPerson.svc_status = `error:Invalid Service Status! (${person.svc_status})`;
                 }
 
                 return finalPerson;
             });
+
+            // Check if any of the personnel exist (check post_in, ORD and name) 
+            // TODO
 
             res.status(200).json({
                 success: true,
