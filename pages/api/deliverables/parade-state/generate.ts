@@ -521,7 +521,7 @@ export default async function handler(
                     "INCLUDE-STATUSES": any[];
                 } = {
                     INDEX: dict["INCLUDE-STATUS"].length + 1,
-                    PID: statuses[0].personnel_ID,
+                    PID: statuses[0].personnel_ID.toString(),
                     RANK: statuses[0].rank,
                     NAME: statuses[0].name,
                     "INCLUDE-STATUSES": [],

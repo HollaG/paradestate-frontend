@@ -119,7 +119,7 @@ const PersonAccordionItem: React.FC<{
                                         end: statusGroup.date[1],
                                         type: statusGroup.perm ? "perm" : "",
                                         personnel_ID:
-                                            person.personnel_ID.toString(),
+                                            person.personnel_ID,
                                         status_ID: status.value,
                                         status_name: status.label,
                                     }}
