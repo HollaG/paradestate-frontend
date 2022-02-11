@@ -193,10 +193,10 @@ const OverviewPage: NextProtectedPage = () => {
                             <Skeleton isLoaded={!!data} height="21px">
                                 {data && !!data.numbers.ma && (
                                     <>
-                                        {data.numbers.numberOfMAsInCamp}
+                                        {data.numbers.numberOfMAsInCamp}{" "}
                                         in camp,
-                                        {data.numbers.ma -
-                                            data.numbers.numberOfMAsInCamp}
+                                        {" "}{data.numbers.ma -
+                                            data.numbers.numberOfMAsInCamp}{" "}
                                         out
                                     </>
                                 )}
