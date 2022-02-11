@@ -81,7 +81,7 @@ export interface Status {
 }
 
 export interface ExtendedStatus extends Status {
-    personnel_ID: string;
+    personnel_ID: number;
     start: Date | string;
     end: Date | string;
     type: "perm" | "";

@@ -90,7 +90,7 @@ import useSWRImmutable from "swr/immutable";
 import fetcher from "../lib/fetcher";
 import SearchInput from "../components/SearchInput";
 
-const DefaultLink: React.FC<{
+export const DefaultLink: React.FC<{
     url: string;
     type:
         | "ma"
@@ -103,7 +103,16 @@ const DefaultLink: React.FC<{
         | "incamp";
     person: ExtendedPersonnel;
 }> = ({ url, type, person }) => {
+    const router = useRouter();
+    
     const { isOpen, onOpen, onClose } = useDisclosure();
+    if (type === "incamp")
+        return (
+            <Tag size="sm" variant="subtle" colorScheme="green">
+                {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+                <TagLabel> In camp </TagLabel>
+            </Tag>
+        );
     let modalContents;
     switch (type) {
         case "leave": {
@@ -176,7 +185,6 @@ const DefaultLink: React.FC<{
             break;
         }
     }
-    const router = useRouter();
     return (
         <>
             {/* <NextLink href={url} passHref> */}
@@ -523,7 +531,7 @@ const PersonAccordionItem: React.FC<{
                                         ? "solid"
                                         : "outline"
                                 }
-                            colorScheme="blue"
+                                colorScheme="blue"
                             >
                                 Extras
                             </MenuButton>
@@ -692,7 +700,14 @@ const Dashboard: NextProtectedPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
-    const defaultIndex = useMemo(() => [Object.keys(data?.sortedByPlatoon || {}).indexOf(session?.user.platoon || "")], [data, session]);
+    const defaultIndex = useMemo(
+        () => [
+            Object.keys(data?.sortedByPlatoon || {}).indexOf(
+                session?.user.platoon || ""
+            ),
+        ],
+        [data, session]
+    );
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
     const handleAccordion = (index: number[]) => {
         setIndex(index);

@@ -332,6 +332,10 @@ const PlatoonAccordionItem: React.FC<{
 }) => {
     const { data: session } = useSession();
     const [rendered, setRendered] = useState(platoon === session?.user.platoon);
+ 
+    useEffect(() => {
+        setRendered(platoon === session?.user.platoon);
+    }, [session?.user.platoon, platoon]);
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
@@ -341,7 +345,7 @@ const PlatoonAccordionItem: React.FC<{
     return (
         <AccordionItem>
             <Text>
-                <AccordionButton _expanded={{ bg: "gray.200" }}>
+                <AccordionButton _expanded={{ bg: "gray.200" }} onClick={() => setRendered(true)}>
                     <Box flex={1} textAlign="left">
                         {platoon} ({personnel.length})
                     </Box>

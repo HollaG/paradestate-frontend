@@ -39,6 +39,17 @@ const chakraTheme = extendTheme(
     //     colorScheme: "teal",
     //     components: ["Button"],
     // })
+    {
+        components: {
+            Divider: {
+                sizes: {
+                    lg: {
+                        borderBottomWidth: "3px",
+                    },
+                },
+            },
+        },
+    }
 );
 
 const theme = deepmerge(chakraTheme, muiTheme);
