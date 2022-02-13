@@ -64,8 +64,11 @@ export default async function handler(
                 const title = off.reason ? `Off: ${off.reason}` : "Off";
                 const { start, end } = off;
                 if (off.start_time === "PM") start.setHours(12);
-                if (off.end_time === "AM") end.setHours(12)
-                else end.setHours(24)
+                if (off.end_time === "AM") end.setHours(12);
+                else {
+                    end.setHours(23);
+                    end.setMinutes(59);
+                }
                 return { title, start, end, id: off.row_ID, type: "off" };
             });
             // const leaves: OffOrLeaveEvent[] = await executeQuery({
@@ -99,7 +102,11 @@ export default async function handler(
                 if (leave.start_time === "PM")
                     start.setHours(start.getHours() + 12);
                 if (leave.end_time === "AM") end.setHours(12);
-                else end.setHours(24)
+                else {
+                    end.setHours(23);
+                    end.setMinutes(59)
+
+                }
 
                 return { title, start, end, id: leave.row_ID, type: "leave" };
             });
@@ -130,7 +137,9 @@ export default async function handler(
                     ? `AttC: ${attc.attc_name}`
                     : "AttC";
                 const { start, end } = attc;
-                end.setHours(24) // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
+                end.setHours(23); // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
+                end.setMinutes(59)
+
                 return {
                     title,
                     start,
@@ -169,9 +178,17 @@ export default async function handler(
                     ? `Course: ${course.course_name}`
                     : "Course";
                 const { start, end } = course;
-                end.setHours(24) // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
+                end.setHours(23); // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
+                end.setMinutes(59)
 
-                return { title, start, end, allDay: true, id: course.row_ID, type: "course" };
+                return {
+                    title,
+                    start,
+                    end,
+                    allDay: true,
+                    id: course.row_ID,
+                    type: "course",
+                };
             });
 
             // const mas: MAEvent[] = await executeQuery({
@@ -249,7 +266,8 @@ export default async function handler(
                     : `${other.other_name}`;
                 const start = other.start;
                 const end = other.end;
-                end.setHours(24) // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
+                end.setHours(23);
+                end.setMinutes(59); // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
                 return {
                     title,
                     start,
@@ -312,8 +330,10 @@ export default async function handler(
                     tempStart = statusDates[i];
                     // continue;
                 }
-                let changed = new Date(statusDates[i])
-                changed.setHours(24)
+                let changed = new Date(statusDates[i]);
+                changed.setHours(23);
+                changed.setMinutes(59)
+
                 // if current iteration is the last iteration,
                 if (i === statusDates.length - 1) {
                     if (!tempStart) {
@@ -322,7 +342,7 @@ export default async function handler(
                             title: "Status",
                             allDay: true,
                             start: statusDates[i],
-                            end: changed
+                            end: changed,
                         });
                         tempStart = undefined;
 
@@ -349,7 +369,7 @@ export default async function handler(
                         title: "Status",
                         allDay: true,
                         start: tempStart,
-                        end: changed
+                        end: changed,
                     });
                     tempStart = undefined;
                 }
