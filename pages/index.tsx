@@ -104,7 +104,7 @@ export const DefaultLink: React.FC<{
     person: ExtendedPersonnel;
 }> = ({ url, type, person }) => {
     const router = useRouter();
-    
+
     const { isOpen, onOpen, onClose } = useDisclosure();
     if (type === "incamp")
         return (
@@ -290,7 +290,36 @@ const PersonAccordionItem: React.FC<{
         [person]
     );
 
-    const [buttonStates, setButtonStates] = useState(defaultState);
+    const initialState = useMemo(
+        () => ({
+            off: false,
+            leave:
+                // defaultData.leave[person.personnel_ID] ||
+                false,
+            attc:
+                // defaultData.attc[person.personnel_ID] ||
+                false,
+            course:
+                // defaultData.course[person.personnel_ID] ||
+                false,
+            ma:
+                // defaultData.ma[person.personnel_ID] ||
+                false,
+            others:
+                // defaultData.others[person.personnel_ID] ||
+                false,
+            // This property is not currently in use
+            extras:
+                // defaultData.course[person.personnel_ID] ||
+                // defaultData.ma[person.personnel_ID] ||
+                // defaultData.others[person.personnel_ID] ||
+
+                false,
+            incamp: person.location === "In camp" ? true : false,
+        }),
+        [person]
+    );
+    const [buttonStates, setButtonStates] = useState(initialState);
     const incamp =
         person.location === "In camp" &&
         !buttonStates.off &&
@@ -300,13 +329,15 @@ const PersonAccordionItem: React.FC<{
         !buttonStates.ma &&
         !buttonStates.others;
 
-    const defaultExtrasChecked: string[] = useMemo(() => {
-        const temp = [];
-        if (person.ma_row_ID) temp.push("ma");
-        if (person.others_row_ID) temp.push("others");
-        if (person.course_row_ID) temp.push("course");
-        return temp;
-    }, [person]);
+    // const defaultExtrasChecked: string[] = useMemo(() => {
+    //     const temp = [];
+    //     if (person.ma_row_ID) temp.push("ma");
+    //     if (person.others_row_ID) temp.push("others");
+    //     if (person.course_row_ID) temp.push("course");
+    //     return temp;
+    // }, [person]);
+
+    const defaultExtrasChecked:string[] = useMemo(() => [], [])
 
     // Override type checking TODO
     const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
@@ -385,36 +416,36 @@ const PersonAccordionItem: React.FC<{
     useEffect(() => {
         setButtonStates((prevState) => ({
             // Only set the button states if dashboardData.[whatever] exists
-            off: defaultState.off || dashboardData.off[person.personnel_ID],
+            off: initialState.off || dashboardData.off[person.personnel_ID],
             // ? true : prevState.off,
 
             leave:
-                defaultState.leave || dashboardData.leave[person.personnel_ID],
+                initialState.leave || dashboardData.leave[person.personnel_ID],
             // ? true
             // : prevState.leave,
 
-            attc: defaultState.attc || dashboardData.attc[person.personnel_ID],
+            attc: initialState.attc || dashboardData.attc[person.personnel_ID],
             // ? true
             // : prevState.attc,
 
             course:
-                defaultState.course ||
+                initialState.course ||
                 dashboardData.course[person.personnel_ID],
             // ? true
             // : prevState.course,
 
-            ma: defaultState.ma || dashboardData.ma[person.personnel_ID],
+            ma: initialState.ma || dashboardData.ma[person.personnel_ID],
             // ? true : prevState.ma,
 
             others:
-                defaultState.others ||
+                initialState.others ||
                 dashboardData.others[person.personnel_ID],
             // ? true
             // : prevState.others,
 
             // This property is not currently in use
             extras:
-                defaultState.extras ||
+                initialState.extras ||
                 dashboardData.course[person.personnel_ID] ||
                 dashboardData.ma[person.personnel_ID] ||
                 dashboardData.others[person.personnel_ID],
@@ -422,12 +453,12 @@ const PersonAccordionItem: React.FC<{
         }));
         // reset the extrasChecked state to the intial value
 
-        const temp = [];
-        if (dashboardData.ma[person.personnel_ID]) temp.push("ma");
-        if (dashboardData.others[person.personnel_ID]) temp.push("others");
-        if (dashboardData.course[person.personnel_ID]) temp.push("course");
-        setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])]);
-    }, [dashboardData, person, defaultState, defaultExtrasChecked]);
+        // const temp = [];
+        // if (dashboardData.ma[person.personnel_ID]) temp.push("ma");
+        // if (dashboardData.others[person.personnel_ID]) temp.push("others");
+        // if (dashboardData.course[person.personnel_ID]) temp.push("course");
+        // setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])]);
+    }, [dashboardData, person, initialState, defaultExtrasChecked]);
 
     // Function to clear all selectins
     // const clearThis = () => {
@@ -485,7 +516,9 @@ const PersonAccordionItem: React.FC<{
                                         key={index}
                                         url={`/personnel/manage/${
                                             person.personnel_ID
-                                        }/?goto=${event}&id=${person[`${event}_row_ID`]}`}
+                                        }/?goto=${event}&id=${
+                                            person[`${event}_row_ID`]
+                                        }`}
                                         type={event}
                                         person={person}
                                     />
@@ -501,7 +534,7 @@ const PersonAccordionItem: React.FC<{
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
                             onClick={() => toggleHandler("off")}
-                            disabled={!!person.off_row_ID}
+                            // disabled={!!person.off_row_ID}
                             colorScheme="blue"
                         >
                             Off
@@ -509,7 +542,7 @@ const PersonAccordionItem: React.FC<{
                         <Button
                             variant={buttonStates.leave ? "solid" : "outline"}
                             onClick={() => toggleHandler("leave")}
-                            disabled={!!person.leave_row_ID}
+                            // disabled={!!person.leave_row_ID}
                             colorScheme="blue"
                         >
                             Leave
@@ -517,7 +550,7 @@ const PersonAccordionItem: React.FC<{
                         <Button
                             variant={buttonStates.attc ? "solid" : "outline"}
                             onClick={() => toggleHandler("attc")}
-                            disabled={!!person.attc_row_ID}
+                            // disabled={!!person.attc_row_ID}
                             colorScheme="blue"
                         >
                             AttC
@@ -543,19 +576,19 @@ const PersonAccordionItem: React.FC<{
                                 >
                                     <MenuItemOption
                                         value="course"
-                                        isDisabled={!!person.course_row_ID}
+                                        // isDisabled={!!person.course_row_ID}
                                     >
                                         Course
                                     </MenuItemOption>
                                     <MenuItemOption
                                         value="ma"
-                                        isDisabled={!!person.ma_row_ID}
+                                        // isDisabled={!!person.ma_row_ID}
                                     >
                                         MA
                                     </MenuItemOption>
                                     <MenuItemOption
                                         value="others"
-                                        isDisabled={!!person.others_row_ID}
+                                        // isDisabled={!!person.others_row_ID}
                                     >
                                         Others
                                     </MenuItemOption>
@@ -580,7 +613,7 @@ const PersonAccordionItem: React.FC<{
             {/* TODO - instead of checking all the events, we check each individual event on the user  */}
 
             {/* only render the below if the user is not already on event */}
-            {!defaultState.off && (
+            {!initialState.off && (
                 <Collapse in={buttonStates.off} animateOpacity unmountOnExit>
                     <AddOff
                         personnel_ID={person.personnel_ID}
@@ -589,7 +622,7 @@ const PersonAccordionItem: React.FC<{
                     />
                 </Collapse>
             )}
-            {!defaultState.leave && (
+            {!initialState.leave && (
                 <Collapse in={buttonStates.leave} animateOpacity unmountOnExit>
                     <AddLeave
                         personnel_ID={person.personnel_ID}
@@ -598,7 +631,7 @@ const PersonAccordionItem: React.FC<{
                     />
                 </Collapse>
             )}
-            {!defaultState.attc && (
+            {!initialState.attc && (
                 <Collapse in={buttonStates.attc} animateOpacity unmountOnExit>
                     <AddAttC
                         personnel_ID={person.personnel_ID}
@@ -608,7 +641,7 @@ const PersonAccordionItem: React.FC<{
                 </Collapse>
             )}
 
-            {!defaultState.course && (
+            {!initialState.course && (
                 <Collapse in={buttonStates.course} animateOpacity unmountOnExit>
                     <AddCourse
                         personnel_ID={person.personnel_ID}
@@ -617,7 +650,7 @@ const PersonAccordionItem: React.FC<{
                     />
                 </Collapse>
             )}
-            {!defaultState.ma && (
+            {!initialState.ma && (
                 <Collapse in={buttonStates.ma} animateOpacity unmountOnExit>
                     <AddMA
                         personnel_ID={person.personnel_ID}
@@ -626,7 +659,7 @@ const PersonAccordionItem: React.FC<{
                     />
                 </Collapse>
             )}
-            {!defaultState.others && (
+            {!initialState.others && (
                 <Collapse in={buttonStates.others} animateOpacity unmountOnExit>
                     <AddOthers
                         personnel_ID={person.personnel_ID}
