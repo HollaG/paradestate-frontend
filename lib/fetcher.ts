@@ -18,6 +18,17 @@ export const sendPOST = async (url: string, data: any) => {
     return responseData
 };
 
+export const sendDELETE = async (url: string, data: any) => {
+    const res = await fetch(url, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+    const responseData = await res.json()
+    return responseData
+}
 
 export const sendPOSTFormData = async (url: string, data: any) => {
     const res = await fetch(url, {

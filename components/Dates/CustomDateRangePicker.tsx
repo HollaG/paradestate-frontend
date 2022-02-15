@@ -39,13 +39,15 @@ const AMPMSelection: React.FC<{
     identifier: string;
 
     defaultTime: "AM" | "PM";
-}> = ({ personnel_ID, type, identifier, defaultTime }) => {
+
+    row_ID? : string
+}> = ({ personnel_ID, type, identifier, defaultTime, row_ID }) => {
     const { register } = useFormContext();
     return (
         <Select
             size="sm"
             w="28"
-            {...register(`${personnel_ID}-${type}-${identifier}-time`)}
+            {...register(row_ID ? `${row_ID}-${type}-${identifier}-time` : `${personnel_ID}-${type}-${identifier}-time`)}
             defaultValue={defaultTime}
         >
             <option> AM </option>
@@ -69,6 +71,7 @@ const CustomDateRangePicker: React.FC<{
     defaultStartTime?: "AM" | "PM";
     defaultEndTime?: "AM" | "PM";
 
+    row_ID? : string
     // isLoading?: boolean;
     // handleMonthChange?: (date: Date) => void;
     // highlightedDays?: HighlightedDay[];
@@ -85,6 +88,7 @@ const CustomDateRangePicker: React.FC<{
     defaultStartTime = "AM",
     defaultEndTime = "PM",
 
+    row_ID
     // isLoading = false,
     // handleMonthChange = () => {},
     // highlightedDays = [],
@@ -131,14 +135,15 @@ const CustomDateRangePicker: React.FC<{
     }, [personnel_ID, type])
 
     const handleMonthChange = (date: Date) => {
+        console.log('handle month change', date)
         setIsLoading(true);
         fetchDisabledDates(date);
     };
 
     const memoized = useMemo(() => fetchDisabledDates, [fetchDisabledDates]);
     useEffect(() => {
-        memoized(new Date());
-    }, [memoized, setIsLoading]);
+        memoized(defaultValues?.length ? new Date(defaultValues[0]) : new Date());
+    }, [memoized, setIsLoading, defaultValues]);
 
     const disableDateHandler = (date: Date) => {
         // console.log("running",);
@@ -153,7 +158,7 @@ const CustomDateRangePicker: React.FC<{
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
-                name={`${personnel_ID}-${type}-date`}
+                name={row_ID ? `${row_ID}-${type}-date` : `${personnel_ID}-${type}-date`}
                 control={control}
                 defaultValue={defaultValues || [currentDate, currentDate]}
                 rules={{
@@ -168,7 +173,7 @@ const CustomDateRangePicker: React.FC<{
                     } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateRangePicker
-                        minDate={subMonths(currentDate, 1)}
+                        minDate={row_ID ? undefined : subMonths(currentDate, 1)}
                         value={value}
                         onChange={(dates: any) =>
                             validateStartBeforeEnd(dates)
@@ -198,10 +203,11 @@ const CustomDateRangePicker: React.FC<{
                                         sx={{
                                             position: "relative",
                                         }}
+                                        key={date.getDay()}
                                     >
                                         {isSelected && (
                                             <Badge
-                                                key={date.getDay()}
+                                                
                                                 sx={{
                                                     position: "absolute",
                                                     right: " -7px",
@@ -256,6 +262,7 @@ const CustomDateRangePicker: React.FC<{
                                             identifier="start"
                                             personnel_ID={personnel_ID}
                                             defaultTime={defaultStartTime}
+                                            row_ID={row_ID}
                                         />
                                     )}
                                 </Flex>
@@ -283,6 +290,8 @@ const CustomDateRangePicker: React.FC<{
                                             identifier="end"
                                             personnel_ID={personnel_ID}
                                             defaultTime={defaultEndTime}
+                                            row_ID={row_ID}
+
                                         />
                                     )}
                                 </Flex>

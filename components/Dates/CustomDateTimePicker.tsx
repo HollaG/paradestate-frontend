@@ -37,7 +37,7 @@ import { HighlightedDay } from "../../types/types";
 
 const CustomDateTimePicker: React.FC<{
     personnel_ID: number;
-
+    row_ID?: string;
     type: string;
     leftAdorn: string;
     placeholder: string;
@@ -45,6 +45,7 @@ const CustomDateTimePicker: React.FC<{
     defaultValue?: Date;
 }> = ({
     personnel_ID,
+    row_ID,
     type,
     leftAdorn,
     placeholder,
@@ -93,14 +94,14 @@ const CustomDateTimePicker: React.FC<{
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
-                name={`${personnel_ID}-${type}-date-time`}
+                name={row_ID ? `${row_ID}-${type}-date-time`: `${personnel_ID}-${type}-date-time`}
                 control={control}
                 defaultValue={defaultValue}
                 render={(
                     { field: { onChange, value } } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateTimePicker
-                        minDateTime={subMonths(new Date(), 1)}
+                        minDateTime={row_ID ? undefined : subMonths(new Date(), 1)}
                         minutesStep={5}
                         value={value}
                         onChange={onChange}

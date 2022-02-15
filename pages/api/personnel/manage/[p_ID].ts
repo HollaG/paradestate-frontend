@@ -1,4 +1,12 @@
-import { addDays, addHours, addMinutes, format, isSameDay } from "date-fns";
+import {
+    addDays,
+    addHours,
+    addMinutes,
+    format,
+    isBefore,
+    isEqual,
+    isSameDay,
+} from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 import executeQuery from "../../../../lib/db";
@@ -13,7 +21,12 @@ import {
     OtherEvent,
 } from "../../../../types/types";
 import { Event } from "react-big-calendar";
-import { sortActiveInactiveStatus } from "../../../../lib/custom";
+import {
+    calculateOutOfOfficeDuration,
+    formatMySQLDateHelper,
+    formatMySQLTimeHelper,
+    sortActiveInactiveStatus,
+} from "../../../../lib/custom";
 
 export default async function handler(
     req: NextApiRequest,
@@ -22,10 +35,10 @@ export default async function handler(
     const session = await getSession({ req });
     if (!session || !session.user)
         return res.status(401).json({ message: "Unauthorized" });
+    const personnel_ID: string = req.query.p_ID.toString();
 
     if (req.method === "GET") {
         try {
-            const personnel_ID: string = req.query.p_ID.toString();
             if (!personnel_ID)
                 return res
                     .status(400)
@@ -104,8 +117,7 @@ export default async function handler(
                 if (leave.end_time === "AM") end.setHours(12);
                 else {
                     end.setHours(23);
-                    end.setMinutes(59)
-
+                    end.setMinutes(59);
                 }
 
                 return { title, start, end, id: leave.row_ID, type: "leave" };
@@ -138,7 +150,7 @@ export default async function handler(
                     : "AttC";
                 const { start, end } = attc;
                 end.setHours(23); // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
-                end.setMinutes(59)
+                end.setMinutes(59);
 
                 return {
                     title,
@@ -179,7 +191,7 @@ export default async function handler(
                     : "Course";
                 const { start, end } = course;
                 end.setHours(23); // to make the event full day cos if the hours are 0, the calendar won't recognise the last day
-                end.setMinutes(59)
+                end.setMinutes(59);
 
                 return {
                     title,
@@ -332,7 +344,7 @@ export default async function handler(
                 }
                 let changed = new Date(statusDates[i]);
                 changed.setHours(23);
-                changed.setMinutes(59)
+                changed.setMinutes(59);
 
                 // if current iteration is the last iteration,
                 if (i === statusDates.length - 1) {
@@ -439,6 +451,370 @@ export default async function handler(
         } catch (e: any) {
             res.status(400).json({
                 error: e.toString(),
+            });
+        }
+    } else if (req.method === "POST") {
+        try {
+            console.log(req.body);
+            const type = req.body.type;
+            const data = req.body.data;
+            const row_ID = Object.keys(data)[0].split("-")[0];
+            let query = ``;
+            let values: string[] = [];
+
+            // Check perms
+            const personnelExists = await executeQuery({
+                query: `SELECT * FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
+                values: [personnel_ID, session.user.unit, session.user.company],
+            });
+            if (!personnelExists.length)
+                return res.status(400).json({
+                    error: "You do not have permission to edit this user!",
+                });
+
+            switch (type) {
+                case "off": {
+                    // Check that start date is before end date and all
+                    const reason = data[`${row_ID}-${type}-reason`];
+                    const dates = data[`${row_ID}-${type}-date`].map(
+                        (date: string) => new Date(date)
+                    );
+                    const startTime = data[`${row_ID}-${type}-start-time`];
+                    const endTime = data[`${row_ID}-${type}-end-time`];
+
+                    const startIsBefore =
+                        isBefore(dates[0], dates[1]) ||
+                        isEqual(dates[0], dates[1]);
+                    if (!startIsBefore) {
+                        return res.status(400).json({
+                            error: "Start date must be before end date",
+                        });
+                    }
+                    const previousOff = await executeQuery({
+                        query: "SELECT * FROM off_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+
+                    if (!previousOff.length)
+                        return res.status(400).json({
+                            error: "Invalid off ID!",
+                        });
+                    console.log({ previousOff });
+                    const previousDaysOff = calculateOutOfOfficeDuration({
+                        date: [previousOff[0].start, previousOff[0].end],
+                        "end-time": previousOff[0].end_time,
+                        "start-time": previousOff[0].start_time,
+                    });
+                    const newDaysOff = calculateOutOfOfficeDuration({
+                        date: dates,
+                        "end-time": endTime,
+                        "start-time": startTime,
+                    });
+
+                    const daysToChange = newDaysOff - previousDaysOff;
+                    query = `UPDATE off_tracker SET start = ?, start_time = ?, end = ?, end_time = ?, reason = ? WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dates[0]),
+                        startTime,
+                        formatMySQLDateHelper(dates[1]),
+                        endTime,
+                        reason,
+                        row_ID,
+                    ];
+
+                    await executeQuery({
+                        query: `UPDATE personnel SET off_balance=off_balance+? WHERE personnel_ID = ?`,
+                        values: [daysToChange, personnel_ID],
+                    });
+                    break;
+                }
+                case "leave": {
+                    // Check that start date is before end date and all
+                    const reason = data[`${row_ID}-${type}-reason`];
+                    const dates = data[`${row_ID}-${type}-date`].map(
+                        (date: string) => new Date(date)
+                    );
+                    const startTime = data[`${row_ID}-${type}-start-time`];
+                    const endTime = data[`${row_ID}-${type}-end-time`];
+
+                    const startIsBefore =
+                        isBefore(dates[0], dates[1]) ||
+                        isEqual(dates[0], dates[1]);
+                    if (!startIsBefore) {
+                        return res.status(400).json({
+                            error: "Start date must be before end date",
+                        });
+                    }
+                    const previousLeave = await executeQuery({
+                        query: "SELECT * FROM leave_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+
+                    if (!previousLeave.length)
+                        return res.status(400).json({
+                            error: "Invalid leave ID!",
+                        });
+                    console.log({ previousLeave });
+                    const previousDaysLeave = calculateOutOfOfficeDuration({
+                        date: [previousLeave[0].start, previousLeave[0].end],
+                        "end-time": previousLeave[0].end_time,
+                        "start-time": previousLeave[0].start_time,
+                    });
+                    const newDaysLeave = calculateOutOfOfficeDuration({
+                        date: dates,
+                        "end-time": endTime,
+                        "start-time": startTime,
+                    });
+
+                    const daysToChange = newDaysLeave - previousDaysLeave;
+                    query = `UPDATE leave_tracker SET start = ?, start_time = ?, end = ?, end_time = ?, reason = ? WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dates[0]),
+                        startTime,
+                        formatMySQLDateHelper(dates[1]),
+                        endTime,
+                        reason,
+                        row_ID,
+                    ];
+
+                    await executeQuery({
+                        query: `UPDATE personnel SET leave_balance=leave_balance+? WHERE personnel_ID = ?`,
+                        values: [daysToChange, personnel_ID],
+                    });
+                    break;
+                }
+                case "attc": {
+                    // Check that start date is before end date and all
+                    const reason = data[`${row_ID}-${type}-reason`];
+                    const dates = data[`${row_ID}-${type}-date`].map(
+                        (date: string) => new Date(date)
+                    );
+                    const startIsBefore =
+                        isBefore(dates[0], dates[1]) ||
+                        isEqual(dates[0], dates[1]);
+                    if (!startIsBefore) {
+                        return res.status(400).json({
+                            error: "Start date must be before end date",
+                        });
+                    }
+                    const previousAttc = await executeQuery({
+                        query: "SELECT * FROM attc_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+
+                    if (!previousAttc.length)
+                        res.status(400).json({
+                            error: "Invalid attc ID!",
+                        });
+
+                    query = `UPDATE attc_tracker SET start = ?, end = ?, attc_name = ? WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dates[0]),
+
+                        formatMySQLDateHelper(dates[1]),
+
+                        reason,
+                        row_ID,
+                    ];
+
+                    break;
+                }
+                case "course": {
+                    // Check that start date is before end date and all
+                    const name = data[`${row_ID}-${type}-name`];
+                    const dates = data[`${row_ID}-${type}-date`].map(
+                        (date: string) => new Date(date)
+                    );
+                    const startIsBefore =
+                        isBefore(dates[0], dates[1]) ||
+                        isEqual(dates[0], dates[1]);
+                    if (!startIsBefore) {
+                        return res.status(400).json({
+                            error: "Start date must be before end date",
+                        });
+                    }
+                    const previousCourse = await executeQuery({
+                        query: "SELECT * FROM course_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+
+                    if (!previousCourse.length)
+                        return res.status(400).json({
+                            error: "Invalid course ID!",
+                        });
+
+                    query = `UPDATE course_tracker SET start = ?, end = ?, course_name = ? WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dates[0]),
+
+                        formatMySQLDateHelper(dates[1]),
+
+                        name,
+                        row_ID,
+                    ];
+
+                    break;
+                }
+                case "ma": {
+                    const previousMa = await executeQuery({
+                        query: "SELECT * FROM ma_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+                    if (!previousMa.length)
+                        return res.status(400).json({
+                            error: "Invalid MA ID!",
+                        });
+
+                    const name = data[`${row_ID}-${type}-name`];
+                    const location = data[`${row_ID}-${type}-location`];
+                    const incamp = data[`${row_ID}-${type}-incamp`];
+                    const dateTime = data[`${row_ID}-${type}-date-time`];
+                    query = `UPDATE ma_tracker SET date = ?, time = ?, location = ?, ma_name = ?, in_camp = ? WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dateTime),
+                        formatMySQLTimeHelper(dateTime),
+                        location,
+                        name,
+                        incamp,
+                        row_ID,
+                    ];
+                    break;
+                }
+                case "others": {
+                    // Check that start date is before end date and all
+                    const name = data[`${row_ID}-${type}-name`];
+                    const incamp = data[`${row_ID}-${type}-incamp`];
+                    const dates = data[`${row_ID}-${type}-date`].map(
+                        (date: string) => new Date(date)
+                    );
+                    const startIsBefore =
+                        isBefore(dates[0], dates[1]) ||
+                        isEqual(dates[0], dates[1]);
+                    if (!startIsBefore) {
+                        return res.status(400).json({
+                            error: "Start date must be before end date",
+                        });
+                    }
+                    const previousOthers = await executeQuery({
+                        query: "SELECT * FROM others_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+
+                    if (!previousOthers.length)
+                        return res.status(400).json({
+                            error: "Invalid others ID!",
+                        });
+
+                    query = `UPDATE others_tracker SET start = ?, end = ?, others_name = ?, in_camp = ?, location = "" WHERE row_ID = ?`;
+                    values = [
+                        formatMySQLDateHelper(dates[0]),
+
+                        formatMySQLDateHelper(dates[1]),
+
+                        name,
+                        incamp,
+                        row_ID,
+                    ];
+
+                    break;
+                }
+                case "status": {
+                    const isPerm = data[`${row_ID}-${type}-perm`];
+
+                    const previousStatus = await executeQuery({
+                        query: "SELECT * FROM status_tracker WHERE row_ID = ?",
+                        values: [row_ID],
+                    });
+                    if (!previousStatus.length)
+                        return res.status(400).json({
+                            error: "Invalid status ID!",
+                        });
+
+                    if (isPerm) {
+                        query = `UPDATE status_tracker SET type = 'perm' WHERE row_ID = ?`;
+                        values = [row_ID];
+                    } else {
+                        const dates = data[`${row_ID}-${type}-date`].map(
+                            (date: string) => new Date(date)
+                        );
+                        const startIsBefore =
+                            isBefore(dates[0], dates[1]) ||
+                            isEqual(dates[0], dates[1]);
+                        if (!startIsBefore) {
+                            return res.status(400).json({
+                                error: "Start date must be before end date",
+                            });
+                        }
+                        query = `UPDATE status_tracker SET start = ?, end = ?, type = "" WHERE row_ID = ?`;
+                        values = [
+                            formatMySQLDateHelper(dates[0]),
+                            formatMySQLDateHelper(dates[1]),
+                            row_ID,
+                        ];
+                    }
+                }
+            }
+            console.log("Final query:", { query, values });
+            const result = await executeQuery({ query, values });
+            const oldGroupID = await executeQuery({
+                query: `SELECT MAX(group_ID) as max FROM audit_log`,
+                values: [],
+            });
+            const groupID = oldGroupID[0].max + 1;
+            const auditSql = `INSERT INTO audit_log SET user_ID = ?, operation = "UPDATE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW(), group_ID = ?`;
+            const auditArr = [
+                session.user.row_ID,
+                type,
+                row_ID,
+                personnel_ID,
+                groupID,
+            ];
+            await executeQuery({ query: auditSql, values: auditArr });
+
+            res.json({ success: true });
+        } catch (e: any) {
+            console.log(e);
+            res.json({
+                error: {
+                    message: "Something went wrong!",
+                },
+            });
+        }
+    } else if (req.method === "DELETE") {
+        try {
+            console.log("deleting...");
+            const { type, id } = req.body;
+
+            // Check perms
+            const personnelExists = await executeQuery({
+                query: `SELECT * FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
+                values: [personnel_ID, session.user.unit, session.user.company],
+            });
+            if (!personnelExists.length)
+                return res.status(400).json({
+                    error: "You do not have permission to edit this user!",
+                });
+
+            const result = await executeQuery({
+                query: `DELETE FROM ?? WHERE row_ID = ?`,
+                values: [`${type}_tracker`, id],
+            });
+            const oldGroupID = await executeQuery({
+                query: `SELECT MAX(group_ID) as max FROM audit_log`,
+                values: [],
+            });
+            const groupID = oldGroupID[0].max + 1;
+            await executeQuery({
+                query: `INSERT INTO audit_log SET group_ID = ?, user_ID = ?, operation = "DELETE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW()`,
+                values: [groupID, session.user.row_ID, type, id, personnel_ID],
+            });
+           
+            res.json({ success: true });
+        } catch (e) {
+            res.json({
+                error: {
+                    message: "Something went wrong!",
+                },
             });
         }
     }

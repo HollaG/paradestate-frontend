@@ -41,7 +41,8 @@ const CustomStatusDateRangePicker: React.FC<{
     endPlaceholder: string;
     personnel_ID: number;
     defaultValues?: [Date, Date];
-    num: number
+    num?: number,
+    row_ID?: string
 }> = ({
     startLeftAdorn,
     startPlaceholder,
@@ -50,6 +51,7 @@ const CustomStatusDateRangePicker: React.FC<{
     personnel_ID,
     defaultValues,
     num,
+    row_ID
     // isLoading = false,
     // handleMonthChange = () => {},
     // highlightedDays = [],
@@ -115,7 +117,7 @@ const CustomStatusDateRangePicker: React.FC<{
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
-                name={`${personnel_ID}-${num}-status-date`}
+                name={row_ID ? `${row_ID}-status-date` : `${personnel_ID}-${num}-status-date`}
                 control={control}
                 defaultValue={defaultValues || [currentDate, currentDate]}
                 rules={{
@@ -130,7 +132,7 @@ const CustomStatusDateRangePicker: React.FC<{
                     } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateRangePicker
-                        minDate={subMonths(currentDate, 1)}
+                        minDate={row_ID ? undefined : subMonths(currentDate, 1)}
                         value={value}
                         onChange={(dates: any) =>
                             validateStartBeforeEnd(dates)

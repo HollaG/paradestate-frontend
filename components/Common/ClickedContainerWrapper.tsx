@@ -22,4 +22,4 @@ const ClickedContainerWrapper = React.forwardRef<
     );
 });
 ClickedContainerWrapper.displayName = "ClickedContainerWrapper";
-export default React.memo(ClickedContainerWrapper);
+export default (ClickedContainerWrapper);

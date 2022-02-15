@@ -10,11 +10,12 @@ import {
     Text,
 } from "@chakra-ui/react";
 import { DateRange } from "@mui/lab/DateRangePicker";
+import { format, parse } from "date-fns";
 import { useState } from "react";
 import { FieldValues, useFormContext, UseFormReturn } from "react-hook-form";
 import CustomDateRangePicker from "../Dates/CustomDateRangePicker";
 import CustomDateTimePicker from "../Dates/CustomDateTimePicker";
-
+import Assignments from "../../config/assignments.json";
 export const ConfirmLeave: React.FC<{
     personnel_ID: number;
     data: {
@@ -23,8 +24,10 @@ export const ConfirmLeave: React.FC<{
         "start-time": "AM" | "PM";
         "end-time": "AM" | "PM";
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string;
+}> = ({ personnel_ID, data, row_ID }) => {
     const { register } = useFormContext();
+    const ID = row_ID ? row_ID : personnel_ID;
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <CustomDateRangePicker
@@ -38,6 +41,7 @@ export const ConfirmLeave: React.FC<{
                 defaultValues={data.date}
                 defaultStartTime={data["start-time"]}
                 defaultEndTime={data["end-time"]}
+                row_ID={row_ID}
             />
 
             <InputGroup size="sm">
@@ -45,7 +49,7 @@ export const ConfirmLeave: React.FC<{
                 <Input
                     placeholder="Reason for leave"
                     defaultValue={data.reason}
-                    {...register(`${personnel_ID}-leave-reason`)}
+                    {...register(`${ID}-leave-reason`)}
                 />
             </InputGroup>
         </SimpleGrid>
@@ -60,8 +64,11 @@ export const ConfirmOff: React.FC<{
         "start-time": "AM" | "PM";
         "end-time": "AM" | "PM";
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string;
+}> = ({ personnel_ID, data, row_ID }) => {
     const { register } = useFormContext();
+    const ID = row_ID ? row_ID : personnel_ID;
+
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <CustomDateRangePicker
@@ -75,6 +82,7 @@ export const ConfirmOff: React.FC<{
                 defaultValues={data.date}
                 defaultStartTime={data["start-time"]}
                 defaultEndTime={data["end-time"]}
+                row_ID={row_ID}
             />
 
             <InputGroup size="sm">
@@ -82,7 +90,7 @@ export const ConfirmOff: React.FC<{
                 <Input
                     placeholder="Reason for off"
                     defaultValue={data.reason}
-                    {...register(`${personnel_ID}-off-reason`)}
+                    {...register(`${ID}-off-reason`)}
                 />
             </InputGroup>
         </SimpleGrid>
@@ -95,8 +103,11 @@ export const ConfirmAttC: React.FC<{
         reason: string;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string;
+}> = ({ personnel_ID, data, row_ID }) => {
     const { register } = useFormContext();
+    const ID = row_ID ? row_ID : personnel_ID;
+
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <CustomDateRangePicker
@@ -108,13 +119,14 @@ export const ConfirmAttC: React.FC<{
                 endPlaceholder="AttC end date"
                 renderSelects={false}
                 defaultValues={data.date}
+                row_ID={row_ID}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Reason" />
                 <Input
                     placeholder="Reason for AttC"
                     defaultValue={data.reason}
-                    {...register(`${personnel_ID}-attc-reason`)}
+                    {...register(`${ID}-attc-reason`)}
                 />
             </InputGroup>
         </SimpleGrid>
@@ -127,8 +139,11 @@ export const ConfirmCourse: React.FC<{
         name: string;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string;
+}> = ({ personnel_ID, data, row_ID }) => {
     const { register } = useFormContext();
+    const ID = row_ID ? row_ID : personnel_ID;
+
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
             <CustomDateRangePicker
@@ -140,13 +155,14 @@ export const ConfirmCourse: React.FC<{
                 endPlaceholder="Course end date"
                 renderSelects={false}
                 defaultValues={data.date}
+                row_ID={row_ID}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
                     placeholder="Name of Course"
                     defaultValue={data.name}
-                    {...register(`${personnel_ID}-course-name`)}
+                    {...register(`${ID}-course-name`)}
                 />
             </InputGroup>
         </SimpleGrid>
@@ -159,9 +175,20 @@ export const ConfirmMA: React.FC<{
         name: string;
         location: string;
         incamp: boolean;
-        "date-time": Date;
+        "date-time"?: Date;
+        "date-time-formatted"?: string;
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string;
+}> = ({ personnel_ID, data, row_ID }) => {
+    const ID = row_ID ? row_ID : personnel_ID;
+    const parsedDate =
+        data["date-time"] ||
+        parse(
+            data["date-time-formatted"] || "",
+            Assignments.datetimeformat,
+            new Date()
+        );
+
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -170,14 +197,15 @@ export const ConfirmMA: React.FC<{
                 type="ma"
                 leftAdorn="Date"
                 placeholder="Medical appointment date and time"
-                defaultValue={data["date-time"]}
+                defaultValue={parsedDate}
+                row_ID={row_ID}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
                     defaultValue={data.name}
                     placeholder="Name of Medical Appointment"
-                    {...register(`${personnel_ID}-ma-name`)}
+                    {...register(`${ID}-ma-name`)}
                 />
             </InputGroup>
             <InputGroup size="sm">
@@ -185,14 +213,14 @@ export const ConfirmMA: React.FC<{
                 <Input
                     defaultValue={data.location}
                     placeholder="Location of Medical Appointment"
-                    {...register(`${personnel_ID}-ma-location`)}
+                    {...register(`${ID}-ma-location`)}
                 />
                 <InputRightAddon w="6rem" />
                 <InputRightElement w="6rem">
                     <Checkbox
                         size="sm"
                         defaultChecked={data.incamp}
-                        {...register(`${personnel_ID}-ma-incamp`)}
+                        {...register(`${ID}-ma-incamp`)}
                     >
                         In camp
                     </Checkbox>
@@ -209,7 +237,10 @@ export const ConfirmOthers: React.FC<{
         incamp: boolean;
         date: [Date, Date];
     };
-}> = ({ personnel_ID, data }) => {
+    row_ID?: string
+}> = ({ personnel_ID, data,row_ID }) => {
+    const ID = row_ID ? row_ID : personnel_ID;
+
     const { register } = useFormContext();
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -222,20 +253,21 @@ export const ConfirmOthers: React.FC<{
                 endPlaceholder="Other appointment's end date"
                 renderSelects={false}
                 defaultValues={data.date}
+                row_ID={row_ID}
             />
             <InputGroup size="sm">
                 <InputLeftAddon children="Name" />
                 <Input
                     defaultValue={data.name}
                     placeholder="Other appointment name"
-                    {...register(`${personnel_ID}-others-name`)}
+                    {...register(`${ID}-others-name`)}
                 />
                 <InputRightAddon w="10rem" />
                 <InputRightElement w="10rem">
                     <Checkbox
                         size="sm"
                         defaultChecked={data.incamp}
-                        {...register(`${personnel_ID}-others-incamp`)}
+                        {...register(`${ID}-others-incamp`)}
                     >
                         Include in strength
                     </Checkbox>
