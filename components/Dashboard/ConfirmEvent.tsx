@@ -10,9 +10,9 @@ import {
     Text,
 } from "@chakra-ui/react";
 import { DateRange } from "@mui/lab/DateRangePicker";
-import { format, parse } from "date-fns";
+import { addDays, format, parse } from "date-fns";
 import { useState } from "react";
-import { FieldValues, useFormContext, UseFormReturn } from "react-hook-form";
+import { FieldValues, useFormContext, UseFormReturn, useWatch } from "react-hook-form";
 import CustomDateRangePicker from "../Dates/CustomDateRangePicker";
 import CustomDateTimePicker from "../Dates/CustomDateTimePicker";
 import Assignments from "../../config/assignments.json";
@@ -105,8 +105,15 @@ export const ConfirmAttC: React.FC<{
     };
     row_ID?: string;
 }> = ({ personnel_ID, data, row_ID }) => {
-    const { register } = useFormContext();
+    const { register, control } = useFormContext();
     const ID = row_ID ? row_ID : personnel_ID;
+
+    const selectedDates = useWatch({
+        control,
+        name: row_ID ? `${row_ID}-attc-date` : `${personnel_ID}-attc-date`,
+        defaultValue: data.date,
+    })
+    console.log({selectedDates})
 
     return (
         <SimpleGrid p={2} columns={1} spacing={2}>
@@ -129,6 +136,7 @@ export const ConfirmAttC: React.FC<{
                     {...register(`${ID}-attc-reason`)}
                 />
             </InputGroup>
+            <Text> One day of LIGHT DUTY (RECOVD. ATTC) will be added on {format(addDays(new Date(selectedDates[1]), 1), Assignments.dateformat)}.</Text>
         </SimpleGrid>
     );
 };

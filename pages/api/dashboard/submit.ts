@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 import executeQuery, { db } from "../../../lib/db";
@@ -180,6 +180,33 @@ export default async function handler(
                             //     ];
                             //     return [auditSql, auditArr];
                             // });
+
+                            // Add 1 day of LD
+                            // Get the LD id
+                            txn.query(`SELECT status_ID FROM status_list WHERE status_name = "LIGHT DUTY (RECOVD. ATTC)"`, []).query((r: any) => {
+                                if (!r || !r[0].status_ID) { 
+                                    return null
+                                } else { 
+                                    const ldID = r[0].status_ID;
+                                    const dayAfter = formatMySQLDateHelper(addDays(new Date(indivDetails.date[1]), 1).toString())
+                                    const updateLDsql = `INSERT INTO status_tracker SET personnel_ID = ?, start = ?, end = ?, status_ID = ?, editor_ID = ?, type = ""`;
+                                    const updateLDarr = [personnel_ID, dayAfter, dayAfter, ldID, session.user.email];
+                                    return [updateLDsql, updateLDarr]
+                                }
+                            }).query((r: any) => {
+                                const insertId = r.insertId
+                                const auditSql = `INSERT INTO audit_log SET user_ID = ?, operation = "CREATE", type = "status", row_ID = ?, personnel_ID = ?, date = NOW(), group_ID = ?`;
+                                const auditArr = [
+                                    session.user.row_ID,                                  
+                                    r.insertId,
+                                    personnel_ID,
+                                    groupID,
+                                ];
+                                return [auditSql, auditArr];
+                            }).rollback((e: any) => console.log(e))
+
+                            
+
                             break;
 
                         case "course":
@@ -271,7 +298,9 @@ export default async function handler(
                 });
             }
         );
-        txn.rollback(console.log);
+        txn.rollback((e:any) => { 
+            return res.status(400).json({error: {message: e.toString()}})
+        });
         txn.commit();
         // const insertIds = await executeQuery({})
 

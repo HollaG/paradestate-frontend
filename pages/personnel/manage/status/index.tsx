@@ -81,7 +81,7 @@ const StatusModal: React.FC<{
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
-    personnel_ID: string
+    personnel_ID: number
 }> = React.memo(({ statuses, isOpen, onOpen, onClose, personnel_ID }) => {
     // console.log({ statuses }, "----------------------------------");
     return (
