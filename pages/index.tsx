@@ -483,9 +483,9 @@ const PersonAccordionItem: React.FC<{
                                 defaultState[event] ? (
                                     <DefaultLink
                                         key={index}
-                                        url={`/personnel/manage/${event}/${
+                                        url={`/personnel/manage/${
                                             person.personnel_ID
-                                        }/#${person[`${event}_row_ID`]}`}
+                                        }/?goto=${event}&id=${person[`${event}_row_ID`]}`}
                                         type={event}
                                         person={person}
                                     />

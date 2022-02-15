@@ -131,18 +131,18 @@ export interface PersonnelPageData {
     onStatus: boolean;
 }
 
-const DeleteDialog:React.FC<{
-    isOpen: boolean,
-    setIsOpen : React.Dispatch<React.SetStateAction<boolean>>
-    confirmDelete: () => void
-}> = ({isOpen, setIsOpen, confirmDelete}) => {
+const DeleteDialog: React.FC<{
+    isOpen: boolean;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    confirmDelete: () => void;
+}> = ({ isOpen, setIsOpen, confirmDelete }) => {
     const onClose = () => setIsOpen(false);
     const cancelRef = React.useRef<HTMLButtonElement>(null);
 
     const closeHandler = () => {
-        confirmDelete()
-        setIsOpen(false)
-    }
+        confirmDelete();
+        setIsOpen(false);
+    };
     return (
         <AlertDialog
             isOpen={isOpen}
@@ -325,15 +325,27 @@ const PersonnelPage: NextProtectedPage = () => {
     const router = useRouter();
     const [type, setType] = useState<typeof types[number]>("All");
     const personnel_ID = router.query.p_ID;
+    const { goto, id } = router.query;
     const { data, error, mutate } = useSWR<PersonnelPageData>(
         `/api/personnel/manage/${personnel_ID}`,
         fetcher
     );
     console.log({ data });
 
-    const [clickedType, setClickedType] = useState(null);
-    const [clickedID, setClickedID] = useState(null);
+    const [clickedType, setClickedType] = useState<string>();
+    const [clickedID, setClickedID] = useState<any>();
     const [refresher, setRefresher] = useState(false);
+
+    useEffect(() => {
+        console.log({ goto, id });
+        if (goto && id && !Number.isNaN(Number(id))) {
+            setClickedID(Number(id));
+            setClickedType(goto.toString());
+
+            setTimeout(() => setRefresher((prev) => !prev), 500);
+        }
+    }, [goto, id]);
+    console.log({ clickedType, clickedID });
     const eventOnClick = React.useCallback(
         (event: any) => {
             // router.push(`${router.asPath}#${event.type}-${event.id}`);
@@ -344,7 +356,6 @@ const PersonnelPage: NextProtectedPage = () => {
         [setClickedType, setClickedID, setRefresher]
     );
     const scrollRef = useRef<HTMLDivElement>(null);
-    console.log({ clickedType, clickedID });
     useEffect(() => {
         if (scrollRef && scrollRef.current) {
             window.scrollTo({
@@ -387,42 +398,48 @@ const PersonnelPage: NextProtectedPage = () => {
         }
     };
 
-    const [deleteType, setDeleteType] = useState("")
-    const [deleteID, setDeleteID] = useState("")
+    const [deleteType, setDeleteType] = useState("");
+    const [deleteID, setDeleteID] = useState("");
     const deleteHandler = (type: string, id: string) => {
         setIsOpen(true);
         setDeleteType(type);
         setDeleteID(id);
-
-    }
+    };
     const [isOpen, setIsOpen] = React.useState(false);
     const confirmDelete = async () => {
-        console.log("Deleting...")
+        console.log("Deleting...");
 
-        const responseData = await sendDELETE(`/api/personnel/manage/${personnel_ID}`, {
-            type: deleteType, id: deleteID
-        })
-        
-        if (responseData.success) { 
+        const responseData = await sendDELETE(
+            `/api/personnel/manage/${personnel_ID}`,
+            {
+                type: deleteType,
+                id: deleteID,
+            }
+        );
+
+        if (responseData.success) {
             toast({
                 title: "Success",
                 description: "Successfully deleted",
                 status: "success",
             });
             mutate();
-        } else { 
+        } else {
             toast({
                 title: "Error",
                 description: responseData.error?.message,
                 status: "error",
             });
         }
-
-    }
+    };
 
     return (
         <>
-            <DeleteDialog isOpen={isOpen} setIsOpen={setIsOpen} confirmDelete={confirmDelete} />
+            <DeleteDialog
+                isOpen={isOpen}
+                setIsOpen={setIsOpen}
+                confirmDelete={confirmDelete}
+            />
             {router && data && data.person ? (
                 <Stack direction="column">
                     <Grid
@@ -809,8 +826,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                                 <ButtonGroup
                                                                                     size="sm"
                                                                                     isAttached
+                                                                                    p={2}
                                                                                 >
-                                                                                    <Button colorScheme="red" onClick={() => deleteHandler("off", off.row_ID)}>
+                                                                                    <Button
+                                                                                        colorScheme="red"
+                                                                                        onClick={() =>
+                                                                                            deleteHandler(
+                                                                                                "off",
+                                                                                                off.row_ID
+                                                                                            )
+                                                                                        }
+                                                                                    >
                                                                                         Delete
                                                                                     </Button>
                                                                                     <Button
@@ -955,8 +981,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                                 <ButtonGroup
                                                                                     size="sm"
                                                                                     isAttached
+                                                                                    p={2}
                                                                                 >
-                                                                                    <Button colorScheme="red" onClick={() => deleteHandler("leave", leave.row_ID)}>
+                                                                                    <Button
+                                                                                        colorScheme="red"
+                                                                                        onClick={() =>
+                                                                                            deleteHandler(
+                                                                                                "leave",
+                                                                                                leave.row_ID
+                                                                                            )
+                                                                                        }
+                                                                                    >
                                                                                         Delete
                                                                                     </Button>
                                                                                     <Button
@@ -1095,8 +1130,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                            >
-                                                                                <Button colorScheme="red" onClick={() => deleteHandler("attc", attc.row_ID)}>
+                                                                                p={2}
+                                                                                >
+                                                                                <Button
+                                                                                    colorScheme="red"
+                                                                                    onClick={() =>
+                                                                                        deleteHandler(
+                                                                                            "attc",
+                                                                                            attc.row_ID
+                                                                                        )
+                                                                                    }
+                                                                                >
                                                                                     Delete
                                                                                 </Button>
                                                                                 <Button
@@ -1230,8 +1274,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                            >
-                                                                                <Button colorScheme="red" onClick={() => deleteHandler("course", course.row_ID)}>
+                                                                                p={2}
+                                                                                >
+                                                                                <Button
+                                                                                    colorScheme="red"
+                                                                                    onClick={() =>
+                                                                                        deleteHandler(
+                                                                                            "course",
+                                                                                            course.row_ID
+                                                                                        )
+                                                                                    }
+                                                                                >
                                                                                     Delete
                                                                                 </Button>
                                                                                 <Button
@@ -1369,8 +1422,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                            >
-                                                                                <Button colorScheme="red" onClick={() => deleteHandler("ma", ma.row_ID)}>
+                                                                                p={2}
+                                                                                >
+                                                                                <Button
+                                                                                    colorScheme="red"
+                                                                                    onClick={() =>
+                                                                                        deleteHandler(
+                                                                                            "ma",
+                                                                                            ma.row_ID
+                                                                                        )
+                                                                                    }
+                                                                                >
                                                                                     Delete
                                                                                 </Button>
                                                                                 <Button
@@ -1512,8 +1574,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                            >
-                                                                                <Button colorScheme="red" onClick={() => deleteHandler("others", other.row_ID)}>
+                                                                                p={2}
+                                                                                >
+                                                                                <Button
+                                                                                    colorScheme="red"
+                                                                                    onClick={() =>
+                                                                                        deleteHandler(
+                                                                                            "others",
+                                                                                            other.row_ID
+                                                                                        )
+                                                                                    }
+                                                                                >
                                                                                     Delete
                                                                                 </Button>
                                                                                 <Button
@@ -1645,8 +1716,17 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                            >
-                                                                                <Button colorScheme="red" onClick={() => deleteHandler("status", status.row_ID)}>
+                                                                                p={2}
+                                                                                >
+                                                                                <Button
+                                                                                    colorScheme="red"
+                                                                                    onClick={() =>
+                                                                                        deleteHandler(
+                                                                                            "status",
+                                                                                            status.row_ID
+                                                                                        )
+                                                                                    }
+                                                                                >
                                                                                     Delete
                                                                                 </Button>
                                                                                 <Button

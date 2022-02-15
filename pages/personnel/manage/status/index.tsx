@@ -70,6 +70,7 @@ import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
 import { IoOpenOutline } from "react-icons/io5";
 import React from "react";
 import NextLink from "next/link";
+import { onClickUrl } from "../../../../lib/custom";
 export interface StatusOption extends OptionBase {
     label: string;
     value: string;
@@ -80,7 +81,8 @@ const StatusModal: React.FC<{
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
-}> = React.memo(({ statuses, isOpen, onOpen, onClose }) => {
+    personnel_ID: string
+}> = React.memo(({ statuses, isOpen, onOpen, onClose, personnel_ID }) => {
     // console.log({ statuses }, "----------------------------------");
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
@@ -101,7 +103,7 @@ const StatusModal: React.FC<{
                     <Button
                         colorScheme="purple"
                         mr={3}
-                        // onClick={onClickUrl(url)}
+                        onClick={onClickUrl(`/personnel/manage/${personnel_ID}`)}
                     >
                         Edit statuses
                     </Button>
@@ -308,6 +310,7 @@ const PersonAccordionItem: React.FC<{
                     onClose={onClose}
                     onOpen={onOpen}
                     statuses={statusesById[person.personnel_ID]}
+                    personnel_ID={person.personnel_ID}
                 />
             )}
         </>
