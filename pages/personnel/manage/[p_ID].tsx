@@ -349,11 +349,14 @@ const PersonnelPage: NextProtectedPage = () => {
     const eventOnClick = React.useCallback(
         (event: any) => {
             // router.push(`${router.asPath}#${event.type}-${event.id}`);
-            setClickedType(event.type ?? "status");
-            setClickedID(event.id ?? null);
-            setRefresher((prev) => !prev);
+            setType("All");
+            setTimeout(() => {
+                setClickedType(event.type ?? "status");
+                setClickedID(event.id ?? null);
+                setRefresher((prev) => !prev);
+            }, 100);
         },
-        [setClickedType, setClickedID, setRefresher]
+        [setClickedType, setClickedID, setRefresher, setType]
     );
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -826,7 +829,9 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                                 <ButtonGroup
                                                                                     size="sm"
                                                                                     isAttached
-                                                                                    p={2}
+                                                                                    p={
+                                                                                        2
+                                                                                    }
                                                                                 >
                                                                                     <Button
                                                                                         colorScheme="red"
@@ -981,7 +986,9 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                                 <ButtonGroup
                                                                                     size="sm"
                                                                                     isAttached
-                                                                                    p={2}
+                                                                                    p={
+                                                                                        2
+                                                                                    }
                                                                                 >
                                                                                     <Button
                                                                                         colorScheme="red"
@@ -1130,8 +1137,10 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                                p={2}
-                                                                                >
+                                                                                p={
+                                                                                    2
+                                                                                }
+                                                                            >
                                                                                 <Button
                                                                                     colorScheme="red"
                                                                                     onClick={() =>
@@ -1274,8 +1283,10 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                                p={2}
-                                                                                >
+                                                                                p={
+                                                                                    2
+                                                                                }
+                                                                            >
                                                                                 <Button
                                                                                     colorScheme="red"
                                                                                     onClick={() =>
@@ -1422,8 +1433,10 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                                p={2}
-                                                                                >
+                                                                                p={
+                                                                                    2
+                                                                                }
+                                                                            >
                                                                                 <Button
                                                                                     colorScheme="red"
                                                                                     onClick={() =>
@@ -1574,8 +1587,10 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                                p={2}
-                                                                                >
+                                                                                p={
+                                                                                    2
+                                                                                }
+                                                                            >
                                                                                 <Button
                                                                                     colorScheme="red"
                                                                                     onClick={() =>
@@ -1716,8 +1731,10 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                             <ButtonGroup
                                                                                 size="sm"
                                                                                 isAttached
-                                                                                p={2}
-                                                                                >
+                                                                                p={
+                                                                                    2
+                                                                                }
+                                                                            >
                                                                                 <Button
                                                                                     colorScheme="red"
                                                                                     onClick={() =>
