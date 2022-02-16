@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^1.7.4",
+    "@dotmind/react-use-pwa": "^1.0.4",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/lab": "^5.0.0-alpha.66",

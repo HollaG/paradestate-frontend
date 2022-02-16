@@ -4,6 +4,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+ 
 }
 html { 
     overflow-y:scroll
@@ -21,4 +22,14 @@ a {
 /* New - custom to override spacing */
 .checkbox-custom > .chakra-checkbox__label { 
     margin-inline-start: 1rem !important
+}
+
+@media all and (display-mode: standalone) {
+    /* Here goes the CSS rules that will only apply if app is running standalone */
+    * {
+        user-select: none;
+    }
+    #install-button {
+        display: none
+    }
 }

@@ -1,4 +1,4 @@
-import React, { ReactNode, ReactPropTypes, useEffect, useState } from "react";
+import React, { ReactNode, ReactPropTypes, useCallback, useEffect, useState } from "react";
 import {
     IconButton,
     Avatar,
@@ -71,6 +71,8 @@ import {
 import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import { useSwipeable } from "react-swipeable";
+import appImage from "../public/pwa/icons/manifest-icon-512.png";
+import { usePwa } from '@dotmind/react-use-pwa';
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -216,15 +218,15 @@ const Sidebar = (props: any) => {
         router.push(url);
     };
 
-    const [isMobileMode] = useMediaQuery('(max-width: 48em)')
+    const [isMobileMode] = useMediaQuery("(max-width: 48em)");
 
     const handlers = useSwipeable({
         // onSwiped: () => alert("swiped"),
-        onSwipedLeft: () => isMobileMode ? sidebar.onClose() : null,
-        onSwipedRight: () => isMobileMode ? sidebar.onOpen() : null,
+        onSwipedLeft: () => (isMobileMode ? sidebar.onClose() : null),
+        onSwipedRight: () => (isMobileMode ? sidebar.onOpen() : null),
         // preventDefaultTouchmoveEvent: true,
-        
-        trackTouch: true, 
+
+        trackTouch: true,
     });
 
     const discloures = {
@@ -399,6 +401,17 @@ const Sidebar = (props: any) => {
         e.stopPropagation();
     };
     const goToSetPlatoon = () => router.push("/auth/registration");
+
+    const { installPrompt, isInstalled, isStandalone, isOffline, canInstall } =
+        usePwa();
+    console.log({  isInstalled, isStandalone, isOffline, canInstall })
+    const handleInstallPrompt = useCallback(() => {
+        if (canInstall) {
+            installPrompt();
+        }
+    }, [canInstall, installPrompt]);
+
+    
     return (
         <Box
             as="section"
@@ -460,6 +473,14 @@ const Sidebar = (props: any) => {
                         </InputGroup>
 
                         <HStack spacing={{ base: "0", md: "6" }}>
+                            
+                            {!(isInstalled || isStandalone || !canInstall) && <Button
+                                colorScheme="teal"
+                                onClick={handleInstallPrompt}
+                            >
+                                Install
+                            </Button>}
+
                             <IconButton
                                 size="lg"
                                 variant="ghost"
@@ -565,6 +586,7 @@ const Sidebar = (props: any) => {
                     </Container>
                 </Box>
             </Box>
+           
         </Box>
     );
 };
