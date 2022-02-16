@@ -408,9 +408,6 @@ const Sidebar = (props: any) => {
     };
     const goToSetPlatoon = () => router.push("/auth/registration");
 
-
-   
-
     return (
         <Box
             as="section"
@@ -473,18 +470,18 @@ const Sidebar = (props: any) => {
 
                         <HStack spacing={{ base: "0", md: "6" }}>
                             {/* {!(appinstalled || isPwa) && ( */}
-                                <Button
-                                    colorScheme="teal"
-                                    onClick={() => 
-                                        router.push("/install")
-                                        // location.href = "/install"
-                                    }
-                                    id="install-button"
-                                >
-                                    Install
-                                </Button>
+                            <Button
+                                colorScheme="teal"
+                                onClick={() =>
+                                    // router.push("/install")
+                                    (location.href = "/install")
+                                }
+                                id="install-button"
+                            >
+                                Install
+                            </Button>
                             {/* )} */}
-                            
+
                             <IconButton
                                 size="lg"
                                 variant="ghost"
@@ -566,28 +563,30 @@ const Sidebar = (props: any) => {
                 </Box>
 
                 {/* TODO - change this to Just 1 container? */}
-                <Collapse in={platoonHintShowing}>
-                    <Alert
-                        status="info"
-                        cursor="pointer"
-                        onClick={goToSetPlatoon}
-                    >
-                        <Container maxW="container.lg">
-                            <Flex alignItems="center">
-                                <AlertIcon />
-                                <Text flexGrow={1}>
-                                    You have not yet set your platoon. Set it by
-                                    clicking on this alert.
-                                </Text>
-                                <CloseButton onClick={closeHint} />
-                            </Flex>
+                <Box mt="56px">
+                    <Collapse in={platoonHintShowing}>
+                        <Alert
+                            status="info"
+                            cursor="pointer"
+                            onClick={goToSetPlatoon}
+                        >
+                            <Container maxW="container.lg">
+                                <Flex alignItems="center">
+                                    <AlertIcon />
+                                    <Text flexGrow={1}>
+                                        You have not yet set your platoon. Set
+                                        it by clicking on this alert.
+                                    </Text>
+                                    <CloseButton onClick={closeHint} />
+                                </Flex>
+                            </Container>
+                        </Alert>
+                    </Collapse>
+                    <Box as="main" p="4" >
+                        <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
+                            {props.children}
                         </Container>
-                    </Alert>
-                </Collapse>
-                <Box as="main" p="4" mt="56px">
-                    <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
-                        {props.children}
-                    </Container>
+                    </Box>
                 </Box>
             </Box>
         </Box>

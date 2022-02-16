@@ -301,7 +301,7 @@ const SetCompany: React.FC<{
         // </form>
     );
 });
-SetCompany.displayName = "SetCompany"
+SetCompany.displayName = "SetCompany";
 
 interface PlatoonOption extends OptionBase {
     label: string;
@@ -414,7 +414,7 @@ const Completed: React.FC<{
 }> = ({ company, platoon, unit }) => {
     const { data: session } = useSession();
 
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(15);
     useEffect(() => {
         const interval = setInterval(() => {
             setTimeLeft((timeLeft) => (!timeLeft ? timeLeft : timeLeft - 1));
@@ -477,6 +477,14 @@ const Completed: React.FC<{
 
             <Button colorScheme="teal" onClick={redirectToHome}>
                 Home ({timeLeft}s)
+            </Button>
+
+            <Text>
+                This website can be installed on your device! To do so, click
+                the button below.
+            </Text>
+            <Button onClick={() => (location.href = "/install")} colorScheme="teal">
+                Install
             </Button>
         </Stack>
     );
