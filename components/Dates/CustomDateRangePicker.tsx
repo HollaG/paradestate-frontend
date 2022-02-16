@@ -174,6 +174,7 @@ const CustomDateRangePicker: React.FC<{
                 ) => (
                     <MobileDateRangePicker
                         minDate={row_ID ? undefined : subMonths(currentDate, 1)}
+                        
                         value={value}
                         onChange={(dates: any) =>
                             validateStartBeforeEnd(dates)
@@ -253,6 +254,7 @@ const CustomDateRangePicker: React.FC<{
                                             }
                                             {...startProps.inputProps}
                                             placeholder={startPlaceholder}
+                                            readOnly
                                         />
                                     </InputGroup>
 
@@ -281,6 +283,8 @@ const CustomDateRangePicker: React.FC<{
                                             }
                                             {...endProps.inputProps}
                                             placeholder={endPlaceholder}
+                                            readOnly
+
                                         />
                                     </InputGroup>
 

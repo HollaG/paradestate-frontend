@@ -33,6 +33,8 @@ import {
     AlertIcon,
     Alert,
     useToast,
+    useBreakpointValue,
+    useMediaQuery,
 } from "@chakra-ui/react";
 import {
     FiHome,
@@ -68,6 +70,7 @@ import {
 } from "react-icons/io5";
 import { Session } from "next-auth";
 import { useRouter } from "next/router";
+import { useSwipeable } from "react-swipeable";
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -207,6 +210,22 @@ const Sidebar = (props: any) => {
     }
 
     const sidebar = useDisclosure();
+    const router = useRouter();
+    const navigate = (url: string) => {
+        sidebar.onClose();
+        router.push(url);
+    };
+
+    const [isMobileMode] = useMediaQuery('(max-width: 48em)')
+
+    const handlers = useSwipeable({
+        // onSwiped: () => alert("swiped"),
+        onSwipedLeft: () => isMobileMode ? sidebar.onClose() : null,
+        onSwipedRight: () => isMobileMode ? sidebar.onOpen() : null,
+        // preventDefaultTouchmoveEvent: true,
+        
+        trackTouch: true, 
+    });
 
     const discloures = {
         personnel: useDisclosure(),
@@ -334,7 +353,7 @@ const Sidebar = (props: any) => {
                             <NavItem
                                 key={index}
                                 icon={link.icon}
-                                onClick={props.onClose || null}
+                                onClick={() => navigate(link.url || "/")}
                             >
                                 <NextLink href={link.url || "/"} passHref>
                                     <Link>{link.name}</Link>
@@ -350,7 +369,6 @@ const Sidebar = (props: any) => {
 
     const [platoonHintShowing, setPlatoonHintShowing] = useState(false);
     const [hasChosenToHide, setHasChosenToHide] = useState(false);
-    const router = useRouter();
 
     useEffect(() => {
         // This page will always hide the alert
@@ -386,6 +404,7 @@ const Sidebar = (props: any) => {
             as="section"
             bg={useColorModeValue("gray.50", "gray.700")}
             minH="100vh"
+            {...handlers}
         >
             <SidebarContent display={{ base: "none", md: "unset" }} />
             <Drawer
@@ -403,115 +422,123 @@ const Sidebar = (props: any) => {
                 </DrawerContent>
             </Drawer>
             <Box ml={{ base: 0, md: 60 }} transition=".3s ease">
-                <Flex
-                    as="header"
-                    align="center"
-                    justify="space-between"
-                    w="full"
-                    px="4"
-                    bg={useColorModeValue("white", "gray.800")}
-                    borderBottomWidth="1px"
-                    borderColor="blackAlpha.300"
-                    h="14"
+                <Box
+                    position="fixed"
+                    top={0}
+                    right={0}
+                    left={{ base: 0, md: 60 }}
+                    zIndex="100"
                 >
-                    <IconButton
-                        aria-label="Menu"
-                        display={{ base: "inline-flex", md: "none" }}
-                        onClick={sidebar.onOpen}
-                        icon={<FiMenu />}
-                        size="sm"
-                    />
-                    <InputGroup
-                        mx="2"
-                        maxW="64"
-                        display={{ base: "flex", md: "flex" }}
+                    <Flex
+                        as="header"
+                        align="center"
+                        justify="space-between"
+                        w="full"
+                        px="4"
+                        bg={useColorModeValue("white", "gray.800")}
+                        borderBottomWidth="1px"
+                        borderColor="blackAlpha.300"
+                        h="14"
                     >
-                        <InputLeftElement
-                            color="gray.500"
-                            children={<FiSearch />}
-                        />
-                        <Input placeholder="Search for stuff..." />
-                    </InputGroup>
-
-                    <HStack spacing={{ base: "0", md: "6" }}>
                         <IconButton
-                            size="lg"
-                            variant="ghost"
-                            aria-label="open menu"
-                            icon={<FiBell />}
+                            aria-label="Menu"
+                            display={{ base: "inline-flex", md: "none" }}
+                            onClick={sidebar.onOpen}
+                            icon={<FiMenu />}
+                            size="sm"
                         />
-                        {session && session.user ? (
-                            <Flex alignItems={"center"}>
-                                <Menu>
-                                    <MenuButton
-                                        py={2}
-                                        transition="all 0.3s"
-                                        _focus={{ boxShadow: "none" }}
-                                    >
-                                        <HStack>
-                                            <Avatar
-                                                size={"sm"}
-                                                src={session.user.photo}
-                                            />
-                                            <VStack
-                                                display={{
-                                                    base: "none",
-                                                    md: "flex",
-                                                }}
-                                                alignItems="flex-start"
-                                                spacing="1px"
-                                                ml="2"
-                                            >
-                                                <Text fontSize="sm">
-                                                    {session?.user.username}{" "}
-                                                </Text>
-                                                <Text
-                                                    fontSize="xs"
-                                                    color="gray.600"
+                        <InputGroup
+                            mx="2"
+                            maxW="64"
+                            display={{ base: "flex", md: "flex" }}
+                        >
+                            <InputLeftElement
+                                color="gray.500"
+                                children={<FiSearch />}
+                            />
+                            <Input placeholder="Search for stuff..." />
+                        </InputGroup>
+
+                        <HStack spacing={{ base: "0", md: "6" }}>
+                            <IconButton
+                                size="lg"
+                                variant="ghost"
+                                aria-label="open menu"
+                                icon={<FiBell />}
+                            />
+                            {session && session.user ? (
+                                <Flex alignItems={"center"}>
+                                    <Menu>
+                                        <MenuButton
+                                            py={2}
+                                            transition="all 0.3s"
+                                            _focus={{ boxShadow: "none" }}
+                                        >
+                                            <HStack>
+                                                <Avatar
+                                                    size={"sm"}
+                                                    src={session.user.photo}
+                                                />
+                                                <VStack
+                                                    display={{
+                                                        base: "none",
+                                                        md: "flex",
+                                                    }}
+                                                    alignItems="flex-start"
+                                                    spacing="1px"
+                                                    ml="2"
                                                 >
-                                                    {session?.user.company}{" "}
-                                                    {session?.user.platoon}
-                                                </Text>
-                                            </VStack>
-                                            <Box
-                                                display={{
-                                                    base: "none",
-                                                    md: "flex",
-                                                }}
-                                            >
-                                                <FiChevronDown />
-                                            </Box>
-                                        </HStack>
-                                    </MenuButton>
-                                    <MenuList
-                                        bg={whiteGray900}
-                                        borderColor={gray200Gray700}
-                                    >
-                                        <MenuItem>Profile</MenuItem>
-                                        <MenuItem>Settings</MenuItem>
-                                        <MenuItem>
-                                            <NextLink
-                                                href="/auth/registration?change=1"
-                                                passHref
-                                            >
-                                                <Link>Change platoon</Link>
-                                            </NextLink>
-                                        </MenuItem>
-                                        <MenuDivider />
-                                        <MenuItem onClick={() => signOut()}>
-                                            Sign out
-                                        </MenuItem>
-                                    </MenuList>
-                                </Menu>
-                            </Flex>
-                        ) : (
-                            // <Button colorScheme="teal" onClick={() => signIn()}>
-                            //     Sign in
-                            // </Button>
-                            <></>
-                        )}
-                    </HStack>
-                </Flex>
+                                                    <Text fontSize="sm">
+                                                        {session?.user.username}{" "}
+                                                    </Text>
+                                                    <Text
+                                                        fontSize="xs"
+                                                        color="gray.600"
+                                                    >
+                                                        {session?.user.company}{" "}
+                                                        {session?.user.platoon}
+                                                    </Text>
+                                                </VStack>
+                                                <Box
+                                                    display={{
+                                                        base: "none",
+                                                        md: "flex",
+                                                    }}
+                                                >
+                                                    <FiChevronDown />
+                                                </Box>
+                                            </HStack>
+                                        </MenuButton>
+                                        <MenuList
+                                            bg={whiteGray900}
+                                            borderColor={gray200Gray700}
+                                        >
+                                            <MenuItem>Profile</MenuItem>
+                                            <MenuItem>Settings</MenuItem>
+                                            <MenuItem>
+                                                <NextLink
+                                                    href="/auth/registration?change=1"
+                                                    passHref
+                                                >
+                                                    <Link>Change platoon</Link>
+                                                </NextLink>
+                                            </MenuItem>
+                                            <MenuDivider />
+                                            <MenuItem onClick={() => signOut()}>
+                                                Sign out
+                                            </MenuItem>
+                                        </MenuList>
+                                    </Menu>
+                                </Flex>
+                            ) : (
+                                // <Button colorScheme="teal" onClick={() => signIn()}>
+                                //     Sign in
+                                // </Button>
+                                <></>
+                            )}
+                        </HStack>
+                    </Flex>
+                </Box>
 
                 {/* TODO - change this to Just 1 container? */}
                 <Collapse in={platoonHintShowing}>
@@ -532,7 +559,7 @@ const Sidebar = (props: any) => {
                         </Container>
                     </Alert>
                 </Collapse>
-                <Box as="main" p="4">
+                <Box as="main" p="4" mt="56px">
                     <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
                         {props.children}
                     </Container>

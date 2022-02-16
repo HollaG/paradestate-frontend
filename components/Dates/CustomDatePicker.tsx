@@ -67,6 +67,7 @@ const CustomDatePicker: React.FC<{
                         ref={props.inputRef}
                         {...props.inputProps}
                         placeholder={placeholder}
+                        readOnly
                     />
                 )}
             />

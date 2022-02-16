@@ -159,6 +159,7 @@ const CustomDateTimePicker: React.FC<{
                                     ref={props.inputRef}
                                     {...props.inputProps}
                                     placeholder={placeholder}
+                                    readOnly
                                 />
                             </InputGroup>
                         )}

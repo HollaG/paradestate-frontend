@@ -211,6 +211,7 @@ const CustomStatusDateRangePicker: React.FC<{
                                             }
                                             {...startProps.inputProps}
                                             placeholder={startPlaceholder}
+                                            readOnly
                                         />
                                     </InputGroup>
                                 </Flex>
@@ -229,6 +230,7 @@ const CustomStatusDateRangePicker: React.FC<{
                                             }
                                             {...endProps.inputProps}
                                             placeholder={endPlaceholder}
+                                            readOnly
                                         />
                                     </InputGroup>
                                 </Flex>

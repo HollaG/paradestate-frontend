@@ -262,6 +262,7 @@ const PersonAccordionItem: React.FC<{
                             ml={{ lg: "auto" }}
                             onClick={() => setIsAdding((prev) => !prev)}
                             // disabled={!!person.leave_row_ID}
+                            colorScheme="teal"
                         >
                             Add status
                         </Button>
