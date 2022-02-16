@@ -21,6 +21,7 @@ import {
     StatLabel,
     StatNumber,
     Text,
+    Tooltip,
     Wrap,
     WrapItem,
 } from "@chakra-ui/react";
@@ -96,6 +97,36 @@ interface OverviewData {
     maSortedByPlatoonThenID: SortedObject;
     othersSortedByPlatoonThenID: SortedObject;
     statusesSortedByPlatoonThenID: SortedStatusObject;
+    splitNumbers: {
+        [key: string]: {
+            officers_wospecs: {
+                in: number;
+                total: number;
+            };
+            specs: {
+                in: number;
+                total: number;
+            };
+            pioneers: {
+                in: number;
+                total: number;
+            };
+        };
+        all: {
+            officers_wospecs: {
+                in: number;
+                total: number;
+            };
+            specs: {
+                in: number;
+                total: number;
+            };
+            pioneers: {
+                in: number;
+                total: number;
+            };
+        };
+    };
 }
 const OverviewPage: NextProtectedPage = () => {
     const { data, error } = useSWR<OverviewData>("/api/info/overview", fetcher);
@@ -150,6 +181,7 @@ const OverviewPage: NextProtectedPage = () => {
                                 {!!data &&
                                     data?.numbers?.total -
                                         data?.numbers.commitments}
+                                /142
                                 <Button
                                     size="xs"
                                     colorScheme="teal"
@@ -161,8 +193,33 @@ const OverviewPage: NextProtectedPage = () => {
                         </StatNumber>
                         <StatHelpText>
                             <Skeleton isLoaded={!!data} height="21px">
-                                {data?.numbers.total} total,{" "}
-                                {data?.numbers.commitments} w/ commitments
+                                {/* {data?.numbers.total} total,{" "}
+                                {data?.numbers.commitments} w/ commitments */}
+
+                                <Tooltip
+                                    label="Officers and WOSpecs | Specs | Pioneers"
+                                    aria-label="Arrangement of numbers"
+                                >
+                                    <Text
+                                        textDecorationStyle="dotted"
+                                        textDecorationLine="underline"
+                                        width="fit-content"
+                                    >
+                                        {
+                                            data?.splitNumbers.all
+                                                .officers_wospecs.in
+                                        }
+                                        /
+                                        {
+                                            data?.splitNumbers.all
+                                                .officers_wospecs.total
+                                        }{" "}
+                                        | {data?.splitNumbers.all.specs.in}/
+                                        {data?.splitNumbers.all.specs.total} |{" "}
+                                        {data?.splitNumbers.all.pioneers.in}/
+                                        {data?.splitNumbers.all.pioneers.total}{" "}
+                                    </Text>
+                                </Tooltip>
                             </Skeleton>
                         </StatHelpText>
                     </Stat>
@@ -193,9 +250,9 @@ const OverviewPage: NextProtectedPage = () => {
                             <Skeleton isLoaded={!!data} height="21px">
                                 {data && !!data.numbers.ma && (
                                     <>
-                                        {data.numbers.numberOfMAsInCamp}{" "}
-                                        in camp,
-                                        {" "}{data.numbers.ma -
+                                        {data.numbers.numberOfMAsInCamp} in
+                                        camp,{" "}
+                                        {data.numbers.ma -
                                             data.numbers.numberOfMAsInCamp}{" "}
                                         out
                                     </>
@@ -384,6 +441,42 @@ const OverviewPage: NextProtectedPage = () => {
                                             data.numbers.platoonNumbers[platoon]
                                                 .out}
                                     </StatNumber>
+                                    <StatHelpText>
+                                        <Skeleton
+                                            isLoaded={!!data}
+                                            height="21px"
+                                        >
+                                            {
+                                                data.splitNumbers[platoon]
+                                                    .officers_wospecs.in
+                                            }
+                                            /
+                                            {
+                                                data.splitNumbers[platoon]
+                                                    .officers_wospecs.total
+                                            }{" "}
+                                            |{" "}
+                                            {
+                                                data.splitNumbers[platoon].specs
+                                                    .in
+                                            }
+                                            /
+                                            {
+                                                data.splitNumbers[platoon].specs
+                                                    .total
+                                            }{" "}
+                                            |{" "}
+                                            {
+                                                data.splitNumbers[platoon]
+                                                    .pioneers.in
+                                            }
+                                            /
+                                            {
+                                                data.splitNumbers[platoon]
+                                                    .pioneers.total
+                                            }
+                                        </Skeleton>
+                                    </StatHelpText>
                                 </Stat>
                             </BasicCard>
                         )
@@ -437,17 +530,21 @@ const OverviewPage: NextProtectedPage = () => {
                             </Select>
                         </Box>
                     </Flex>
-                    <Skeleton isLoaded={!!data} height={!data ? "50vh" : "auto"}>
+                    <Skeleton
+                        isLoaded={!!data}
+                        height={!data ? "50vh" : "auto"}
+                    >
                         {data && (
                             <Box w="100%">
-                                <Collapse animateOpacity unmountOnExit
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
                                     in={
                                         data &&
                                         (type === "All" ||
                                             type === "In camp" ||
                                             type === "Out of camp")
                                     }
-                                     
                                 >
                                     <AllCard
                                         sortedByPlatoon={data.sortedByPlatoon}
@@ -463,49 +560,77 @@ const OverviewPage: NextProtectedPage = () => {
                                 />
                             </Collapse> */}
 
-                                <Collapse animateOpacity unmountOnExit in={type === "Off"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "Off"}
+                                >
                                     <OffCard
                                         offSortedByPlatoonThenID={
                                             data.offSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "Leave"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "Leave"}
+                                >
                                     <LeaveCard
                                         leaveSortedByPlatoonThenID={
                                             data.leaveSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "AttC"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "AttC"}
+                                >
                                     <AttcCard
                                         attcSortedByPlatoonThenID={
                                             data.attcSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "Course"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "Course"}
+                                >
                                     <CourseCard
                                         courseSortedByPlatoonThenID={
                                             data.courseSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "MA"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "MA"}
+                                >
                                     <MaCard
                                         maSortedByPlatoonThenID={
                                             data.maSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "Others"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "Others"}
+                                >
                                     <OthersCard
                                         othersSortedByPlatoonThenID={
                                             data.othersSortedByPlatoonThenID
                                         }
                                     />
                                 </Collapse>
-                                <Collapse animateOpacity unmountOnExit in={type === "Status"}>
+                                <Collapse
+                                    animateOpacity
+                                    unmountOnExit
+                                    in={type === "Status"}
+                                >
                                     <StatusCard
                                         statusesSortedByPlatoonThenID={
                                             data.statusesSortedByPlatoonThenID

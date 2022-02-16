@@ -55,6 +55,51 @@ export default async function handler(
     let commitmentsIDs: string[] = [];
     let numberOfMAsInCamp = 0;
     let platoonNumbers: { [key: string]: { in: number; out: number } } = {};
+    let splitNumbers: {
+        all: {
+            officers_wospecs: {
+                in: number;
+                total: number;
+            };
+            specs: {
+                in: number;
+                total: number;
+            };
+            pioneers: {
+                in: number;
+                total: number;
+            };
+        };
+        [key: string]: {
+            officers_wospecs: {
+                in: number;
+                total: number;
+            };
+            specs: {
+                in: number;
+                total: number;
+            };
+            pioneers: {
+                in: number;
+                total: number;
+            };
+        };
+    } = {
+        all: {
+            officers_wospecs: {
+                in: 0,
+                total: 0,
+            },
+            specs: {
+                in: 0,
+                total: 0,
+            },
+            pioneers: {
+                in: 0,
+                total: 0,
+            },
+        },
+    };
     const hasEvent: any[] = [];
     const noEvent: any[] = [];
     objectified.forEach((x) => {
@@ -101,6 +146,50 @@ export default async function handler(
             noEvent.push(cleansed);
         } else {
             hasEvent.push(cleansed);
+        }
+
+        // Test rank, see if commander
+        if (!splitNumbers[x.platoon]) splitNumbers[x.platoon] = {
+            officers_wospecs: { 
+                in: 0,
+                total: 0,
+            },
+            specs: {
+                in: 0,
+                total: 0,
+            },
+            pioneers: {
+                in: 0,
+                total: 0,
+            },
+        }
+        if (Assignments.commander.men.includes(x.rank)) {
+            // Men
+            if (cleansed.location === "In camp") {
+                // In camp
+                splitNumbers.all.pioneers.in++;
+                splitNumbers[x.platoon].pioneers.in++;
+            }
+            splitNumbers.all.pioneers.total++;
+            splitNumbers[x.platoon].pioneers.total++;
+        } else if (Assignments.commander.officer_wospec.includes(x.rank)) {
+            // person is officer or wospec
+            if (cleansed.location === "In camp") {
+                // In camp
+                splitNumbers.all.officers_wospecs.in++;
+                splitNumbers[x.platoon].officers_wospecs.in++;
+            } 
+            splitNumbers.all.officers_wospecs.total++;
+            splitNumbers[x.platoon].officers_wospecs.total++;
+        } else {
+            // Spec
+            if (cleansed.location === "In camp") {
+                // In camp
+                splitNumbers.all.specs.in++;
+                splitNumbers[x.platoon].specs.in++;
+            } 
+            splitNumbers.all.specs.total++;
+            splitNumbers[x.platoon].specs.total++;
         }
     });
 
@@ -377,7 +466,7 @@ export default async function handler(
 
     const data = {
         sortedByPlatoon,
-        
+
         numbers: {
             total: personnel.length,
             commitments,
@@ -401,6 +490,7 @@ export default async function handler(
         maSortedByPlatoonThenID,
         othersSortedByPlatoonThenID,
         statusesSortedByPlatoonThenID,
+        splitNumbers
     };
     res.json(data);
 }
