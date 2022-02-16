@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^1.7.4",
-    "@dotmind/react-use-pwa": "^1.0.4",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/lab": "^5.0.0-alpha.66",
@@ -40,7 +39,8 @@
     "redux": "^4.1.2",
     "serverless-mysql": "^1.5.4",
     "superjson": "^1.8.0",
-    "swr": "^1.2.0"
+    "swr": "^1.2.0",
+    "use-pwa": "^1.1.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",

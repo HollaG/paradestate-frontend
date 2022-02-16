@@ -1,4 +1,10 @@
-import React, { ReactNode, ReactPropTypes, useCallback, useEffect, useState } from "react";
+import React, {
+    ReactNode,
+    ReactPropTypes,
+    useCallback,
+    useEffect,
+    useState,
+} from "react";
 import {
     IconButton,
     Avatar,
@@ -72,7 +78,8 @@ import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import { useSwipeable } from "react-swipeable";
 import appImage from "../public/pwa/icons/manifest-icon-512.png";
-import { usePwa } from '@dotmind/react-use-pwa';
+import usePwa from "use-pwa";
+
 interface LinkItemProps {
     name: string;
     icon: IconType | null;
@@ -402,16 +409,14 @@ const Sidebar = (props: any) => {
     };
     const goToSetPlatoon = () => router.push("/auth/registration");
 
-    const { installPrompt, isInstalled, isStandalone, isOffline, canInstall } =
-        usePwa();
-    console.log({  isInstalled, isStandalone, isOffline, canInstall })
-    const handleInstallPrompt = useCallback(() => {
-        if (canInstall) {
-            installPrompt();
-        }
-    }, [canInstall, installPrompt]);
 
-    
+    const {
+        
+        appinstalled, 
+        isPwa,
+        
+    } = usePwa();
+
     return (
         <Box
             as="section"
@@ -473,13 +478,17 @@ const Sidebar = (props: any) => {
                         </InputGroup>
 
                         <HStack spacing={{ base: "0", md: "6" }}>
-                            
-                            {!(isInstalled || isStandalone || !canInstall) && <Button
-                                colorScheme="teal"
-                                onClick={handleInstallPrompt}
-                            >
-                                Install
-                            </Button>}
+                            {!(appinstalled || isPwa) && (
+                                <Button
+                                    colorScheme="teal"
+                                    onClick={() => 
+                                        // router.push("/install")
+                                        location.href = "/install"
+                                    }
+                                >
+                                    Install
+                                </Button>
+                            )}
 
                             <IconButton
                                 size="lg"
@@ -586,7 +595,6 @@ const Sidebar = (props: any) => {
                     </Container>
                 </Box>
             </Box>
-           
         </Box>
     );
 };
