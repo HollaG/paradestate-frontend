@@ -135,7 +135,8 @@ const DeleteDialog: React.FC<{
     isOpen: boolean;
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
     confirmDelete: () => void;
-}> = ({ isOpen, setIsOpen, confirmDelete }) => {
+    type?: string;
+}> = ({ isOpen, setIsOpen, confirmDelete, type = "entry" }) => {
     const onClose = () => setIsOpen(false);
     const cancelRef = React.useRef<HTMLButtonElement>(null);
 
@@ -152,7 +153,7 @@ const DeleteDialog: React.FC<{
             <AlertDialogOverlay>
                 <AlertDialogContent>
                     <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                        Delete entry
+                        Delete {type}
                     </AlertDialogHeader>
 
                     <AlertDialogBody>
@@ -332,10 +333,33 @@ const PersonnelPage: NextProtectedPage = () => {
     );
     console.log({ data });
 
-    const editUser = () => router.push(`/personnel/manage/${personnel_ID}/edit`)
-    const deleteUser = () => { 
-
-    }
+    const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
+    const editUser = () =>
+        router.push(`/personnel/manage/${personnel_ID}/edit`);
+    const deleteUser = async () => {
+        
+        const responseData = await sendDELETE(
+            `/api/personnel/manage/${personnel_ID}`,
+            {
+                type: "personnel",
+                
+            }
+        );
+        if (responseData.success) { 
+            toast({
+                title: "Success",
+                description: "Successfully deleted",
+                status: "success",
+            });
+            router.push("/personnel/manage")
+        } else { 
+            toast({
+                title: "Error",
+                description: "Successfully deleted",
+                status: "success",
+            });
+        }
+    };
 
     const [clickedType, setClickedType] = useState<string>();
     const [clickedID, setClickedID] = useState<any>();
@@ -350,7 +374,7 @@ const PersonnelPage: NextProtectedPage = () => {
             setTimeout(() => setRefresher((prev) => !prev), 500);
         }
     }, [goto, id]);
-   
+
     const eventOnClick = React.useCallback(
         (event: any) => {
             // router.push(`${router.asPath}#${event.type}-${event.id}`);
@@ -447,6 +471,12 @@ const PersonnelPage: NextProtectedPage = () => {
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
                 confirmDelete={confirmDelete}
+            />
+            <DeleteDialog
+                isOpen={isDeleteUserOpen}
+                setIsOpen={setIsDeleteUserOpen}
+                confirmDelete={deleteUser}
+                type="user"
             />
             {router && data && data.person ? (
                 <Stack direction="column">
@@ -719,9 +749,25 @@ const PersonnelPage: NextProtectedPage = () => {
                         </StatHelpText> */}
                                 </Stat>
 
-                                <SimpleGrid columns={2} spacing={2} alignItems="center">
-                                    <Button colorScheme="teal" onClick={editUser}> Edit </Button>
-                                    <Button colorScheme="red" onClick={deleteUser}> Delete </Button>
+                                <SimpleGrid
+                                    columns={2}
+                                    spacing={2}
+                                    alignItems="center"
+                                >
+                                    <Button
+                                        colorScheme="teal"
+                                        onClick={editUser}
+                                    >
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        colorScheme="red"
+                                        onClick={() =>
+                                            setIsDeleteUserOpen(true)
+                                        }
+                                    >
+                                        Delete
+                                    </Button>
                                 </SimpleGrid>
                             </SimpleGrid>
                         </GridItem>

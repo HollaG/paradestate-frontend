@@ -795,21 +795,46 @@ export default async function handler(
                     error: "You do not have permission to edit this user!",
                 });
 
-            const result = await executeQuery({
-                query: `DELETE FROM ?? WHERE row_ID = ?`,
-                values: [`${type}_tracker`, id],
-            });
             const oldGroupID = await executeQuery({
                 query: `SELECT MAX(group_ID) as max FROM audit_log`,
                 values: [],
             });
             const groupID = oldGroupID[0].max + 1;
-            await executeQuery({
-                query: `INSERT INTO audit_log SET group_ID = ?, user_ID = ?, operation = "DELETE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW()`,
-                values: [groupID, session.user.row_ID, type, id, personnel_ID],
-            });
-           
-            res.json({ success: true });
+            if (type === "personnel") {
+                await executeQuery({
+                    query: `DELETE FROM personnel WHERE personnel_ID = ?`,
+                    values: [personnel_ID],
+                });
+                await executeQuery({
+                    query: `INSERT INTO audit_log SET group_ID = ?, user_ID = ?, operation = "DELETE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW()`,
+                    values: [
+                        groupID,
+                        session.user.row_ID,
+                        type,
+                        personnel_ID,
+                        personnel_ID,
+                    ],
+                });
+
+                res.json({success: true})
+            } else {
+                const result = await executeQuery({
+                    query: `DELETE FROM ?? WHERE row_ID = ?`,
+                    values: [`${type}_tracker`, id],
+                });
+                await executeQuery({
+                    query: `INSERT INTO audit_log SET group_ID = ?, user_ID = ?, operation = "DELETE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW()`,
+                    values: [
+                        groupID,
+                        session.user.row_ID,
+                        type,
+                        id,
+                        personnel_ID,
+                    ],
+                });
+
+                res.json({ success: true });
+            }
         } catch (e) {
             res.json({
                 error: {
