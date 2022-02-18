@@ -147,6 +147,11 @@ const LinkItems: (
                 icon: FiSettings,
                 url: "/personnel/manage/import",
             },
+            {
+                name: "Transfer personnel",
+                icon: FiSettings,
+                url: "/personnel/manage/transfer",
+            },
         ],
     },
     // {
@@ -582,7 +587,7 @@ const Sidebar = (props: any) => {
                             </Container>
                         </Alert>
                     </Collapse>
-                    <Box as="main" p="4" >
+                    <Box as="main" p="4">
                         <Container maxW="container.lg" p={{ base: 0, md: 3 }}>
                             {props.children}
                         </Container>

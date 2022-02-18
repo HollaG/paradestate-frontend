@@ -17,23 +17,45 @@ import {
     TagLabel,
     TagRightIcon,
     Divider,
+    Checkbox,
+    ButtonGroup,
+    InputGroup,
+    InputLeftAddon,
+    Input,
+    useToast,
+    Wrap,
 } from "@chakra-ui/react";
+import {
+    AsyncCreatableSelect,
+    GroupBase,
+    OptionBase,
+    Select,
+    SingleValue,
+} from "chakra-react-select";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import { IoOpenOutline } from "react-icons/io5";
-import useSWR from "swr";
+import useSWR, { KeyedMutator } from "swr";
 import PersonBasicDetails from "../../../components/Common/PersonBasicDetails";
 import SearchInput from "../../../components/SearchInput";
 import { NextProtectedPage } from "../../../lib/auth";
-import fetcher from "../../../lib/fetcher";
+import fetcher, { sendDELETE, sendPOST } from "../../../lib/fetcher";
 import { ExtendedPersonnel, Personnel } from "../../../types/database";
+import Assignments from "../../../config/assignments.json";
+import DeleteDialog from "../../../components/Dialogs/DeleteDialog";
 interface ResponseData {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
     };
     inactivePersonnel: ExtendedPersonnel[];
     total: number;
+}
+
+interface NewPlatoonSelectOption extends OptionBase {
+    value: string;
+    label: string;
+    unit?: string;
 }
 
 const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
@@ -91,18 +113,31 @@ const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     return <>{tags}</>;
 };
 
+
+
 const MemoizedTags = React.memo(Tags);
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     search: string;
     ord?: boolean;
-}> = ({ person, search, ord = false }) => {
+    checkedIDs: number[];
+    setCheckedIDs: React.Dispatch<React.SetStateAction<number[]>>;
+}> = ({ person, search, ord = false, checkedIDs, setCheckedIDs }) => {
     const isVisible =
         search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
     const router = useRouter();
     const handleClick = () =>
         router.push(`/personnel/manage/${person.personnel_ID}`);
+
+    const isChecked = checkedIDs.includes(person.personnel_ID);
+    const handleCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (isChecked)
+            setCheckedIDs((prev) =>
+                prev.filter((id) => id !== person.personnel_ID)
+            );
+        else setCheckedIDs((prev) => [...prev, person.personnel_ID]);
+    };
     return (
         <Collapse in={isVisible} animateOpacity>
             <SimpleGrid
@@ -111,18 +146,24 @@ const PersonAccordionItem: React.FC<{
                 my={3}
                 w="100%"
             >
-                <PersonBasicDetails person={person} handleClick={handleClick}>
-                    {!ord && <MemoizedTags person={person} />}
-                    {ord && (
-                        <Tag
-                            size="sm"
-                            variant="subtle"
-                            colorScheme="teal" // TODO: find a nice color for this
-                        >
-                            <TagLabel>{person.platoon}</TagLabel>
-                        </Tag>
-                    )}
-                </PersonBasicDetails>
+                <Stack direction="row" spacing={3}>
+                    <Checkbox isChecked={isChecked} onChange={handleCheck} />
+                    <PersonBasicDetails
+                        person={person}
+                        handleClick={handleClick}
+                    >
+                        {!ord && <MemoizedTags person={person} />}
+                        {ord && (
+                            <Tag
+                                size="sm"
+                                variant="subtle"
+                                colorScheme="teal" // TODO: find a nice color for this
+                            >
+                                <TagLabel>{person.platoon}</TagLabel>
+                            </Tag>
+                        )}
+                    </PersonBasicDetails>
+                </Stack>
                 <Flex alignItems="center" m={{ lg: "unset", base: "auto" }}>
                     <Button size="xs" ml={{ lg: "auto" }} onClick={handleClick}>
                         Go to manager
@@ -135,12 +176,21 @@ const PersonAccordionItem: React.FC<{
 };
 
 const MemoizedPersonAccordionItem = React.memo(PersonAccordionItem);
+
 const PlatoonAccordionItem: React.FC<{
     personnel: ExtendedPersonnel[];
     platoon: string;
     search: string;
     ord?: boolean;
-}> = ({ personnel, platoon, search, ord = false }) => {
+    platoonOptions: {
+        label: string;
+        options: {
+            label: string;
+            value: string;
+        }[];
+    }[];
+    mutate: KeyedMutator<ResponseData>;
+}> = ({ personnel, platoon, search, ord = false, platoonOptions, mutate }) => {
     const { data: session } = useSession();
     const [rendered, setRendered] = useState(platoon === session?.user.platoon);
     useEffect(() => {
@@ -148,13 +198,116 @@ const PlatoonAccordionItem: React.FC<{
     }, [session?.user.platoon, platoon]);
 
     useEffect(() => {
-        if (search.length) setRendered(true)
-    }, [search])
+        if (search.length) setRendered(true);
+    }, [search]);
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
     // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
 
+    const [checkedIDs, setCheckedIDs] = useState<number[]>([]);
+    const handleCheckAll = () => {
+        if (checkedIDs.length === personnel.length) {
+            setCheckedIDs([]);
+        } else {
+            setCheckedIDs(personnel.map((person) => person.personnel_ID));
+        }
+    };
+    const allChecked = checkedIDs.length === personnel.length;
+    const isIndeterminate =
+        checkedIDs.length !== personnel.length &&
+        !allChecked &&
+        checkedIDs.length > 0;
+
+    const [isTransferring, setIsTransferring] = useState(false);
+
+    const [value, setValue] = useState<NewPlatoonSelectOption>();
+    const handleSelect = (e: SingleValue<NewPlatoonSelectOption>) => {
+        e && setValue({ ...e });
+    };
+    const [password, setPassword] = useState("");
+
+    const toast = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const submitTransfer = async () => {
+        if (!value) return;
+        setIsLoading(true);
+        const [unit, company, platoon] = value?.value.split(
+            Assignments.separator
+        );
+
+        const responseData = await sendPOST("/api/personnel/manage/transfer", {
+            personnel_IDs: checkedIDs,
+            to: {
+                unit,
+                company,
+                platoon,
+                password,
+            },
+        });
+
+        if (responseData.success) {
+            toast({
+                title: "Success",
+                description: `Successfully transferred ${responseData.data.movedNumber} personnel to ${responseData.data.to.unit} ${responseData.data.to.company} ${responseData.data.to.platoon}`,
+                status: "success",
+            });
+            mutate();
+            setCheckedIDs([]);
+        } else {
+            toast({
+                title: "Error",
+                description: responseData.message,
+                status: "error",
+            });
+        }
+        setIsLoading(false);
+        
+    };
+
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const deleteSelected = async () => {
+        if (!checkedIDs.length) return
+
+        const responseData = await sendDELETE("/api/personnel/manage", {
+            personnel_IDs: checkedIDs,
+        });
+
+        if (responseData.success) { 
+            toast({
+                title: "Success",
+                description: `Successfully deleted ${responseData.data.deletedNumber} personnel`,
+                status: "success",
+            });
+            mutate();
+            setCheckedIDs([]);
+        } else { 
+            toast({
+                title: "Error",
+                description: responseData.message,
+                status: "error",
+            });
+        }
+
+    }
+    const customPlatoonOpts: {
+        label: string;
+        options: {
+            label: string;
+            value: string;
+        }[];
+    }[] = JSON.parse(JSON.stringify(platoonOptions));
+    const thisUnit = customPlatoonOpts.find(
+        ({ label }) => label === session?.user?.unit
+    );
+    if (thisUnit)
+        thisUnit.options = thisUnit?.options.filter(
+            (value) =>
+                value.value !==
+                `${session?.user?.unit}${Assignments.separator}${session?.user?.company}${Assignments.separator}${platoon}`
+        );
     return (
+        
         <AccordionItem>
             <Text>
                 <AccordionButton
@@ -168,6 +321,89 @@ const PlatoonAccordionItem: React.FC<{
                 </AccordionButton>
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
+                <DeleteDialog isOpen={deleteOpen} setIsOpen={setDeleteOpen} confirmDelete={deleteSelected} type="personnel"/>
+                <Flex justifyContent="space-between" flexWrap="wrap">
+                    <Checkbox
+                        size="lg"
+                        spacing={3}
+                        isChecked={allChecked}
+                        isIndeterminate={isIndeterminate}
+                        onChange={handleCheckAll}
+                    >
+                        {checkedIDs.length} selected
+                    </Checkbox>
+                    <Box>
+                        <ButtonGroup size="xs" isAttached p={2}>
+                            <Button
+                                colorScheme="red"
+                                // variant="outline"
+                                onClick={() => setDeleteOpen(true)}
+                            >
+                                Delete
+                            </Button>
+                            <Button
+                                colorScheme="teal"
+                                variant={isTransferring ? "solid" : "outline"}
+                                onClick={() =>
+                                    setIsTransferring((prev) => !prev)
+                                }
+                            >
+                                Transfer
+                            </Button>
+                            <Button colorScheme="teal" variant="outline">
+                                Edit
+                            </Button>
+                        </ButtonGroup>
+                    </Box>
+                </Flex>
+                <Collapse in={isTransferring}>
+                    <Stack direction="column">
+                        <InputGroup size="sm" w="100%">
+                            <InputLeftAddon children="Transfer to" />
+                            <Box w="100%">
+                                <Select<
+                                    NewPlatoonSelectOption,
+                                    false,
+                                    GroupBase<NewPlatoonSelectOption>
+                                >
+                                    options={customPlatoonOpts}
+                                    size="sm"
+                                    value={value}
+                                    onChange={handleSelect}
+                                />
+                            </Box>
+                        </InputGroup>
+                        <Collapse
+                            in={
+                                value &&
+                                value?.value.split(Assignments.separator)[1] !==
+                                    session?.user?.company
+                            }
+                        >
+                            <InputGroup size="sm" w="100%">
+                                <InputLeftAddon children="Password" />
+                                <Input
+                                    value={password}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)
+                                    }
+                                    placeholder="Enter password..."
+                                />
+                            </InputGroup>
+                        </Collapse>
+                        <Center>
+                            <Button
+                                size="sm"
+                                colorScheme="teal"
+                                onClick={submitTransfer}
+                                disabled={isLoading || !checkedIDs.length}
+                                isLoading={isLoading}
+                            >
+                                Submit
+                            </Button>
+                        </Center>
+                    </Stack>
+                </Collapse>
                 {rendered &&
                     personnel.map((person, index) => (
                         <MemoizedPersonAccordionItem
@@ -175,6 +411,8 @@ const PlatoonAccordionItem: React.FC<{
                             person={person}
                             search={search}
                             ord={ord}
+                            checkedIDs={checkedIDs}
+                            setCheckedIDs={setCheckedIDs}
                         />
                     ))}
             </AccordionPanel>
@@ -185,14 +423,14 @@ const PlatoonAccordionItem: React.FC<{
 const MemoizedPlatoonAccordionItem = React.memo(PlatoonAccordionItem);
 const PersonnelListPage: NextProtectedPage = () => {
     // Get all personnel, active / old as well
-    const { data, error } = useSWR<ResponseData>(
+    const { data, error, mutate } = useSWR<ResponseData>(
         "/api/personnel/manage",
         fetcher
     );
-    const { data: session } = useSession()
-    
-    const defaultIndex = useMemo(() => [Object.keys(data?.sortedByPlatoon || {}).indexOf(session?.user.platoon || "")], [data, session]);
-    const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
+    const { data: session } = useSession();
+
+    const [index, setIndex] = useState<number[]>([]); // todo - set this to the user platoon
+
     const handleAccordion = (index: number[]) => {
         setIndex(index);
     };
@@ -203,12 +441,42 @@ const PersonnelListPage: NextProtectedPage = () => {
             // do stuff
             // Open all the tabs
             setIndex(
-               [...Object.keys(data.sortedByPlatoon).map((_, index) => index), Object.keys(data.sortedByPlatoon).length] // add the ORD accordion
+                [
+                    ...Object.keys(data.sortedByPlatoon).map(
+                        (_, index) => index
+                    ),
+                    Object.keys(data.sortedByPlatoon).length,
+                ] // add the ORD accordion
             );
         } else {
-            setIndex(defaultIndex);
+            setIndex([
+                Object.keys(data?.sortedByPlatoon || {}).indexOf(
+                    session?.user.platoon || ""
+                ),
+            ]);
         }
-    }, [search, data?.sortedByPlatoon, defaultIndex]);
+    }, [search, data?.sortedByPlatoon, session]);
+
+    // Get platoon data
+    const { data: platoonData } = useSWR<{
+        [key: string]: {
+            platoon: string;
+            company: string;
+            unit: string;
+        }[];
+    }>("/api/personnel/manage/transfer", fetcher);
+    console.log({ platoonData });
+
+    const otherPlatoonOptions = platoonData
+        ? Object.keys(platoonData).map((unit) => ({
+              label: unit,
+              options: platoonData[unit].map(({ platoon, company }) => ({
+                  label: `${company} - ${platoon}`,
+                  value: `${unit}${Assignments.separator}${company}${Assignments.separator}${platoon}`,
+              })),
+          }))
+        : [];
+    console.log({ otherPlatoonOptions });
 
     return (
         <Stack direction="column">
@@ -216,7 +484,7 @@ const PersonnelListPage: NextProtectedPage = () => {
                 <Heading> Personnel ({data?.total})</Heading>
             </Center>
             <SearchInput setSearch={setSearch} />
-            {data && (
+            {data && platoonData && (
                 <Accordion
                     // defaultIndex={[0]}
                     allowMultiple
@@ -230,6 +498,8 @@ const PersonnelListPage: NextProtectedPage = () => {
                             platoon={platoon}
                             search={search}
                             key={index}
+                            platoonOptions={otherPlatoonOptions}
+                            mutate={mutate}
                         />
                     ))}
                     {data.inactivePersonnel.length > 0 && (
@@ -238,6 +508,8 @@ const PersonnelListPage: NextProtectedPage = () => {
                             platoon="ORD"
                             search={search}
                             ord={true}
+                            platoonOptions={otherPlatoonOptions}
+                            mutate={mutate}
                         />
                     )}
                 </Accordion>

@@ -57,10 +57,10 @@ export default async function handler(
 
             if (!objectified) return { props: {} };
 
-            const edited:ExtendedPersonnel[] = []
+            const edited: ExtendedPersonnel[] = [];
             objectified.forEach((x) => {
                 const locationArr = [];
-         
+
                 if (x.attc_row_ID) locationArr.push("On AttC");
                 if (x.course_row_ID) locationArr.push("On course");
                 if (x.leave_row_ID) locationArr.push("On leave");
@@ -80,19 +80,15 @@ export default async function handler(
                     }
                 }
 
-                
-
                 const str = locationArr.join(", ");
                 x.location = str || "In camp";
-                x.locationArr = locationArr
+                x.locationArr = locationArr;
                 // Remove null values
                 const cleansed = Object.fromEntries(
                     Object.entries(x).filter(([_, v]) => v != null)
                 ) as ExtendedPersonnel;
-                edited.push(cleansed)
+                edited.push(cleansed);
             });
-
-    
 
             const sortedByPlatoon = edited.reduce<{
                 [key: string]: ExtendedPersonnel[];
@@ -114,6 +110,65 @@ export default async function handler(
                 total: personnel.length + inactivePersonnel.length,
             });
         } catch (e: any) {
+            res.status(400).json({
+                error: e.toString(),
+            });
+        }
+    } else if (req.method === "DELETE") {
+        try {
+            const { personnel_IDs } = req.body;
+            if (!personnel_IDs)
+                return res
+                    .status(400)
+                    .json({ message: "No personnel selected!" });
+
+            // ensure have permissions
+            const personnel = await executeQuery({
+                query: `SELECT personnel_ID FROM personnel WHERE personnel_ID IN (?) AND unit = ? AND company = ?`,
+                values: [
+                    personnel_IDs,
+                    session.user.unit,
+                    session.user.company,
+                ],
+            });
+
+            if (personnel.length !== personnel_IDs.length)
+                return res.status(400).json({
+                    message:
+                        "You do not have permission to delete this personnel!",
+                });
+
+            await executeQuery({
+                query: `DELETE FROM personnel WHERE personnel_ID IN (?)`,
+                values: [personnel_IDs],
+            });
+
+            res.status(200).json({
+                success: true,
+                data: { deletedNumber: personnel_IDs.length },
+            });
+
+            const oldGroupID = await executeQuery({
+                query: `SELECT MAX(group_ID) as max FROM audit_log`,
+                values: [],
+            });
+
+            const groupID = oldGroupID[0].max + 1;
+
+            for (let personnel_ID of personnel_IDs) { 
+                await executeQuery({
+                    query: `INSERT INTO audit_log SET user_ID = ?, operation = "DELETE", type = "personnel", row_ID = ?, personnel_ID = ?, date = NOW(), group_ID = ?`,
+                    values: [
+                        session.user.row_ID,
+                        personnel_ID,
+                        personnel_ID,
+                        groupID,
+                    ],
+                });
+            }
+
+        } catch (e: any) {
+            console.log(e);
             res.status(400).json({
                 error: e.toString(),
             });
