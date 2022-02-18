@@ -36,17 +36,17 @@ import {
 import { useRouter } from "next/router";
 import React, { RefObject, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
-import { NextProtectedPage } from "../../../lib/auth";
-import fetcher, { sendDELETE, sendPOST } from "../../../lib/fetcher";
-import { Personnel } from "../../../types/database";
-import Assignments from "../../../config/assignments.json";
+import { NextProtectedPage } from "../../../../lib/auth";
+import fetcher, { sendDELETE, sendPOST } from "../../../../lib/fetcher";
+import { Personnel } from "../../../../types/database";
+import Assignments from "../../../../config/assignments.json";
 import { format } from "date-fns";
 import {
     calculateMonthsToOrFrom,
     capitalizeFirstLetter,
     convertToAMPM,
-} from "../../../lib/custom";
-import CustomCalendar from "../../../components/Calendar/CustomCalendar";
+} from "../../../../lib/custom";
+import CustomCalendar from "../../../../components/Calendar/CustomCalendar";
 import { Event } from "react-big-calendar";
 import {
     Data,
@@ -56,15 +56,15 @@ import {
     MAEvent,
     OffOrLeaveEvent,
     OtherEvent,
-} from "../../../types/types";
+} from "../../../../types/types";
 import {
     AddedAttCOrCourse,
     AddedLeaveOrOff,
     AddedMA,
     AddedOthers,
-} from "../../../components/Dashboard/AddedEvent";
-import StatusEntry from "../../../components/Personnel/Status/StatusEntry";
-import ClickedContainerWrapper from "../../../components/Common/ClickedContainerWrapper";
+} from "../../../../components/Dashboard/AddedEvent";
+import StatusEntry from "../../../../components/Personnel/Status/StatusEntry";
+import ClickedContainerWrapper from "../../../../components/Common/ClickedContainerWrapper";
 import {
     ConfirmAttC,
     ConfirmCourse,
@@ -72,9 +72,9 @@ import {
     ConfirmMA,
     ConfirmOff,
     ConfirmOthers,
-} from "../../../components/Dashboard/ConfirmEvent";
+} from "../../../../components/Dashboard/ConfirmEvent";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
-import CustomStatusDateRangePicker from "../../../components/Dates/CustomStatusDateRangePicker";
+import CustomStatusDateRangePicker from "../../../../components/Dates/CustomStatusDateRangePicker";
 
 const types = [
     "All",
@@ -332,6 +332,11 @@ const PersonnelPage: NextProtectedPage = () => {
     );
     console.log({ data });
 
+    const editUser = () => router.push(`/personnel/manage/${personnel_ID}/edit`)
+    const deleteUser = () => { 
+
+    }
+
     const [clickedType, setClickedType] = useState<string>();
     const [clickedID, setClickedID] = useState<any>();
     const [refresher, setRefresher] = useState(false);
@@ -345,7 +350,7 @@ const PersonnelPage: NextProtectedPage = () => {
             setTimeout(() => setRefresher((prev) => !prev), 500);
         }
     }, [goto, id]);
-    console.log({ clickedType, clickedID });
+   
     const eventOnClick = React.useCallback(
         (event: any) => {
             // router.push(`${router.asPath}#${event.type}-${event.id}`);
@@ -713,6 +718,11 @@ const PersonnelPage: NextProtectedPage = () => {
                             For internal reference only{" "}
                         </StatHelpText> */}
                                 </Stat>
+
+                                <SimpleGrid columns={2} spacing={2} alignItems="center">
+                                    <Button colorScheme="teal" onClick={editUser}> Edit </Button>
+                                    <Button colorScheme="red" onClick={deleteUser}> Delete </Button>
+                                </SimpleGrid>
                             </SimpleGrid>
                         </GridItem>
                         <GridItem colSpan={5} mt={2}>

@@ -9,9 +9,9 @@ import {
 } from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
-import executeQuery from "../../../../lib/db";
-import Assignments from "../../../../config/assignments.json";
-import { ExtendedPersonnel, Personnel } from "../../../../types/database";
+import executeQuery from "../../../../../lib/db";
+import Assignments from "../../../../../config/assignments.json";
+import { ExtendedPersonnel, Personnel } from "../../../../../types/database";
 import { queryBuilder } from "mysql-query-placeholders";
 import {
     ExtendedStatus,
@@ -19,14 +19,14 @@ import {
     MAEvent,
     OffOrLeaveEvent,
     OtherEvent,
-} from "../../../../types/types";
+} from "../../../../../types/types";
 import { Event } from "react-big-calendar";
 import {
     calculateOutOfOfficeDuration,
     formatMySQLDateHelper,
     formatMySQLTimeHelper,
     sortActiveInactiveStatus,
-} from "../../../../lib/custom";
+} from "../../../../../lib/custom";
 
 export default async function handler(
     req: NextApiRequest,

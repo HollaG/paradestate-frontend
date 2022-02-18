@@ -15,7 +15,12 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import { CreatableSelect, OptionBase, Select } from "chakra-react-select";
-import { Controller, useForm } from "react-hook-form";
+import {
+    Controller,
+    FormProvider,
+    useForm,
+    useFormContext,
+} from "react-hook-form";
 import useSWR from "swr";
 import CustomStepper from "../../../../components/Common/CustomStepper";
 import { NextProtectedPage } from "../../../../lib/auth";
@@ -28,6 +33,7 @@ import { isBefore } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import CustomBigAlert from "../../../../components/Alert/CustomBigAlert";
 import { useRouter } from "next/router";
+import AddFormTemplate from "../../../../components/Personnel/Status/Manage/AddFormTemplate";
 
 const steps = ["Add details", "Success"];
 
@@ -37,14 +43,21 @@ interface ServiceStatusOption extends OptionBase {
 }
 [];
 const AddPersonnelPage: NextProtectedPage = () => {
-    const {
-        register,
-        control,
-        handleSubmit,
-        formState: { errors },
-        setError,
-        reset,
-    } = useForm<any>({
+    // const {
+    //     register,
+    //     control,
+    //     handleSubmit,
+    //     formState: { errors },
+    //     setError,
+    //     reset,
+    // } = useForm<any>({
+    //     defaultValues: {
+    //         service_status: { label: "NSF", value: "NSF" },
+    //         post_in: new Date(),
+    //         ord: new Date(),
+    //     },
+    // });
+    const methods = useForm<any>({
         defaultValues: {
             service_status: { label: "NSF", value: "NSF" },
             post_in: new Date(),
@@ -78,11 +91,11 @@ const AddPersonnelPage: NextProtectedPage = () => {
         const { post_in, ord, name } = data;
 
         if (isBefore(ord, post_in)) {
-            setError("ord", {
+            methods.setError("ord", {
                 type: "wrong_date",
                 message: "ORD must be after post in date!",
             });
-            setError("post_in", {
+            methods.setError("post_in", {
                 type: "wrong_date",
                 message: "ORD must be after post in date!",
             });
@@ -103,7 +116,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
             rank,
             service_status,
         });
-        console.log({ responseData });
+        
         if (responseData.success) {
             setSuccess(true);
             console.log(responseData.data);
@@ -131,8 +144,10 @@ const AddPersonnelPage: NextProtectedPage = () => {
 
     const redirectToHome = useCallback(() => {
         setSuccess(false);
-        reset();
-    }, [setSuccess, reset]);
+        setSecondsLeft(10)
+
+        methods.reset();
+    }, [setSuccess, methods.reset]);
     const redirectToPersonnelPage = useCallback(
         () => router.push(`/personnel/manage/${personnelData?.personnel_ID}`),
         [personnelData, router]
@@ -142,7 +157,6 @@ const AddPersonnelPage: NextProtectedPage = () => {
             redirectToHome();
         }
     }, [secondsLeft, redirectToHome]);
-
 
     if (success)
         return (
@@ -156,9 +170,8 @@ const AddPersonnelPage: NextProtectedPage = () => {
 
                 <CustomBigAlert header="Personnel added!">
                     <>
-                        Your personnel {personnelData?.rank || "LCP"}{" "}
-                        {personnelData?.name || "testing"} has been added.
-                        
+                        Your personnel {personnelData?.rank}{" "}
+                        {personnelData?.name} has been added.
                         <Stack direction="row" justifyContent="center" mt={1}>
                             <Button
                                 size="xs"
@@ -180,231 +193,240 @@ const AddPersonnelPage: NextProtectedPage = () => {
             </Stack>
         );
 
-    return (
-        <form onSubmit={handleSubmit(submit)}>
-            <Stack direction="column">
-                <Center>
-                    <Heading> Add Personnel </Heading>
-                </Center>
-                <Center>
-                    <CustomStepper step={0} steps={steps} />
-                </Center>
-                {/* <Center>
-                    <Box>
-                        <Button colorScheme="teal"> Import </Button>
-                    </Box>
-                </Center> */}
-                <Text pl={2}> All fields are required. </Text>
-                <Stack direction="column" spacing={6}>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Service status" />
-                            <Box w="100%">
-                                <Controller
-                                    name="service_status"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            defaultValue={{
-                                                label: "NSF",
-                                                value: "NSF",
-                                            }}
-                                            id="service_status"
-                                            name="service_status"
-                                            options={Assignments.service_status.map(
-                                                (status) => ({
-                                                    label: status,
-                                                    value: status,
-                                                })
-                                            )}
-                                            placeholder="Select service status"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.service_status?.type === "required" && (
-                            <ErrorText text="Please select a service status!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Rank" />
-                            <Box w="100%">
-                                <Controller
-                                    name="rank"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            id="rank"
-                                            name="rank"
-                                            options={Object.keys(
-                                                Assignments.rank_army
-                                            ).map((rank) => ({
-                                                label: rank,
-                                                value: rank,
-                                            }))}
-                                            placeholder="Select rank"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.rank?.type === "required" && (
-                            <ErrorText text="Please select a rank!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Name" />
-                            <Input
-                                placeholder="Full name of personnel"
-                                {...register("name", {
-                                    required: true,
-                                })}
-                            />
-                        </InputGroup>
-                        {errors?.name?.type === "required" && (
-                            <ErrorText text="Please enter a name!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="PES" />
-                            <Box w="100%">
-                                <Controller
-                                    name="pes"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            id="pes"
-                                            name="pes"
-                                            options={Assignments.pes.map(
-                                                (pes) => ({
-                                                    label: pes,
-                                                    value: pes,
-                                                })
-                                            )}
-                                            placeholder="Select PES"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.pes?.type === "required" && (
-                            <ErrorText text="Please select a PES!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Post in" />
-                            <CustomControlledDatePicker
-                                control={control}
-                                name="post_in"
-                                placeholder="Date when personnel joined the company"
-                            />
-                        </InputGroup>
-                        {errors?.post_in?.type === "required" && (
-                            <ErrorText text="Please enter a date for post-in!" />
-                        )}
-                        {errors?.post_in?.type === "wrong_date" && (
-                            <ErrorText text="ORD must be after post-in date!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="ORD" />
-                            <CustomControlledDatePicker
-                                control={control}
-                                name="ord"
-                                placeholder="Operationally Ready Date"
-                            />
-                        </InputGroup>
-                        {errors?.ord?.type === "required" && (
-                            <ErrorText text="Please enter an ORD!" />
-                        )}
-                        {errors?.ord?.type === "wrong_date" && (
-                            <ErrorText text="ORD must be after post-in date!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Platoon" />
-                            <Box w="100%">
-                                <Controller
-                                    name="platoon"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <CreatableSelect<
-                                            ServiceStatusOption,
-                                            true
-                                        >
-                                            name="platoon"
-                                            placeholder="Select or enter a platoon..."
-                                            options={data?.platoons.map(
-                                                (platoon) => ({
-                                                    label: platoon,
-                                                    value: platoon,
-                                                })
-                                            )}
-                                            value={value}
-                                            onChange={onChange}
-                                            size="sm"
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.platoon?.type === "required" ? (
-                            <ErrorText text="Please choose or type a platoon!" />
-                        ) : (
-                            <HelpText text="If the desired platoon does not exist, create the platoon by typing the name." />
-                        )}
-                    </Box>
-                    <Center>
-                        <Button colorScheme="teal" type="submit" isLoading={isSubmitting}>
-                            Submit
-                        </Button>
-                    </Center>
-                </Stack>
-            </Stack>
-        </form>
-    );
+    if (data?.platoons && data?.sections)
+        return <FormProvider {...methods}>
+            <AddFormTemplate isSubmitting={isSubmitting} steps={steps} step={0} submit={submit} platoons={data?.platoons} sections={data?.sections}/>
+        </FormProvider>;
+    else return <> Loading data... </>
+    // return (
+    //     <form onSubmit={handleSubmit(submit)}>
+    //         <Stack direction="column">
+    //             <Center>
+    //                 <Heading> Add Personnel </Heading>
+    //             </Center>
+    //             <Center>
+    //                 <CustomStepper step={0} steps={steps} />
+    //             </Center>
+    //             {/* <Center>
+    //                 <Box>
+    //                     <Button colorScheme="teal"> Import </Button>
+    //                 </Box>
+    //             </Center> */}
+    //             <Text pl={2}> All fields are required. </Text>
+    //             <Stack direction="column" spacing={6}>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="Service status" />
+    //                         <Box w="100%">
+    //                             <Controller
+    //                                 name="service_status"
+    //                                 control={control}
+    //                                 rules={{
+    //                                     required: true,
+    //                                 }}
+    //                                 render={({
+    //                                     field: { onChange, value = [] },
+    //                                 }) => (
+    //                                     <Select<ServiceStatusOption, false>
+    //                                         defaultValue={{
+    //                                             label: "NSF",
+    //                                             value: "NSF",
+    //                                         }}
+    //                                         id="service_status"
+    //                                         name="service_status"
+    //                                         options={Assignments.service_status.map(
+    //                                             (status) => ({
+    //                                                 label: status,
+    //                                                 value: status,
+    //                                             })
+    //                                         )}
+    //                                         placeholder="Select service status"
+    //                                         closeMenuOnSelect={true}
+    //                                         size="sm"
+    //                                         isSearchable={false}
+    //                                         value={value}
+    //                                         onChange={onChange}
+    //                                     />
+    //                                 )}
+    //                             />
+    //                         </Box>
+    //                     </InputGroup>
+    //                     {errors?.service_status?.type === "required" && (
+    //                         <ErrorText text="Please select a service status!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="Rank" />
+    //                         <Box w="100%">
+    //                             <Controller
+    //                                 name="rank"
+    //                                 control={control}
+    //                                 rules={{
+    //                                     required: true,
+    //                                 }}
+    //                                 render={({
+    //                                     field: { onChange, value = [] },
+    //                                 }) => (
+    //                                     <Select<ServiceStatusOption, false>
+    //                                         id="rank"
+    //                                         name="rank"
+    //                                         options={Object.keys(
+    //                                             Assignments.rank_army
+    //                                         ).map((rank) => ({
+    //                                             label: rank,
+    //                                             value: rank,
+    //                                         }))}
+    //                                         placeholder="Select rank"
+    //                                         closeMenuOnSelect={true}
+    //                                         size="sm"
+    //                                         isSearchable={false}
+    //                                         value={value}
+    //                                         onChange={onChange}
+    //                                     />
+    //                                 )}
+    //                             />
+    //                         </Box>
+    //                     </InputGroup>
+    //                     {errors?.rank?.type === "required" && (
+    //                         <ErrorText text="Please select a rank!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="Name" />
+    //                         <Input
+    //                             placeholder="Full name of personnel"
+    //                             {...register("name", {
+    //                                 required: true,
+    //                             })}
+    //                         />
+    //                     </InputGroup>
+    //                     {errors?.name?.type === "required" && (
+    //                         <ErrorText text="Please enter a name!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="PES" />
+    //                         <Box w="100%">
+    //                             <Controller
+    //                                 name="pes"
+    //                                 control={control}
+    //                                 rules={{
+    //                                     required: true,
+    //                                 }}
+    //                                 render={({
+    //                                     field: { onChange, value = [] },
+    //                                 }) => (
+    //                                     <Select<ServiceStatusOption, false>
+    //                                         id="pes"
+    //                                         name="pes"
+    //                                         options={Assignments.pes.map(
+    //                                             (pes) => ({
+    //                                                 label: pes,
+    //                                                 value: pes,
+    //                                             })
+    //                                         )}
+    //                                         placeholder="Select PES"
+    //                                         closeMenuOnSelect={true}
+    //                                         size="sm"
+    //                                         isSearchable={false}
+    //                                         value={value}
+    //                                         onChange={onChange}
+    //                                     />
+    //                                 )}
+    //                             />
+    //                         </Box>
+    //                     </InputGroup>
+    //                     {errors?.pes?.type === "required" && (
+    //                         <ErrorText text="Please select a PES!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="Post in" />
+    //                         <CustomControlledDatePicker
+    //                             control={control}
+    //                             name="post_in"
+    //                             placeholder="Date when personnel joined the company"
+    //                         />
+    //                     </InputGroup>
+    //                     {errors?.post_in?.type === "required" && (
+    //                         <ErrorText text="Please enter a date for post-in!" />
+    //                     )}
+    //                     {errors?.post_in?.type === "wrong_date" && (
+    //                         <ErrorText text="ORD must be after post-in date!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="ORD" />
+    //                         <CustomControlledDatePicker
+    //                             control={control}
+    //                             name="ord"
+    //                             placeholder="Operationally Ready Date"
+    //                         />
+    //                     </InputGroup>
+    //                     {errors?.ord?.type === "required" && (
+    //                         <ErrorText text="Please enter an ORD!" />
+    //                     )}
+    //                     {errors?.ord?.type === "wrong_date" && (
+    //                         <ErrorText text="ORD must be after post-in date!" />
+    //                     )}
+    //                 </Box>
+    //                 <Box>
+    //                     <InputGroup size="sm">
+    //                         <InputLeftAddon children="Platoon" />
+    //                         <Box w="100%">
+    //                             <Controller
+    //                                 name="platoon"
+    //                                 control={control}
+    //                                 rules={{
+    //                                     required: true,
+    //                                 }}
+    //                                 render={({
+    //                                     field: { onChange, value = [] },
+    //                                 }) => (
+    //                                     <CreatableSelect<
+    //                                         ServiceStatusOption,
+    //                                         true
+    //                                     >
+    //                                         name="platoon"
+    //                                         placeholder="Select or enter a platoon..."
+    //                                         options={data?.platoons.map(
+    //                                             (platoon) => ({
+    //                                                 label: platoon,
+    //                                                 value: platoon,
+    //                                             })
+    //                                         )}
+    //                                         value={value}
+    //                                         onChange={onChange}
+    //                                         size="sm"
+    //                                     />
+    //                                 )}
+    //                             />
+    //                         </Box>
+    //                     </InputGroup>
+    //                     {errors?.platoon?.type === "required" ? (
+    //                         <ErrorText text="Please choose or type a platoon!" />
+    //                     ) : (
+    //                         <HelpText text="If the desired platoon does not exist, create the platoon by typing the name." />
+    //                     )}
+    //                 </Box>
+    //                 <Center>
+    //                     <Button
+    //                         colorScheme="teal"
+    //                         type="submit"
+    //                         isLoading={isSubmitting}
+    //                     >
+    //                         Submit
+    //                     </Button>
+    //                 </Center>
+    //             </Stack>
+    //         </Stack>
+    //     </form>
+    // );
 };
 
 AddPersonnelPage.requireAuth = true;
