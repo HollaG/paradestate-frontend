@@ -18,6 +18,7 @@ import { NextProtectedPage } from "../lib/auth";
 import "../styles/globals.css";
 
 import Layout from "../components/Sidebar";
+import Head from "next/head";
 const muiTheme = createTheme({
     // typography: {
     //     fontFamily: "Inter", //Custom Font
@@ -63,6 +64,9 @@ function App({
 }) {
     return (
         <ThemeProvider theme={theme}>
+            <Head>
+                <title> SAF Parade State Generator </title>
+            </Head>
             <ChakraProvider resetCSS theme={theme}>
                 <Provider store={store}>
                     <SessionProvider session={session}>

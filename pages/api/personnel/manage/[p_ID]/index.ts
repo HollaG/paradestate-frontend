@@ -9,7 +9,7 @@ import {
 } from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
-import executeQuery from "../../../../../lib/db";
+import executeQuery, { db } from "../../../../../lib/db";
 import Assignments from "../../../../../config/assignments.json";
 import { ExtendedPersonnel, Personnel } from "../../../../../types/database";
 import { queryBuilder } from "mysql-query-placeholders";
@@ -801,10 +801,20 @@ export default async function handler(
             });
             const groupID = oldGroupID[0].max + 1;
             if (type === "personnel") {
-                await executeQuery({
-                    query: `DELETE FROM personnel WHERE personnel_ID = ?`,
-                    values: [personnel_ID],
-                });
+                const txn = db.transaction();
+                txn.query(
+                    `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID = ?`,
+                    [personnel_ID]
+                )
+                    .query(`DELETE FROM personnel WHERE personnel_ID = ?`, [
+                        personnel_ID,
+                    ])
+                    .rollback(console.log)
+                    .commit();
+                // await executeQuery({
+                //     query: `DELETE FROM personnel WHERE personnel_ID = ?`,
+                //     values: [personnel_ID],
+                // });
                 await executeQuery({
                     query: `INSERT INTO audit_log SET group_ID = ?, user_ID = ?, operation = "DELETE", type = ?, row_ID = ?, personnel_ID = ?, date = NOW()`,
                     values: [
@@ -816,7 +826,7 @@ export default async function handler(
                     ],
                 });
 
-                res.json({success: true})
+                res.json({ success: true });
             } else {
                 const result = await executeQuery({
                     query: `DELETE FROM ?? WHERE row_ID = ?`,

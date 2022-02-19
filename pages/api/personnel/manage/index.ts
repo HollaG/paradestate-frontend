@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
-import executeQuery from "../../../../lib/db";
+import executeQuery, { db } from "../../../../lib/db";
 import Assignments from "../../../../config/assignments.json";
 import { ExtendedPersonnel, Personnel } from "../../../../types/database";
 import { queryBuilder } from "mysql-query-placeholders";
@@ -138,10 +138,24 @@ export default async function handler(
                         "You do not have permission to delete this personnel!",
                 });
 
-            await executeQuery({
-                query: `DELETE FROM personnel WHERE personnel_ID IN (?)`,
-                values: [personnel_IDs],
-            });
+            const txn = db.transaction();
+            txn.query(
+                `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID IN (?)`,
+                [personnel_IDs]
+            )
+            .query(`DELETE FROM personnel WHERE personnel_ID IN (?)`, [
+                personnel_IDs,
+            ]);
+            txn.rollback(console.log);
+            txn.commit();
+            // await executeQuery({
+            //     query: `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID IN (?)`,
+            //     values: [personnel_IDs],
+            // });
+            // await executeQuery({
+            //     query: `DELETE FROM personnel WHERE personnel_ID IN (?)`,
+            //     values: [personnel_IDs],
+            // });
 
             res.status(200).json({
                 success: true,
@@ -155,7 +169,7 @@ export default async function handler(
 
             const groupID = oldGroupID[0].max + 1;
 
-            for (let personnel_ID of personnel_IDs) { 
+            for (let personnel_ID of personnel_IDs) {
                 await executeQuery({
                     query: `INSERT INTO audit_log SET user_ID = ?, operation = "DELETE", type = "personnel", row_ID = ?, personnel_ID = ?, date = NOW(), group_ID = ?`,
                     values: [
@@ -166,7 +180,6 @@ export default async function handler(
                     ],
                 });
             }
-
         } catch (e: any) {
             console.log(e);
             res.status(400).json({
