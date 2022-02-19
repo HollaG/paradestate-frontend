@@ -11,6 +11,7 @@ import {
     Stack,
     Divider,
     Button,
+    Link,
 } from "@chakra-ui/react";
 import { format } from "date-fns";
 import React from "react";
@@ -21,12 +22,17 @@ import fetcher from "../../lib/fetcher";
 import { AuditLogInterface, AuditResponse } from "../api/audit-log";
 import Assignments from "../../config/assignments.json";
 const AuditLogEntry: React.FC<{ entry: AuditLogInterface }> = ({ entry }) => {
+    const url =
+        entry.type === "personnel"
+            ? `/personnel/manage/${entry.personnel_ID}`
+            : `/personnel/manage/${entry.personnel_ID}?goto=${entry.type}&id=${entry.row_ID}`;
+
     return (
         <Stack direction="column" spacing={0}>
-            <Text fontWeight="semibold">
+            <Link fontWeight="semibold" isExternal href={url}>
                 {entry.username} executed: {entry.operation.toUpperCase()}{" "}
                 {entry.type.toUpperCase()} #{entry.personnel_ID}
-            </Text>
+            </Link>
             <Text> {entry.email} </Text>
             <Text fontWeight="light">
                 Created{" "}
@@ -50,17 +56,25 @@ const AuditLogGroup: React.FC<{ group: AuditLogInterface[] }> = ({ group }) => {
                 Group #{group[0].group_ID}
             </Text>
             <Stack p={2} direction="column" divider={<Divider />}>
-                {group.map((entry) => (
-                    // <AuditLogEntry key={entry.audit_ID} entry={entry} />
-                    <Stack direction="column" spacing={0}>
-                        <Text fontWeight="semibold">
-                            {entry.username} executed:{" "}
-                            {entry.operation.toUpperCase()}{" "}
-                            {entry.type.toUpperCase()} #{entry.personnel_ID}
-                        </Text>
-                        <Text fontWeight="light">Log #{entry.audit_ID}</Text>
-                    </Stack>
-                ))}
+                {group.map((entry, index) => {
+                    const url =
+                        entry.type === "personnel"
+                            ? `/personnel/manage/${entry.personnel_ID}`
+                            : `/personnel/manage/${entry.personnel_ID}?goto=${entry.type}&id=${entry.row_ID}`;
+
+                    return (
+                        <Stack direction="column" spacing={0} key={index}>
+                            <Link fontWeight="semibold" isExternal href={url}>
+                                {entry.username} executed:{" "}
+                                {entry.operation.toUpperCase()}{" "}
+                                {entry.type.toUpperCase()} #{entry.personnel_ID}
+                            </Link>
+                            <Text fontWeight="light">
+                                Log #{entry.audit_ID}
+                            </Text>
+                        </Stack>
+                    );
+                })}
             </Stack>
         </Stack>
     );
@@ -139,7 +153,14 @@ const AuditLogPage: NextProtectedPage = () => {
             <Center>
                 <Stack direction="row" align="center">
                     <Heading> Audit log </Heading>
-                    <Button size="xs" colorScheme="teal" onClick={() => setEntries(prev => prev+30)}> Load more </Button>
+                    <Button
+                        size="xs"
+                        colorScheme="teal"
+                        onClick={() => setEntries((prev) => prev + 30)}
+                    >
+                        {" "}
+                        Load more{" "}
+                    </Button>
                 </Stack>
             </Center>
             {!data && <>Loading data...</>}

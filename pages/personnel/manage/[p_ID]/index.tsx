@@ -132,8 +132,6 @@ export interface PersonnelPageData {
     onStatus: boolean;
 }
 
-
-
 const Editing: React.FC<{
     type: string;
     row_ID: string;
@@ -297,22 +295,20 @@ const PersonnelPage: NextProtectedPage = () => {
     const editUser = () =>
         router.push(`/personnel/manage/${personnel_ID}/edit`);
     const deleteUser = async () => {
-        
         const responseData = await sendDELETE(
             `/api/personnel/manage/${personnel_ID}`,
             {
                 type: "personnel",
-                
             }
         );
-        if (responseData.success) { 
+        if (responseData.success) {
             toast({
                 title: "Success",
                 description: "Successfully deleted",
                 status: "success",
             });
-            router.push("/personnel/manage")
-        } else { 
+            router.push("/personnel/manage");
+        } else {
             toast({
                 title: "Error",
                 description: "Successfully deleted",
@@ -348,6 +344,7 @@ const PersonnelPage: NextProtectedPage = () => {
         [setClickedType, setClickedID, setRefresher, setType]
     );
     const scrollRef = useRef<HTMLDivElement>(null);
+    const toastMissingId = "missing"
     useEffect(() => {
         if (scrollRef && scrollRef.current) {
             window.scrollTo({
@@ -357,12 +354,20 @@ const PersonnelPage: NextProtectedPage = () => {
                 left: 0,
                 behavior: "smooth",
             });
+        } else if (goto && id && !toast.isActive(toastMissingId)) { 
+            // toast({
+            //     id: toastMissingId,
+            //     title: "Error",
+            //     description: `Invalid ${goto} ID ${id}! Has it been deleted? Check the audit log.`,
+            //     status: "error",
+            // })
         }
-    }, [scrollRef, refresher]);
+    }, [scrollRef, refresher, goto, id]);
 
     const methods = useForm({ shouldUnregister: true });
     const [editingID, setEditingID] = useState<string>();
     const toast = useToast();
+    
     const editHandler = async (data: any) => {
         console.log("Submitted data:", { data });
         const responseData = await sendPOST(
@@ -1727,19 +1732,28 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                     //         status
                                                                     //     }
                                                                     // />
-                                                                    <Box
+                                                                    <ClickedContainerWrapper
                                                                         key={
                                                                             index
                                                                         }
+                                                                        condition={
+                                                                            clickedType ===
+                                                                                "status" &&
+                                                                            clickedID ===
+                                                                                status.row_ID
+                                                                        }
+                                                                        scrollId={`status-${status.row_ID}`}
+                                                                        ref={
+                                                                            scrollRef
+                                                                        }
+                                                                        
                                                                     >
                                                                         <Flex
                                                                             justifyContent="space-between"
                                                                             alignItems="center"
                                                                         >
                                                                             <StatusEntry
-                                                                                key={
-                                                                                    index
-                                                                                }
+                                                                                
                                                                                 status={
                                                                                     status
                                                                                 }
@@ -1794,7 +1808,7 @@ const PersonnelPage: NextProtectedPage = () => {
                                                                                 `status-${status.row_ID}`
                                                                             }
                                                                         />
-                                                                    </Box>
+                                                                    </ClickedContainerWrapper>
                                                                 )
                                                             )}
                                                         </Stack>
