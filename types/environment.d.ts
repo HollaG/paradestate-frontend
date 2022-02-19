@@ -8,6 +8,8 @@ declare global {
             MYSQL_PORT: number;
             MYSQL_DATABASE: string;
             MYSQL_USER: string;
+            MYSQL_PASSWORD: string;
+            SALT_ROUNDS: number
         }
     }
 }

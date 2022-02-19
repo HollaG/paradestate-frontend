@@ -1,29 +1,60 @@
 import { stringify } from "querystring";
 import mysql from "serverless-mysql";
-const db = mysql({
+export const db = mysql({
     config: {
-        host: "localhost",
-        port: 3306,
-        database: "parade_state",
-        user: "root",
-        // password: process.env.MYSQL_PASSWORD
+        host: process.env.MYSQL_HOST,
+        port: process.env.MYSQL_PORT,
+        database: process.env.MYSQL_DATABASE,
+        user: process.env.MYSQL_USER,
+        password: process.env.MYSQL_PASSWORD,
     },
 });
+
 export default async function executeQuery({
     query,
-    values,
+    values = [],
 }: {
     query: string;
-    values: any[];
+    values?: any[];
 }) {
     try {
         const results = await db.query<any>(query, values);
         await db.end();
-        const stripped = results.map((rowDataPacket: any) =>
-            Object.assign({}, rowDataPacket)
-        );
-        return stripped;
+        if (Array.isArray(results)) {
+            const stripped = results.map((rowDataPacket: any) =>
+                Object.assign({}, rowDataPacket)
+            );
+            return stripped;
+        } else { return results}
     } catch (error) {
         return { error };
     }
 }
+
+export const executeTransaction = async (
+    queries: string[],
+    values: any[][]
+) => {
+    try {
+        const transaction = await db.transaction();
+
+        const results: any[] = [];
+        for (let i = 0; i < queries.length; i++) {
+            transaction
+                .query(queries[i], values[i])
+                .query((r: any) => results.push(r.insertId));
+        }
+
+        transaction.rollback((e: any) => {
+            // error
+            console.log(e);
+            return { error: e };
+        });
+        transaction.commit();
+        return results;
+
+        // return insertIDs
+    } catch (e) {
+        return { error: e };
+    }
+};

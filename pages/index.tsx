@@ -1,7 +1,7 @@
 import type { GetServerSidePropsContext, NextPage } from "next";
-import { getSession, signIn, signOut, useSession } from "next-auth/react";
-import Link from "next/link";
-import Navbar from "../components/Navbar";
+import { getSession, useSession } from "next-auth/react";
+import NextLink from "next/link";
+
 import executeQuery from "../lib/db";
 import Layout from "../components/Sidebar";
 
@@ -10,9 +10,8 @@ import { addDays, format } from "date-fns";
 
 import Assignments from "../config/assignments.json";
 import { ExtendedPersonnel } from "../types/database";
-import { serialize } from "superjson";
+
 import {
-    Container,
     Text,
     Wrap,
     WrapItem,
@@ -25,96 +24,373 @@ import {
     Flex,
     ButtonGroup,
     Button,
-    Spacer,
     Center,
     Menu,
     MenuButton,
-    MenuItem,
     MenuList,
     Divider,
-    MenuDivider,
     MenuItemOption,
     MenuOptionGroup,
+    Collapse,
+    SimpleGrid,
+    Link,
+    Icon,
+    Container,
+    Heading,
+    theme,
+    Badge,
+    Stack,
+    Tag,
+    TagLabel,
+    TagLeftIcon,
+    TagRightIcon,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    useDisclosure,
 } from "@chakra-ui/react";
 
 import { FaChevronDown } from "react-icons/fa";
-import { useState } from "react";
-const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
-    person,
-}) => {
+import { useEffect, useMemo, useState } from "react";
+
+import {
+    AddAttC,
+    AddCourse,
+    AddLeave,
+    AddMA,
+    AddOff,
+    AddOthers,
+} from "../components/Dashboard/AddEvent";
+import { FormProvider, useForm } from "react-hook-form";
+import {
+    IoCheckmarkDoneCircleOutline,
+    IoAlertCircleOutline,
+    IoCheckmarkDoneOutline,
+    IoOpenOutline,
+} from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
+import { dashboardActions } from "../store/dashboard-slice";
+import { useRouter } from "next/router";
+import { NextProtectedPage } from "../lib/auth";
+import { RootState } from "../types/types";
+import CustomStepper from "../components/Dashboard/CustomStepper";
+import DashboardHeading from "../components/Dashboard/Heading";
+import {
+    AddedAttCOrCourse,
+    AddedLeaveOrOff,
+    AddedMA,
+    AddedOthers,
+} from "../components/Dashboard/AddedEvent";
+import { capitalizeFirstLetter, onClickUrl } from "../lib/custom";
+import useSWRImmutable from "swr/immutable";
+import fetcher from "../lib/fetcher";
+import SearchInput from "../components/SearchInput";
+
+export const DefaultLink: React.FC<{
+    url: string;
+    type:
+        | "ma"
+        | "off"
+        | "leave"
+        | "attc"
+        | "course"
+        | "others"
+        | "extras"
+        | "incamp";
+    person: ExtendedPersonnel;
+}> = ({ url, type, person }) => {
+    const router = useRouter();
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    if (type === "incamp")
+        return (
+            <Tag size="sm" variant="subtle" colorScheme="green">
+                {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+                <TagLabel> In camp </TagLabel>
+            </Tag>
+        );
+    let modalContents;
+    switch (type) {
+        case "leave": {
+            let data = {
+                reason: person.leave_reason as string,
+                date: [person.leave_start, person.leave_end] as [
+                    string,
+                    string
+                ],
+                "start-time": person.leave_start_time as "AM" | "PM",
+                "end-time": person.leave_end_time as "AM" | "PM",
+                days: 0,
+            };
+            modalContents = <AddedLeaveOrOff data={data} />;
+            break;
+        }
+        case "off": {
+            let data = {
+                reason: person.off_reason as string,
+                date: [person.off_start, person.off_end] as [string, string],
+                "start-time": person.off_start_time as "AM" | "PM",
+                "end-time": person.off_end_time as "AM" | "PM",
+                days: 0,
+            };
+            modalContents = <AddedLeaveOrOff data={data} />;
+            break;
+        }
+        case "attc": {
+            let data = {
+                reason: person.attc_name as string,
+                date: [person.attc_start, person.attc_end] as [string, string],
+            };
+            modalContents = <AddedAttCOrCourse data={data} />;
+            break;
+        }
+        case "course": {
+            let data = {
+                name: person.course_name as string,
+                date: [person.course_start, person.course_end] as [
+                    string,
+                    string
+                ],
+            };
+            modalContents = <AddedAttCOrCourse data={data} />;
+            break;
+        }
+        case "ma": {
+            let data = {
+                name: person.ma_name as string,
+                location: person.ma_location as string,
+                incamp: Boolean(person.ma_incamp),
+                "date-time-formatted": `${format(
+                    new Date(person.ma_date),
+                    Assignments.dateformat
+                )} ${person.ma_time}`,
+            };
+            modalContents = <AddedMA data={data} />;
+            break;
+        }
+        case "others": {
+            let data = {
+                name: person.others_name as string,
+                incamp: Boolean(person.others_incamp),
+                date: [person.others_start, person.others_end] as [
+                    string,
+                    string
+                ],
+            };
+            modalContents = <AddedOthers data={data} />;
+            break;
+        }
+    }
+    return (
+        <>
+            {/* <NextLink href={url} passHref> */}
+            {/* <Badge colorScheme="red">On {type}</Badge> */}
+
+            {/* <Link> */}
+            <Tag
+                size="sm"
+                variant="subtle"
+                colorScheme="red"
+                onClick={onOpen}
+                sx={{ cursor: "pointer" }}
+            >
+                {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+
+                <TagLabel>
+                    On {type === "ma" ? "medical appointment" : type}
+                </TagLabel>
+                <TagRightIcon as={IoOpenOutline} />
+            </Tag>
+            {/* </Link> */}
+            {/* </NextLink> */}
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>{capitalizeFirstLetter(type)}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text>
+                            {" "}
+                            {person.rank} {person.name}{" "}
+                        </Text>
+                        <Text> {person.platoon} </Text>
+                        {modalContents}
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button
+                            colorScheme="purple"
+                            mr={3}
+                            onClick={onClickUrl(url)}
+                        >
+                            Edit {type}
+                        </Button>
+
+                        <Button mr={3} onClick={onClose}>
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </>
+    );
+};
+
+const PersonAccordionItem: React.FC<{
+    person: ExtendedPersonnel;
+    selectedDate: Date;
+    search: string;
+}> = ({ person, selectedDate, search }) => {
+    console.log("Person accordion item rerender");
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
-    const disabledStates = person.location.split(",");
+    const dashboardData = useSelector(
+        (state: RootState) => state.dashboard.data
+    );
+    const isVisible =
+        search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
-    const [buttonStates, setButtonStates] = useState({
-        off: person.off_row_ID ? true : false,
-        leave: person.leave_row_ID ? true : false,
-        attc: person.attc_row_ID ? true : false,
-        course: person.course_row_ID ? true : false,
-        ma: person.ma_row_ID ? true : false,
-        others: person.others_row_ID ? true : false,
-        extras:
-            person.course_row_ID || person.ma_row_ID || person.others_row_ID
-                ? true
-                : false,
-        incamp: person.location === "In camp" ? true : false,
-    });
+    const icon =
+        person.location === "In camp"
+            ? IoCheckmarkDoneCircleOutline
+            : IoAlertCircleOutline;
+    const defaultState = useMemo(
+        () => ({
+            off:
+                // defaultData.off[person.personnel_ID] ||
+                person.off_row_ID ? true : false,
+            leave:
+                // defaultData.leave[person.personnel_ID] ||
+                person.leave_row_ID ? true : false,
+            attc:
+                // defaultData.attc[person.personnel_ID] ||
+                person.attc_row_ID ? true : false,
+            course:
+                // defaultData.course[person.personnel_ID] ||
+                person.course_row_ID ? true : false,
+            ma:
+                // defaultData.ma[person.personnel_ID] ||
+                person.ma_row_ID ? true : false,
+            others:
+                // defaultData.others[person.personnel_ID] ||
+                person.others_row_ID ? true : false,
+            // This property is not currently in use
+            extras:
+                // defaultData.course[person.personnel_ID] ||
+                // defaultData.ma[person.personnel_ID] ||
+                // defaultData.others[person.personnel_ID] ||
+                person.course_row_ID || person.ma_row_ID || person.others_row_ID
+                    ? true
+                    : false,
+            incamp: person.location === "In camp" ? true : false,
+        }),
+        [person]
+    );
 
-    const defaultExtrasChecked:string[] = []
-    if (person.ma_row_ID) defaultExtrasChecked.push("ma")
-    if (person.others_row_ID) defaultExtrasChecked.push("others")
-    if (person.course_row_ID) defaultExtrasChecked.push("course")
+    const initialState = useMemo(
+        () => ({
+            off: false,
+            leave:
+                // defaultData.leave[person.personnel_ID] ||
+                false,
+            attc:
+                // defaultData.attc[person.personnel_ID] ||
+                false,
+            course:
+                // defaultData.course[person.personnel_ID] ||
+                false,
+            ma:
+                // defaultData.ma[person.personnel_ID] ||
+                false,
+            others:
+                // defaultData.others[person.personnel_ID] ||
+                false,
+            // This property is not currently in use
+            extras:
+                // defaultData.course[person.personnel_ID] ||
+                // defaultData.ma[person.personnel_ID] ||
+                // defaultData.others[person.personnel_ID] ||
 
+                false,
+            incamp: person.location === "In camp" ? true : false,
+        }),
+        [person]
+    );
+    const [buttonStates, setButtonStates] = useState(initialState);
+    const incamp =
+        person.location === "In camp" &&
+        !buttonStates.off &&
+        !buttonStates.leave &&
+        !buttonStates.attc &&
+        !buttonStates.course &&
+        !buttonStates.ma &&
+        !buttonStates.others;
+
+    // const defaultExtrasChecked: string[] = useMemo(() => {
+    //     const temp = [];
+    //     if (person.ma_row_ID) temp.push("ma");
+    //     if (person.others_row_ID) temp.push("others");
+    //     if (person.course_row_ID) temp.push("course");
+    //     return temp;
+    // }, [person]);
+
+    const defaultExtrasChecked:string[] = useMemo(() => [], [])
 
     // Override type checking TODO
-    const [extrasChecked, setExtrasChecked] = useState<string[]|string>(defaultExtrasChecked)
+    const [extrasChecked, setExtrasChecked] = useState<string[] | string>(
+        defaultExtrasChecked
+    );
 
+    const handleExtras = (checked: string | string[]) => {
+        setExtrasChecked(checked);
+
+        // Handle setting the button states
+        let tempArray: string[] = []; // Convert to array (if one option is selected, then it's a string, not an array)
+        if (Array.isArray(checked)) {
+            tempArray = checked;
+        } else {
+            tempArray = [checked];
+        }
+
+        setButtonStates((prevState) => ({
+            ...prevState,
+            course: tempArray.includes("course"),
+            ma: tempArray.includes("ma"),
+            others: tempArray.includes("others"),
+            incamp: false,
+            extras: tempArray.length > 0,
+        }));
+    };
 
     const toggleHandler = (
         type: "off" | "leave" | "attc" | "course" | "ma" | "others" | "incamp"
     ) => {
-        if (type !== "incamp")
-            setButtonStates((prevState) => ({
-                // When user selects another location, de-select the in-camp button because they can't be in camp if they are elsewhere
-                ...prevState,
-                incamp: false,
-            }));
         switch (type) {
             case "off":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     off: !prevState.off,
+                    incamp: false,
                 }));
                 break;
             case "leave":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     leave: !prevState.leave,
+                    incamp: false,
                 }));
                 break;
             case "attc":
                 setButtonStates((prevState) => ({
                     ...prevState,
                     attc: !prevState.attc,
+                    incamp: false,
                 }));
                 break;
-            case "course":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    course: !prevState.course,
-                }));
-                break;
-            case "ma":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    ma: !prevState.ma,
-                }));
-                break;
-            case "others":
-                setButtonStates((prevState) => ({
-                    ...prevState,
-                    others: !prevState.others,
-                }));
-                break;
+
             case "incamp":
                 if (buttonStates.incamp) return; // Prevent deselection, only allow user to select this option
 
@@ -136,74 +412,191 @@ const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
         }
     };
 
+    // Handle setting the values for saved inputs from redux store
+    useEffect(() => {
+        setButtonStates((prevState) => ({
+            // Only set the button states if dashboardData.[whatever] exists
+            off: initialState.off || dashboardData.off[person.personnel_ID],
+            // ? true : prevState.off,
+
+            leave:
+                initialState.leave || dashboardData.leave[person.personnel_ID],
+            // ? true
+            // : prevState.leave,
+
+            attc: initialState.attc || dashboardData.attc[person.personnel_ID],
+            // ? true
+            // : prevState.attc,
+
+            course:
+                initialState.course ||
+                dashboardData.course[person.personnel_ID],
+            // ? true
+            // : prevState.course,
+
+            ma: initialState.ma || dashboardData.ma[person.personnel_ID],
+            // ? true : prevState.ma,
+
+            others:
+                initialState.others ||
+                dashboardData.others[person.personnel_ID],
+            // ? true
+            // : prevState.others,
+
+            // This property is not currently in use
+            extras:
+                initialState.extras ||
+                dashboardData.course[person.personnel_ID] ||
+                dashboardData.ma[person.personnel_ID] ||
+                dashboardData.others[person.personnel_ID],
+            incamp: prevState.incamp,
+        }));
+        // reset the extrasChecked state to the intial value
+
+        // const temp = [];
+        // if (dashboardData.ma[person.personnel_ID]) temp.push("ma");
+        // if (dashboardData.others[person.personnel_ID]) temp.push("others");
+        // if (dashboardData.course[person.personnel_ID]) temp.push("course");
+        // setExtrasChecked([...new Set([...defaultExtrasChecked, ...temp])]);
+    }, [dashboardData, person, initialState, defaultExtrasChecked]);
+
+    // Function to clear all selectins
+    // const clearThis = () => {
+    //     setButtonStates(defaultState);
+    // }
+
+    const events: (
+        | "off"
+        | "leave"
+        | "attc"
+        | "course"
+        | "ma"
+        | "others"
+        | "extras"
+        | "incamp"
+    )[] = ["off", "leave", "attc", "course", "ma", "others"];
+
     return (
-        <>
-            <Flex wrap="wrap" my={3}>
+        <Collapse in={isVisible} animateOpacity>
+            <SimpleGrid columns={{ sm: 1, lg: 2 }} my={3} spacing="6px">
                 <Box>
-                    <Text fontWeight="semibold">
-                        ({person.pes}) {person.rank} {person.name}
-                    </Text>
-                    <Text textColor={textColor}>{person.location}</Text>
+                    {/* <Flex align="center"> */}
+                    <Stack direction="row">
+                        <Center>
+                            <Badge colorScheme="purple">{person.pes}</Badge>
+                        </Center>
+                        <Text fontWeight="semibold">
+                            <Link
+                                isExternal
+                                href={`/personnel/manage/${person.personnel_ID}`}
+                            >
+                                {person.rank} {person.name}
+                            </Link>
+                        </Text>
+                    </Stack>
+                    {/* </Flex> */}
+                    <Flex align="center">
+                        {/* <Icon as={icon} mr={1} color={textColor} /> */}
+                        {/* <Text textColor={textColor}> {person.location}</Text> */}
+                        <Stack direction="row" my={1}>
+                            {person.location === "In camp" && (
+                                // <Badge colorScheme="green" variant="subtle"> In camp </Badge>
+                                <Tag
+                                    size="sm"
+                                    variant="subtle"
+                                    colorScheme="green"
+                                >
+                                    {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
+                                    <TagLabel> In camp </TagLabel>
+                                </Tag>
+                            )}
+                            {events.map((event, index) =>
+                                defaultState[event] ? (
+                                    <DefaultLink
+                                        key={index}
+                                        url={`/personnel/manage/${
+                                            person.personnel_ID
+                                        }/?goto=${event}&id=${
+                                            person[`${event}_row_ID`]
+                                        }`}
+                                        type={event}
+                                        person={person}
+                                    />
+                                ) : null
+                            )}{" "}
+                        </Stack>
+                    </Flex>
                 </Box>
-                <Spacer />
-                <Center>
-                    <ButtonGroup isAttached size="xs">
+                {/* <Spacer /> */}
+
+                <Flex alignItems="center" m={{ lg: "unset", base: "auto" }}>
+                    <ButtonGroup isAttached size="xs" ml={{ lg: "auto" }}>
                         <Button
                             variant={buttonStates.off ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("off")}
-                            disabled={!!person.off_row_ID}
+                            // disabled={!!person.off_row_ID}
+                            colorScheme="blue"
                         >
                             Off
                         </Button>
                         <Button
                             variant={buttonStates.leave ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("leave")}
-                            disabled={!!person.leave_row_ID}
+                            // disabled={!!person.leave_row_ID}
+                            colorScheme="blue"
                         >
                             Leave
                         </Button>
                         <Button
                             variant={buttonStates.attc ? "solid" : "outline"}
-                            colorScheme="teal"
                             onClick={() => toggleHandler("attc")}
-                            disabled={!!person.attc_row_ID}
+                            // disabled={!!person.attc_row_ID}
+                            colorScheme="blue"
                         >
                             AttC
-                        </Button>                        
+                        </Button>
                         <Menu closeOnSelect={true}>
                             <MenuButton
                                 as={Button}
                                 rightIcon={<FaChevronDown />}
                                 variant={
-                                    buttonStates.extras ? "solid" : "outline"
+                                    extrasChecked.length > 0
+                                        ? "solid"
+                                        : "outline"
                                 }
-                                colorScheme="teal"
+                                colorScheme="blue"
                             >
                                 Extras
                             </MenuButton>
                             <MenuList minWidth="240px">
-                                
                                 <MenuOptionGroup
                                     value={extrasChecked}
-                                    onChange={setExtrasChecked}
+                                    onChange={handleExtras}
                                     type="checkbox"
                                 >
-                                    <MenuItemOption value="course" >
+                                    <MenuItemOption
+                                        value="course"
+                                        // isDisabled={!!person.course_row_ID}
+                                    >
                                         Course
                                     </MenuItemOption>
-                                    <MenuItemOption value="ma">
+                                    <MenuItemOption
+                                        value="ma"
+                                        // isDisabled={!!person.ma_row_ID}
+                                    >
                                         MA
                                     </MenuItemOption>
-                                    <MenuItemOption value="others">
+                                    <MenuItemOption
+                                        value="others"
+                                        // isDisabled={!!person.others_row_ID}
+                                    >
                                         Others
                                     </MenuItemOption>
                                 </MenuOptionGroup>
                             </MenuList>
                         </Menu>
                         <Button
-                            variant={buttonStates.incamp ? "solid" : "outline"}
+                            variant={incamp ? "solid" : "outline"}
                             colorScheme="green"
                             onClick={() => toggleHandler("incamp")}
                             disabled={
@@ -213,220 +606,265 @@ const PersonAccordianItem: React.FC<{ person: ExtendedPersonnel }> = ({
                             In camp
                         </Button>
                     </ButtonGroup>
-                </Center>
-            </Flex>
+                </Flex>
+            </SimpleGrid>
+
+            {/* Render if user is on an event */}
+            {/* TODO - instead of checking all the events, we check each individual event on the user  */}
+
+            {/* only render the below if the user is not already on event */}
+            {!initialState.off && (
+                <Collapse in={buttonStates.off} animateOpacity unmountOnExit>
+                    <AddOff
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.off[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
+                    />
+                </Collapse>
+            )}
+            {!initialState.leave && (
+                <Collapse in={buttonStates.leave} animateOpacity unmountOnExit>
+                    <AddLeave
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.leave[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
+                    />
+                </Collapse>
+            )}
+            {!initialState.attc && (
+                <Collapse in={buttonStates.attc} animateOpacity unmountOnExit>
+                    <AddAttC
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.attc[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
+                    />
+                </Collapse>
+            )}
+
+            {!initialState.course && (
+                <Collapse in={buttonStates.course} animateOpacity unmountOnExit>
+                    <AddCourse
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.course[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
+                    />
+                </Collapse>
+            )}
+            {!initialState.ma && (
+                <Collapse in={buttonStates.ma} animateOpacity unmountOnExit>
+                    <AddMA
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.ma[person.personnel_ID]}
+                        defaultDate={selectedDate}
+                    />
+                </Collapse>
+            )}
+            {!initialState.others && (
+                <Collapse in={buttonStates.others} animateOpacity unmountOnExit>
+                    <AddOthers
+                        personnel_ID={person.personnel_ID}
+                        data={dashboardData.others[person.personnel_ID]}
+                        defaultDate={[selectedDate, selectedDate]}
+                    />
+                </Collapse>
+            )}
+
             <Divider />
-        </>
+        </Collapse>
     );
 };
 const PlatoonAccordianItem: React.FC<{
     personnel: ExtendedPersonnel[];
     platoon: string;
-}> = ({ personnel, platoon }) => {
+    selectedDate: Date;
+    search: string;
+}> = ({ personnel, platoon, selectedDate, search }) => {
+    const { data: session } = useSession();
+    const [rendered, setRendered] = useState(platoon === session?.user.platoon);
+    // don't render the accordion panel by default, only render when use rclicks
+    // This allows the page to be more performant as there is less stuff to hydrate
+    // Render the accordion panel which corresponds to the user (will render if platoon === personnel[0].platoon)
+
+    useEffect(() => {
+        if (search.length) setRendered(true);
+    }, [search]);
     return (
         <AccordionItem>
-            <Text>
-                <AccordionButton _expanded={{ bg: "gray.200" }}>
-                    <Box flex={1} textAlign="left">
-                        {platoon} ({personnel.length})
-                    </Box>
-                    <AccordionIcon />
-                </AccordionButton>
-            </Text>
-            <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                {personnel.map((person, index) => (
-                    <PersonAccordianItem key={index} person={person} />
-                ))}
-            </AccordionPanel>
+            <>
+                <Text>
+                    <AccordionButton
+                        _expanded={{ bg: "gray.200" }}
+                        onClick={() => setRendered(true)}
+                    >
+                        <Box flex={1} textAlign="left">
+                            {platoon} ({personnel.length})
+                        </Box>
+                        <AccordionIcon />
+                    </AccordionButton>
+                </Text>
+                <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
+                    {rendered &&
+                        personnel.map((person, index) => (
+                            <PersonAccordionItem
+                                selectedDate={selectedDate}
+                                key={index}
+                                person={person}
+                                search={search}
+                            />
+                        ))}
+                </AccordionPanel>
+            </>
         </AccordionItem>
     );
 };
 
-const Dashboard: NextPage<{
-    data?: {
+const Dashboard: NextProtectedPage = () => {
+    console.log("main page rerendering");
+
+    const { data, error } = useSWRImmutable<{
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
-        personnelTally: {
-            [key: string]: any;
-            total: number;
-            incamp: number;
-        };
-        personnelNotInCamp: {
-            personnel_ID: number;
-            type: "off" | "leave" | "ma" | "attc" | "course" | "others";
-        }[];
         selectedDate: string;
-    };
-}> = ({ data }) => {
+    }>("/api/dashboard", fetcher);
+
     const { data: session } = useSession();
-    if (!data) return <></>;
+    const methods = useForm({ shouldUnregister: true });
+
+    const dispatch = useDispatch();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const router = useRouter();
+    const defaultIndex = useMemo(
+        () => [
+            Object.keys(data?.sortedByPlatoon || {}).indexOf(
+                session?.user.platoon || ""
+            ),
+        ],
+        [data, session]
+    );
+    const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
+    const handleAccordion = (index: number[]) => {
+        setIndex(index);
+    };
+    const [search, setSearch] = useState("");
+
+    useEffect(() => {
+        if (search.length && data?.sortedByPlatoon) {
+            // do stuff
+            // Open all the tabs
+            setIndex(
+                Object.keys(data.sortedByPlatoon).map((_, index) => index)
+            );
+        } else {
+            setIndex(defaultIndex);
+        }
+    }, [search, data?.sortedByPlatoon, defaultIndex]);
+
+    const selectedDate = data?.selectedDate
+        ? new Date(data?.selectedDate)
+        : new Date();
     const {
-        sortedByPlatoon,
-        personnelTally,
-        personnelNotInCamp,
-        selectedDate,
-    } = data;
-    console.log("IN react app frontend", { data });
+        register,
+        handleSubmit,
+        getValues,
+        watch,
+        formState: { errors },
+    } = methods;
+
+    const onSubmit = (data: { [key: string]: any }) => {
+        if (!Object.keys(data).length) return alert("No data was entered");
+        setIsSubmitting(true);
+        // dispatch(dashboardActions.updateForm(data));
+
+        fetch("/api/dashboard/confirm", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data }),
+        })
+            .then((res) => res.json())
+            .then((responseData) => {
+                dispatch(dashboardActions.updateData(responseData));
+                router.push("/confirm");
+            });
+    };
+
+    const clearSelection = () => {
+        dispatch(dashboardActions.clearData());
+    };
+
     return (
-        <Layout
-            content={
-                <Box>
-                    <Wrap>
-                        <WrapItem>
-                            <Text fontSize="2xl">
-                                {" "}
-                                Set status for: {selectedDate}
-                            </Text>
-                        </WrapItem>
-                    </Wrap>
-                    <Accordion defaultIndex={[0]} allowMultiple allowToggle>
-                        {Object.keys(sortedByPlatoon).map((platoon, index) => (
-                            <PlatoonAccordianItem
-                                key={index}
-                                personnel={sortedByPlatoon[platoon]}
-                                platoon={platoon}
-                            />
-                        ))}
-                    </Accordion>
-                </Box>
-            }
-        ></Layout>
+        <Stack direction="column">
+            <DashboardHeading step={0}>
+                <Heading>{format(selectedDate, "eee d LLL yyyy")}</Heading>
+                <Button
+                    colorScheme="teal"
+                    size="xs"
+                    ml={2}
+                    onClick={() => clearSelection()}
+                >
+                    Clear
+                </Button>
+            </DashboardHeading>
+            <SearchInput setSearch={setSearch} />
+            {!data && <>Loading data...</>}
+            {data && (
+                <Accordion
+                    // defaultIndex={[0]}
+                    allowMultiple
+                    allowToggle
+                    index={index}
+                    onChange={(e) => handleAccordion(e as number[])}
+                >
+                    <FormProvider {...methods}>
+                        <form onSubmit={methods.handleSubmit(onSubmit)}>
+                            {Object.keys(data.sortedByPlatoon).map(
+                                (platoon, index) => (
+                                    <PlatoonAccordianItem
+                                        selectedDate={selectedDate}
+                                        key={index}
+                                        personnel={
+                                            data.sortedByPlatoon[platoon]
+                                        }
+                                        platoon={platoon}
+                                        search={search}
+                                    />
+                                )
+                            )}
+                            <Center mt={3}>
+                                <Button
+                                    type="submit"
+                                    colorScheme="teal"
+                                    isLoading={isSubmitting}
+                                >
+                                    Submit
+                                </Button>
+                            </Center>
+                        </form>
+                    </FormProvider>
+                </Accordion>
+            )}
+        </Stack>
     );
 };
 
-export const getServerSideProps = async (
-    context: GetServerSidePropsContext
-) => {
-    const session = await getSession(context);
-    if (!session) return { props: {} };
-    let currentDate = new Date();
-    let formattedDate = format(currentDate, Assignments.mysqldateformat);
+// export const getServerSideProps = async (
+//     context: GetServerSidePropsContext
+// ) => {
+//     const session = await getSession(context);
 
-    if (format(currentDate, "aaa") === "pm")
-        formattedDate = format(
-            addDays(currentDate, 1),
-            Assignments.mysqldateformat
-        );
+//     if (!session || !session.user)
+//         return {
+//             redirect: {
+//                 destination: "/login",
+//                 permanent: false,
+//             },
+//         };
 
-    const opts = {
-        unit: session.user.unit,
-        company: session.user.company,
-        selDate: currentDate,
-    };
-    console.log(opts);
-    try {
-        const query = queryBuilder(
-            "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE unit = :unit AND company = :company AND DATE(ord) >= DATE(:selDate) AND DATE(post_in) <= DATE(:selDate) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
-            opts
-        );
-        // console.log(query);
-        const personnel: ExtendedPersonnel[] = await executeQuery({
-            query: query.sql,
-            values: query.values,
-        });
+//     let selectedDate = new Date();
 
-        const objectified = [...personnel];
+// };
 
-        if (!objectified) return { props: {} };
-
-        const personnelTally: {
-            total: number;
-            incamp: number;
-            [key: string]: any;
-        } = { total: 0, incamp: 0 };
-
-        const edited = objectified.map((x) => {
-            const strArr = [];
-            if (x.attc_row_ID) strArr.push("On AttC");
-            if (x.course_row_ID) strArr.push("On course");
-            if (x.leave_row_ID) strArr.push("On leave");
-            if (x.off_row_ID) strArr.push("On off");
-            if (x.ma_row_ID) {
-                if (x.ma_in_camp) {
-                    strArr.push("On MA (In camp)");
-                } else {
-                    strArr.push("On MA");
-                }
-            }
-            if (x.others_row_ID) {
-                if (x.others_in_camp) {
-                    strArr.push("Others (In camp)");
-                } else {
-                    strArr.push("Others");
-                }
-            }
-
-            // set up object key
-            personnelTally[x.platoon]
-                ? personnelTally[x.platoon]
-                : (personnelTally[x.platoon] = {});
-
-            // Add one to total
-            personnelTally[x.platoon]["total"]
-                ? (personnelTally[x.platoon]["total"] =
-                      personnelTally[x.platoon]["total"] + 1)
-                : (personnelTally[x.platoon]["total"] = 1);
-            personnelTally["total"] = personnelTally["total"] + 1;
-            if (!strArr.length) {
-                // add one to current if in camp
-                personnelTally[x.platoon]["incamp"]
-                    ? (personnelTally[x.platoon]["incamp"] =
-                          personnelTally[x.platoon]["incamp"] + 1)
-                    : (personnelTally[x.platoon]["incamp"] = 1);
-                personnelTally["incamp"] = personnelTally["incamp"] + 1;
-                strArr.push("In camp");
-            }
-
-            const str = strArr.join(", ");
-            x.location = str;
-            return x;
-        });
-        const sortedByPlatoon: { [key: string]: ExtendedPersonnel } =
-            edited.reduce((r: any, a) => {
-                r[a.platoon] = [...(r[a.platoon] || []), a];
-                return r;
-            }, {});
-
-        const personnelNotInCamp: {
-            personnel_ID: number;
-            type: "off" | "leave" | "ma" | "attc" | "course" | "others";
-        }[] = [];
-        edited.forEach((person) => {
-            let type: "off" | "leave" | "ma" | "attc" | "course" | "others" =
-                "off";
-            if (person.leave_row_ID) type = "leave";
-
-            if (person.ma_row_ID) type = "ma";
-
-            if (person.attc_row_ID) type = "attc";
-
-            if (person.course_row_ID) type = "course";
-
-            if (person.others_row_ID) type = "others";
-
-            personnelNotInCamp.push({
-                personnel_ID: person.personnel_ID,
-                type,
-            });
-        });
-
-        const data = {
-            sortedByPlatoon,
-            personnelTally,
-            personnelNotInCamp,
-            selectedDate: formattedDate,
-        };
-
-        return {
-            props: {
-                data,
-            },
-        };
-    } catch (e) {
-        console.log(e);
-        return {
-            props: { error: JSON.stringify(e) },
-        };
-    }
-};
+Dashboard.requireAuth = true;
 
 export default Dashboard;

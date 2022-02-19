@@ -1,4 +1,6 @@
 {
+    "separator": "-_-_-",
+    "svc_status": ["NSF/NSMan", "REG", "SAFVC"],
 	"rank_army": {
 		"REC": "Recruit",
 		"PTE": "Private",
@@ -34,20 +36,21 @@
 		"spec": ["3SG", "2SG", "1SG", "SSG"],
 		"men": ["REC", "PTE", "LCP", "CPL", "CFC"]
 	},
+    
     "pes": [
         "A", "B1", "B2", "B3", "B4", "C2", "C9", "D", "E1", "E9", "F"
     ],
 	"formats": {
 		"single_date_no_time": "dd/MM/yyyy",
-		"single_date_AMPM": "dd/MM/yyyy A" 
+		"single_date_AMPM": "dd/MM/yyyy a" 
 	},
 	"dateformat": "dd/MM/yyyy",
 	"datenoyear": "D/M ddd",
-	"dateampmformat": "dd/MM/yyyy A",
+	"dateampmformat": "dd/MM/yyyy a",
 	"mysqldateformat": "yyyy-MM-dd",
 	"mysqltimeformat": "HHmm",
 	"mysqldatetimeformat": "yyyy-MM-dd HHmm",
-	"datetimeformat": "dd/MM/yyyy hh:mm A",
+	"datetimeformat": "dd/MM/yyyy h:mm a",
 	"timeformat": "hh:mm A",
 	"datepickers": {
 		"single_no_time": {
