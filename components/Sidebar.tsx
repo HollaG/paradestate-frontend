@@ -125,7 +125,6 @@ const LinkItems: (
         icon: IoMailOutline,
         url: "/deliverables/status-list",
     },
-    // { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/" },
     {
         name: "Personnel",
         isGroup: true,
@@ -150,6 +149,8 @@ const LinkItems: (
             
         ],
     },
+    { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/audit-log" },
+
     // {
     //     name: "Event Managers",
     //     isGroup: true,
