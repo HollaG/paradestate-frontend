@@ -30,7 +30,7 @@ const EditPage: NextProtectedPage = () => {
 
     const methods = useForm<any>({
         defaultValues: {
-            service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+            svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
             post_in: new Date(),
             ord: new Date(),
         },
@@ -38,7 +38,7 @@ const EditPage: NextProtectedPage = () => {
     useEffect(() => {
         if (data) {
             methods.reset({
-                service_status: {
+                svc_status: {
                     label: data.svc_status,
                     value: data.svc_status,
                 },
@@ -75,7 +75,7 @@ const EditPage: NextProtectedPage = () => {
         const pes = data.pes.value;
         const platoon = data.platoon.value;
         const rank = data.rank.value;
-        const service_status = data.service_status.value;
+        const svc_status = data.svc_status.value;
         const responseData = await sendPOST(`/api/personnel/manage/${personnel_ID}/edit`, {
             post_in,
             ord,
@@ -83,7 +83,7 @@ const EditPage: NextProtectedPage = () => {
             pes,
             platoon,
             rank,
-            service_status,
+            svc_status,
         });
         if (responseData.success) {
             setSuccess(true);
@@ -116,7 +116,7 @@ const EditPage: NextProtectedPage = () => {
         setSecondsLeft(10)
         if (personnelData)
             methods.reset({
-                service_status: {
+                svc_status: {
                     label: personnelData.svc_status,
                     value: personnelData.svc_status,
                 },

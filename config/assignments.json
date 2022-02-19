@@ -36,7 +36,7 @@
 		"spec": ["3SG", "2SG", "1SG", "SSG"],
 		"men": ["REC", "PTE", "LCP", "CPL", "CFC"]
 	},
-    "service_status": ["NSF/NSMan", "Regular", "SAFVC"],
+    
     "pes": [
         "A", "B1", "B2", "B3", "B4", "C2", "C9", "D", "E1", "E9", "F"
     ],

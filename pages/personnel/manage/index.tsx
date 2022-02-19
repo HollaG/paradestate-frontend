@@ -288,6 +288,7 @@ const PlatoonAccordionItem: React.FC<{
         setEditOption("");
         setIsTransferring(false);
         setDeleteOpen(false);
+        setCheckedIDs([]);
     };
 
     /* Deleting */
@@ -321,6 +322,7 @@ const PlatoonAccordionItem: React.FC<{
         setEditOption("");
         setIsTransferring(false);
         setDeleteOpen(false);
+        setCheckedIDs([]);
     };
     const customPlatoonOpts: {
         label: string;
@@ -348,7 +350,7 @@ const PlatoonAccordionItem: React.FC<{
     } = useForm({ shouldUnregister: true });
     let EditElement = <></>;
     switch (editOption) {
-        case "service_status":
+        case "svc_status":
             EditElement = (
                 <ServiceStatusInput control={control} errors={errors} />
             );
@@ -370,21 +372,30 @@ const PlatoonAccordionItem: React.FC<{
             break;
     }
 
-    const submitEdit = async (data: any) => {       
-        console.log({data}) 
+    const submitEdit = async (data: any) => {
+        console.log({ data });
         const responseData = await sendPOST("/api/personnel/manage/edit", {
             type: editOption,
             value: data[editOption],
             personnel_IDs: checkedIDs,
         });
-        if (responseData.success) { 
-
+        if (responseData.success) {
+            toast({
+                title: "Success",
+                description: `Successfully edited ${responseData.data.editedNumber} personnel`,
+                status: "success",
+            });
+            mutate();
+            setCheckedIDs([]);
+            setEditOption("");
+            setIsTransferring(false);
+            setDeleteOpen(false);
         } else {
             toast({
                 title: "Error",
                 description: responseData.message,
                 status: "error",
-            })
+            });
         }
     };
 
@@ -454,7 +465,7 @@ const PlatoonAccordionItem: React.FC<{
                                         type="radio"
                                     >
                                         <MenuItemOption
-                                            value="service_status"
+                                            value="svc_status"
                                             // isDisabled={!!person.course_row_ID}
                                         >
                                             Service status
@@ -598,14 +609,21 @@ const PersonnelListPage: NextProtectedPage = () => {
                 ] // add the ORD accordion
             );
         } else {
-            setIndex([
-                Object.keys(data?.sortedByPlatoon || {}).indexOf(
-                    session?.user.platoon || ""
-                ),
-            ]);
+            // Only set the index if it hasn't been set yet
+
+            setIndex((prev) => {
+                if (!prev.length) {
+                    const newIndex = Object.keys(data?.sortedByPlatoon || {}).indexOf(
+                        session?.user.platoon || ""
+                    )
+                    if (newIndex === -1) return [...prev]
+                    else return [newIndex]
+                    
+                } else return [...prev]
+            });
         }
     }, [search, data?.sortedByPlatoon, session]);
-
+    console.log(index);
     // Get platoon data
     const { data: platoonData } = useSWR<{
         [key: string]: {

@@ -22,7 +22,7 @@ const ServiceStatusInput:React.FC<{
                 <InputLeftAddon children="Service status" />
                 <Box w="100%">
                     <Controller
-                        name="service_status"
+                        name="svc_status"
                         control={control}
                         rules={{
                             required: true,
@@ -33,9 +33,9 @@ const ServiceStatusInput:React.FC<{
                                     label: "NSF/NSMan",
                                     value: "NSF/NSMan",
                                 }}
-                                id="service_status"
-                                name="service_status"
-                                options={Assignments.service_status.map(
+                                id="svc_status"
+                                name="svc_status"
+                                options={Assignments.svc_status.map(
                                     (status) => ({
                                         label: status,
                                         value: status,
@@ -52,7 +52,7 @@ const ServiceStatusInput:React.FC<{
                     />
                 </Box>
             </InputGroup>
-            {errors?.service_status?.type === "required" && (
+            {errors?.svc_status?.type === "required" && (
                 <ErrorText text="Please select a service status!" />
             )}
         </Box>

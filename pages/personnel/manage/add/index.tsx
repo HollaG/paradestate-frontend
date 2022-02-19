@@ -52,14 +52,14 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //     reset,
     // } = useForm<any>({
     //     defaultValues: {
-    //         service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+    //         svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
     //         post_in: new Date(),
     //         ord: new Date(),
     //     },
     // });
     const methods = useForm<any>({
         defaultValues: {
-            service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+            svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
             post_in: new Date(),
             ord: new Date(),
         },
@@ -78,7 +78,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         pes: string;
         platoon: string;
         rank: string;
-        service_status: string;
+        svc_status: string;
         personnel_ID: string;
     }>();
     const toast = useToast();
@@ -105,7 +105,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         const pes = data.pes.value;
         const platoon = data.platoon.value;
         const rank = data.rank.value;
-        const service_status = data.service_status.value;
+        const svc_status = data.svc_status.value;
 
         const responseData = await sendPOST("/api/personnel/manage/add", {
             post_in,
@@ -114,7 +114,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
             pes,
             platoon,
             rank,
-            service_status,
+            svc_status,
         });
         
         if (responseData.success) {
@@ -219,7 +219,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //                         <InputLeftAddon children="Service status" />
     //                         <Box w="100%">
     //                             <Controller
-    //                                 name="service_status"
+    //                                 name="svc_status"
     //                                 control={control}
     //                                 rules={{
     //                                     required: true,
@@ -232,9 +232,9 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //                                             label: "NSF/NSMan",
     //                                             value: "NSF/NSMan",
     //                                         }}
-    //                                         id="service_status"
-    //                                         name="service_status"
-    //                                         options={Assignments.service_status.map(
+    //                                         id="svc_status"
+    //                                         name="svc_status"
+    //                                         options={Assignments.svc_status.map(
     //                                             (status) => ({
     //                                                 label: status,
     //                                                 value: status,
@@ -251,7 +251,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //                             />
     //                         </Box>
     //                     </InputGroup>
-    //                     {errors?.service_status?.type === "required" && (
+    //                     {errors?.svc_status?.type === "required" && (
     //                         <ErrorText text="Please select a service status!" />
     //                     )}
     //                 </Box>

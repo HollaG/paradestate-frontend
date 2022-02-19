@@ -43,7 +43,7 @@ export default async function handler(
                     .status(400)
                     .json({ error: "Personnel not found or no permissions!" });
 
-            const { post_in, ord, name, pes, platoon, rank, service_status } =
+            const { post_in, ord, name, pes, platoon, rank, svc_status } =
                 req.body;
 
             if (
@@ -53,7 +53,7 @@ export default async function handler(
                 !pes ||
                 !platoon ||
                 !rank ||
-                !service_status
+                !svc_status
             ) {
                 throw new Error("Missing required fields");
             }
@@ -81,7 +81,7 @@ export default async function handler(
                 
                 platoon.trim().toUpperCase(),
                 "UNASSIGNED",
-                service_status,
+                svc_status,
                 personnel_ID
             ];
 
@@ -118,7 +118,7 @@ export default async function handler(
                     pes,
                     platoon,
                     rank,
-                    service_status,
+                    svc_status,
                     personnel_ID
                 },
            
