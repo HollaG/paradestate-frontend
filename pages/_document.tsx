@@ -92,7 +92,6 @@ class MyDocument extends Document {
                     />
 
                     <meta name="theme-color" content="#fff" />
-                    <title> SAF Parade State Generator </title>
                 </Head>
                 <body>
                     <Main />
