@@ -35,9 +35,10 @@ const EditPage: NextProtectedPage = () => {
             ord: new Date(),
         },
     });
+    const reset = methods.reset
     useEffect(() => {
         if (data) {
-            methods.reset({
+            reset({
                 svc_status: {
                     label: data.svc_status,
                     value: data.svc_status,
@@ -51,7 +52,7 @@ const EditPage: NextProtectedPage = () => {
                 platoon: { label: data.platoon, value: data.platoon },
             });
         }
-    }, [data, methods.setValue]);
+    }, [data, reset]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -115,7 +116,7 @@ const EditPage: NextProtectedPage = () => {
         setSuccess(false);
         setSecondsLeft(10)
         if (personnelData)
-            methods.reset({
+            reset({
                 svc_status: {
                     label: personnelData.svc_status,
                     value: personnelData.svc_status,
@@ -129,7 +130,7 @@ const EditPage: NextProtectedPage = () => {
                 platoon: { label: personnelData.platoon, value: personnelData.platoon },
             });
         // mutate()
-    }, [setSuccess, methods.reset]);
+    }, [setSuccess, reset, personnelData]);
     const redirectToPersonnelPage = useCallback(
         () => router.push(`/personnel/manage/${personnelData?.personnel_ID}`),
         [personnelData, router]

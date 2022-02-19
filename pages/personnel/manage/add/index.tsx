@@ -142,12 +142,13 @@ const AddPersonnelPage: NextProtectedPage = () => {
         return () => clearInterval(interval);
     }, [success, setSecondsLeft]);
 
+    const reset = methods.reset
     const redirectToHome = useCallback(() => {
         setSuccess(false);
         setSecondsLeft(10)
 
-        methods.reset();
-    }, [setSuccess, methods.reset]);
+        reset();
+    }, [setSuccess, reset]);
     const redirectToPersonnelPage = useCallback(
         () => router.push(`/personnel/manage/${personnelData?.personnel_ID}`),
         [personnelData, router]

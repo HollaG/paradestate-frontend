@@ -354,7 +354,7 @@ const PersonnelPage: NextProtectedPage = () => {
                 left: 0,
                 behavior: "smooth",
             });
-        } else if (goto && id && !toast.isActive(toastMissingId)) { 
+        } else if (goto && id) { 
             // toast({
             //     id: toastMissingId,
             //     title: "Error",
