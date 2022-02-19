@@ -52,14 +52,14 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //     reset,
     // } = useForm<any>({
     //     defaultValues: {
-    //         service_status: { label: "NSF", value: "NSF" },
+    //         service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
     //         post_in: new Date(),
     //         ord: new Date(),
     //     },
     // });
     const methods = useForm<any>({
         defaultValues: {
-            service_status: { label: "NSF", value: "NSF" },
+            service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
             post_in: new Date(),
             ord: new Date(),
         },
@@ -229,8 +229,8 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //                                 }) => (
     //                                     <Select<ServiceStatusOption, false>
     //                                         defaultValue={{
-    //                                             label: "NSF",
-    //                                             value: "NSF",
+    //                                             label: "NSF/NSMan",
+    //                                             value: "NSF/NSMan",
     //                                         }}
     //                                         id="service_status"
     //                                         name="service_status"

@@ -24,6 +24,11 @@ import {
     Input,
     useToast,
     Wrap,
+    Menu,
+    MenuButton,
+    MenuItemOption,
+    MenuList,
+    MenuOptionGroup,
 } from "@chakra-ui/react";
 import {
     AsyncCreatableSelect,
@@ -44,6 +49,14 @@ import fetcher, { sendDELETE, sendPOST } from "../../../lib/fetcher";
 import { ExtendedPersonnel, Personnel } from "../../../types/database";
 import Assignments from "../../../config/assignments.json";
 import DeleteDialog from "../../../components/Dialogs/DeleteDialog";
+import { FaChevronDown } from "react-icons/fa";
+import { Controller, useForm } from "react-hook-form";
+import ErrorText from "../../../components/Forms/ErrorText";
+import ServiceStatusInput from "../../../components/Forms/Controlled/ServiceStatusInput";
+import RankInput from "../../../components/Forms/Controlled/RankInput";
+import PesInput from "../../../components/Forms/Controlled/PesInput";
+import ORDInput from "../../../components/Forms/Controlled/ORDInput";
+import PostInInput from "../../../components/Forms/Controlled/PostInInput";
 interface ResponseData {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
@@ -57,6 +70,12 @@ interface NewPlatoonSelectOption extends OptionBase {
     label: string;
     unit?: string;
 }
+
+interface ServiceStatusOption extends OptionBase {
+    label: string;
+    value: string;
+}
+[];
 
 const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     const tags = [];
@@ -112,8 +131,6 @@ const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     }
     return <>{tags}</>;
 };
-
-
 
 const MemoizedTags = React.memo(Tags);
 const PersonAccordionItem: React.FC<{
@@ -227,9 +244,15 @@ const PlatoonAccordionItem: React.FC<{
     const [password, setPassword] = useState("");
 
     const toast = useToast();
+
+    /* Transferring */
     const [isLoading, setIsLoading] = useState(false);
     const submitTransfer = async () => {
         if (!value) return;
+
+        // setEditOption("")
+        // setDeleteOpen(false)
+
         setIsLoading(true);
         const [unit, company, platoon] = value?.value.split(
             Assignments.separator
@@ -261,19 +284,25 @@ const PlatoonAccordionItem: React.FC<{
             });
         }
         setIsLoading(false);
-        
+
+        setEditOption("");
+        setIsTransferring(false);
+        setDeleteOpen(false);
     };
 
-
+    /* Deleting */
     const [deleteOpen, setDeleteOpen] = useState(false);
     const deleteSelected = async () => {
-        if (!checkedIDs.length) return
+        if (!checkedIDs.length) return;
+
+        // setEditOption("")
+        // setIsTransferring(false)
 
         const responseData = await sendDELETE("/api/personnel/manage", {
             personnel_IDs: checkedIDs,
         });
 
-        if (responseData.success) { 
+        if (responseData.success) {
             toast({
                 title: "Success",
                 description: `Successfully deleted ${responseData.data.deletedNumber} personnel`,
@@ -281,7 +310,7 @@ const PlatoonAccordionItem: React.FC<{
             });
             mutate();
             setCheckedIDs([]);
-        } else { 
+        } else {
             toast({
                 title: "Error",
                 description: responseData.message,
@@ -289,7 +318,10 @@ const PlatoonAccordionItem: React.FC<{
             });
         }
 
-    }
+        setEditOption("");
+        setIsTransferring(false);
+        setDeleteOpen(false);
+    };
     const customPlatoonOpts: {
         label: string;
         options: {
@@ -306,8 +338,57 @@ const PlatoonAccordionItem: React.FC<{
                 value.value !==
                 `${session?.user?.unit}${Assignments.separator}${session?.user?.company}${Assignments.separator}${platoon}`
         );
+
+    /* Editing */
+    const [editOption, setEditOption] = useState("");
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({ shouldUnregister: true });
+    let EditElement = <></>;
+    switch (editOption) {
+        case "service_status":
+            EditElement = (
+                <ServiceStatusInput control={control} errors={errors} />
+            );
+            break;
+        case "rank":
+            EditElement = <RankInput control={control} errors={errors} />;
+
+            break;
+        case "pes":
+            EditElement = <PesInput control={control} errors={errors} />;
+            break;
+        case "post_in":
+            EditElement = <PostInInput control={control} errors={errors} />;
+
+            break;
+        case "ord":
+            EditElement = <ORDInput control={control} errors={errors} />;
+
+            break;
+    }
+
+    const submitEdit = async (data: any) => {       
+        console.log({data}) 
+        const responseData = await sendPOST("/api/personnel/manage/edit", {
+            type: editOption,
+            value: data[editOption],
+            personnel_IDs: checkedIDs,
+        });
+        if (responseData.success) { 
+
+        } else {
+            toast({
+                title: "Error",
+                description: responseData.message,
+                status: "error",
+            })
+        }
+    };
+
     return (
-        
         <AccordionItem>
             <Text>
                 <AccordionButton
@@ -321,7 +402,12 @@ const PlatoonAccordionItem: React.FC<{
                 </AccordionButton>
             </Text>
             <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                <DeleteDialog isOpen={deleteOpen} setIsOpen={setDeleteOpen} confirmDelete={deleteSelected} type="personnel"/>
+                <DeleteDialog
+                    isOpen={deleteOpen}
+                    setIsOpen={setDeleteOpen}
+                    confirmDelete={deleteSelected}
+                    type="personnel"
+                />
                 <Flex justifyContent="space-between" flexWrap="wrap">
                     <Checkbox
                         size="lg"
@@ -350,9 +436,56 @@ const PlatoonAccordionItem: React.FC<{
                             >
                                 Transfer
                             </Button>
-                            <Button colorScheme="teal" variant="outline">
-                                Edit
-                            </Button>
+                            <Menu closeOnSelect={true}>
+                                <MenuButton
+                                    as={Button}
+                                    rightIcon={<FaChevronDown />}
+                                    variant={editOption ? "solid" : "outline"}
+                                    colorScheme="teal"
+                                >
+                                    Edit
+                                </MenuButton>
+                                <MenuList minWidth="240px">
+                                    <MenuOptionGroup
+                                        value={editOption}
+                                        onChange={(e) =>
+                                            setEditOption(e.toString())
+                                        }
+                                        type="radio"
+                                    >
+                                        <MenuItemOption
+                                            value="service_status"
+                                            // isDisabled={!!person.course_row_ID}
+                                        >
+                                            Service status
+                                        </MenuItemOption>
+                                        <MenuItemOption
+                                            value="rank"
+                                            // isDisabled={!!person.ma_row_ID}
+                                        >
+                                            Rank
+                                        </MenuItemOption>
+                                        <MenuItemOption
+                                            value="pes"
+                                            // isDisabled={!!person.others_row_ID}
+                                        >
+                                            PES
+                                        </MenuItemOption>
+                                        <MenuItemOption
+                                            value="post_in"
+                                            // isDisabled={!!person.others_row_ID}
+                                        >
+                                            Post in
+                                        </MenuItemOption>
+                                        <MenuItemOption
+                                            value="ord"
+                                            // isDisabled={!!person.others_row_ID}
+                                        >
+                                            ORD
+                                        </MenuItemOption>
+                                    </MenuOptionGroup>
+                                </MenuList>
+                            </Menu>
                         </ButtonGroup>
                     </Box>
                 </Flex>
@@ -403,6 +536,22 @@ const PlatoonAccordionItem: React.FC<{
                             </Button>
                         </Center>
                     </Stack>
+                </Collapse>
+                <Collapse in={!!editOption}>
+                    <form onSubmit={handleSubmit(submitEdit)}>
+                        <Stack direction="column">
+                            {EditElement}
+                            <Center>
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    colorScheme="teal"
+                                >
+                                    Submit
+                                </Button>
+                            </Center>
+                        </Stack>
+                    </form>
                 </Collapse>
                 {rendered &&
                     personnel.map((person, index) => (

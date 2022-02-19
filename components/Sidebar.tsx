@@ -147,11 +147,7 @@ const LinkItems: (
                 icon: FiSettings,
                 url: "/personnel/manage/import",
             },
-            {
-                name: "Transfer personnel",
-                icon: FiSettings,
-                url: "/personnel/manage/transfer",
-            },
+            
         ],
     },
     // {

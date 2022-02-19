@@ -18,6 +18,11 @@ import CustomControlledDatePicker from "../../../Dates/CustomControlledDatePicke
 import ErrorText from "../../../Forms/ErrorText";
 import HelpText from "../../../Forms/HelpText";
 import Assignments from "../../../../config/assignments.json"
+import ServiceStatusInput from "../../../Forms/Controlled/ServiceStatusInput";
+import RankInput from "../../../Forms/Controlled/RankInput";
+import PesInput from "../../../Forms/Controlled/PesInput";
+import PostInInput from "../../../Forms/Controlled/PostInInput";
+import ORDInput from "../../../Forms/Controlled/ORDInput";
 
 interface ServiceStatusOption extends OptionBase {
     label: string;
@@ -57,84 +62,8 @@ const AddFormTemplate: React.FC<{
                 </Center> */}
                 <Text pl={2}> All fields are required. </Text>
                 <Stack direction="column" spacing={6}>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Service status" />
-                            <Box w="100%">
-                                <Controller
-                                    name="service_status"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            defaultValue={{
-                                                label: "NSF",
-                                                value: "NSF",
-                                            }}
-                                            id="service_status"
-                                            name="service_status"
-                                            options={Assignments.service_status.map(
-                                                (status) => ({
-                                                    label: status,
-                                                    value: status,
-                                                })
-                                            )}
-                                            placeholder="Select service status"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.service_status?.type === "required" && (
-                            <ErrorText text="Please select a service status!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Rank" />
-                            <Box w="100%">
-                                <Controller
-                                    name="rank"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            id="rank"
-                                            name="rank"
-                                            options={Object.keys(
-                                                Assignments.rank_army
-                                            ).map((rank) => ({
-                                                label: rank,
-                                                value: rank,
-                                            }))}
-                                            placeholder="Select rank"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.rank?.type === "required" && (
-                            <ErrorText text="Please select a rank!" />
-                        )}
-                    </Box>
+                    <ServiceStatusInput control={control} errors={errors}/>
+                    <RankInput control={control} errors={errors}/>
                     <Box>
                         <InputGroup size="sm">
                             <InputLeftAddon children="Name" />
@@ -149,75 +78,9 @@ const AddFormTemplate: React.FC<{
                             <ErrorText text="Please enter a name!" />
                         )}
                     </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="PES" />
-                            <Box w="100%">
-                                <Controller
-                                    name="pes"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({
-                                        field: { onChange, value = [] },
-                                    }) => (
-                                        <Select<ServiceStatusOption, false>
-                                            id="pes"
-                                            name="pes"
-                                            options={Assignments.pes.map(
-                                                (pes) => ({
-                                                    label: pes,
-                                                    value: pes,
-                                                })
-                                            )}
-                                            placeholder="Select PES"
-                                            closeMenuOnSelect={true}
-                                            size="sm"
-                                            isSearchable={false}
-                                            value={value}
-                                            onChange={onChange}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </InputGroup>
-                        {errors?.pes?.type === "required" && (
-                            <ErrorText text="Please select a PES!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="Post in" />
-                            <CustomControlledDatePicker
-                                control={control}
-                                name="post_in"
-                                placeholder="Date when personnel joined the company"
-                            />
-                        </InputGroup>
-                        {errors?.post_in?.type === "required" && (
-                            <ErrorText text="Please enter a date for post-in!" />
-                        )}
-                        {errors?.post_in?.type === "wrong_date" && (
-                            <ErrorText text="ORD must be after post-in date!" />
-                        )}
-                    </Box>
-                    <Box>
-                        <InputGroup size="sm">
-                            <InputLeftAddon children="ORD" />
-                            <CustomControlledDatePicker
-                                control={control}
-                                name="ord"
-                                placeholder="Operationally Ready Date"
-                            />
-                        </InputGroup>
-                        {errors?.ord?.type === "required" && (
-                            <ErrorText text="Please enter an ORD!" />
-                        )}
-                        {errors?.ord?.type === "wrong_date" && (
-                            <ErrorText text="ORD must be after post-in date!" />
-                        )}
-                    </Box>
+                    <PesInput control={control} errors={errors}/>
+                    <PostInInput control={control} errors={errors}/>
+                    <ORDInput control={control} errors={errors} />
                     <Box>
                         <InputGroup size="sm">
                             <InputLeftAddon children="Platoon" />

@@ -30,7 +30,7 @@ const EditPage: NextProtectedPage = () => {
 
     const methods = useForm<any>({
         defaultValues: {
-            service_status: { label: "NSF", value: "NSF" },
+            service_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
             post_in: new Date(),
             ord: new Date(),
         },
