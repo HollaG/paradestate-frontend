@@ -304,7 +304,7 @@ const Sidebar = (props: any) => {
             w="60"
             {...props}
         >
-            <Flex px="4" py="5" align="center">
+            <Flex px="4" py="5" align="center" key="testingtesting">
                 {/* <Logo /> */}
                 <Text fontSize="2xl" ml="2" color="white" fontWeight="semibold">
                     {session?.user?.unit} {session?.user?.company}
@@ -417,7 +417,7 @@ const Sidebar = (props: any) => {
             minH="100vh"
             {...handlers}
         >
-            <SidebarContent display={{ base: "none", md: "unset" }} />
+            <SidebarContent display={{ base: "none", md: "unset" }} key={1} />
             <Drawer
                 isOpen={sidebar.isOpen}
                 onClose={sidebar.onClose}
@@ -426,6 +426,7 @@ const Sidebar = (props: any) => {
                 <DrawerOverlay />
                 <DrawerContent>
                     <SidebarContent
+                    key={2}
                         w="full"
                         borderRight="none"
                         onClose={sidebar.onClose}
