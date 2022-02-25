@@ -381,7 +381,7 @@ const Confirm: NextProtectedPage = () => {
         <>
             <DashboardHeading step={2}>
                 <Heading>Events added</Heading>
-                <Link href="/" passHref>
+                <Link href="/">
                     <Button
                         colorScheme="teal"
                         size="xs"

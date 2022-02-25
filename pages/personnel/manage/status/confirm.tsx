@@ -244,7 +244,7 @@ const Confirmed: NextProtectedPage = () => {
         <Stack direction="column">
             <StatusHeading step={2}>
                 <Heading> Statuses added </Heading>
-                <Link href="/" passHref>
+                <Link href="/">
                     <Button
                         colorScheme="teal"
                         size="xs"
@@ -271,7 +271,7 @@ const Confirmed: NextProtectedPage = () => {
                 <Stack direction="column">
                     <StatusHeading step={1}>
                         <Heading> Confirm </Heading>
-                        <Link href="/" passHref>
+                        <Link href="/">
                             <Button
                                 colorScheme="teal"
                                 size="xs"
