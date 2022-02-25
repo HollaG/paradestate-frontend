@@ -108,7 +108,7 @@ const LinkItems: (
 )[] = [
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
     { name: "Overview", icon: IoCalendarOutline, url: "/info/overview" },
-    // { name: "Analytics", icon: IoAnalyticsOutline, url: "/analytics" },
+    { name: "Analytics", icon: IoAnalyticsOutline, url: "/info/trends" },
     {
         name: "Add statuses (medical)",
         icon: IoMedicalOutline,

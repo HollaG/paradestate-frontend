@@ -138,24 +138,24 @@ export default async function handler(
                         "You do not have permission to delete this personnel!",
                 });
 
-            const txn = db.transaction();
-            txn.query(
-                `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID IN (?)`,
-                [personnel_IDs]
-            )
-            .query(`DELETE FROM personnel WHERE personnel_ID IN (?)`, [
-                personnel_IDs,
-            ]);
-            txn.rollback(console.log);
-            txn.commit();
+            // const txn = db.transaction();
+            // txn.query(
+            //     `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID IN (?)`,
+            //     [personnel_IDs]
+            // )
+            // .query(`DELETE FROM personnel WHERE personnel_ID IN (?)`, [
+            //     personnel_IDs,
+            // ]);
+            // txn.rollback(console.log);
+            // txn.commit();
             // await executeQuery({
             //     query: `INSERT INTO deleted_personnel SELECT * FROM personnel WHERE personnel_ID IN (?)`,
             //     values: [personnel_IDs],
             // });
-            // await executeQuery({
-            //     query: `DELETE FROM personnel WHERE personnel_ID IN (?)`,
-            //     values: [personnel_IDs],
-            // });
+            await executeQuery({
+                query: `DELETE FROM personnel WHERE personnel_ID IN (?)`,
+                values: [personnel_IDs],
+            });
 
             res.status(200).json({
                 success: true,
