@@ -331,7 +331,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -349,7 +349,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -372,7 +372,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -390,7 +390,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -413,7 +413,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -431,7 +431,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -454,7 +454,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -472,7 +472,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -495,7 +495,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -513,7 +513,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -536,7 +536,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                             searchValue
                                                                 .trim()
                                                                 .toUpperCase()
-                                                        )) && (
+                                                        )) ? (
                                                         <Stack
                                                             direction="row"
                                                             key={index}
@@ -554,7 +554,7 @@ const TrendsPage: NextProtectedPage = () => {
                                                                 person={person}
                                                             />
                                                         </Stack>
-                                                    )
+                                                    ) : null
                                             )}
                                         </Stack>
                                     )}
@@ -568,4 +568,5 @@ const TrendsPage: NextProtectedPage = () => {
     );
 };
 
+TrendsPage.requireAuth = true
 export default TrendsPage;

@@ -26,24 +26,25 @@ ChartJS.register(
     Legend,
     Tooltip
 );
+const options = {
+    maintainAspectRatio: false,
+    // responsive: false
+
+  
+
+    scales: {
+        xAxes: {
+            stacked: true,
+        },
+
+        yAxes: {
+            stacked: true,
+        },
+    },
+};
 const HistoryChart: React.FC = () => {
     const { data: session } = useSession();
-    const options = {
-        maintainAspectRatio: false,
-        // responsive: false
-
-      
-
-        scales: {
-            xAxes: {
-                stacked: true,
-            },
-
-            yAxes: {
-                stacked: true,
-            },
-        },
-    };
+    
     const [months, setMonths] = useState(0.5);
     const { data, error } = useSWR<{
         attendanceGraphData: {
