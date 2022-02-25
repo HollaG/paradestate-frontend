@@ -1,4 +1,4 @@
-import { stringify } from "querystring";
+
 import mysql from "serverless-mysql";
 export const db = mysql({
     config: {

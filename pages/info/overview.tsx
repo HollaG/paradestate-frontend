@@ -31,7 +31,7 @@ import fetcher from "../../lib/fetcher";
 import { ExtendedPersonnel } from "../../types/database";
 import { ExtendedStatus } from "../../types/types";
 import { IoSearchOutline } from "react-icons/io5";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import AllCard from "../../components/Info/Overview/AllCard";
 import OffCard from "../../components/Info/Overview/OffCard";
 import LeaveCard from "../../components/Info/Overview/LeaveCard";
@@ -135,6 +135,10 @@ const OverviewPage: NextProtectedPage = () => {
     const selectedDate = new Date();
 
     const [searchValue, setSearchValue] = useState("");
+    const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
+        setSearchValue(event.target.value);
+        if (type !== "All") setType("All");
+    };
     const [type, setType] = useState<typeof types[number]>("All");
 
     const infoRef = useRef<HTMLDivElement>(null);
@@ -181,7 +185,7 @@ const OverviewPage: NextProtectedPage = () => {
                                 {!!data &&
                                     data?.numbers?.total -
                                         data?.numbers.commitments}
-                                /142
+                                /{data?.numbers?.total}
                                 <Button
                                     size="xs"
                                     colorScheme="teal"
@@ -510,9 +514,7 @@ const OverviewPage: NextProtectedPage = () => {
                                 </InputLeftElement>
                                 <Input
                                     value={searchValue}
-                                    onChange={(e) =>
-                                        setSearchValue(e.target.value)
-                                    }
+                                    onChange={handleSearch}
                                     placeholder="Search for personnel..."
                                 />
                             </InputGroup>
@@ -549,6 +551,7 @@ const OverviewPage: NextProtectedPage = () => {
                                     <AllCard
                                         sortedByPlatoon={data.sortedByPlatoon}
                                         type={type}
+                                        search={searchValue.trim().toUpperCase()}
                                     />
                                 </Collapse>
                                 {/* <Collapse animateOpacity unmountOnExit

@@ -157,10 +157,10 @@ const StatusList: NextProtectedPage = () => {
             </Box>
             <Center>
                 <SimpleGrid columns={2} spacing={2}>
-                    <Button onClick={onCopy} disabled={hasCopied}>
+                    <Button onClick={onCopy} disabled={hasCopied} colorScheme="teal">
                         {hasCopied ? "Copied" : "Copy"}
                     </Button>
-                    <Button onClick={share}> Share </Button>
+                    <Button onClick={share} colorScheme="teal"> Share </Button>
                 </SimpleGrid>
             </Center>
             <Box>

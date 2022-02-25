@@ -15,7 +15,8 @@ const events: (
 const AllCard: React.FC<{
     sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
     type: string;
-}> = ({ sortedByPlatoon, type }) => {
+    search?: string
+}> = ({ sortedByPlatoon, type, search }) => {
     return (
         <Stack direction="column" spacing={3} divider={<Divider />}>
             {Object.keys(sortedByPlatoon).map((platoon, index) => (
@@ -24,11 +25,11 @@ const AllCard: React.FC<{
                     <Stack direction="column" spacing={3} divider={<Divider />}>
                         {sortedByPlatoon[platoon].map((person, index2) => {
                             if (
-                                type === "All" ||
+                                (!search || person.name.includes(search)) && (type === "All" ||
                                 (type === "In camp" &&
                                     person.location === "In camp") ||
                                 (type === "Out of camp" &&
-                                    person.location !== "In camp")
+                                    person.location !== "In camp"))
                             )
                                 return (
                                     <Box key={index2}>
