@@ -12,12 +12,16 @@ import {
     LineElement,
     Legend,
     Tooltip,
+    BarController,
+    LineController,
 } from "chart.js";
 import { Box, Flex, Select, Skeleton, Stack } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 const monthSelection = [1, 3, 6];
 
 ChartJS.register(
+    BarController,
+    LineController,
     LinearScale,
     CategoryScale,
     BarElement,
