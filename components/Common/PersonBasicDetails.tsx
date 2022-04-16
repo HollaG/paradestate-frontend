@@ -6,7 +6,7 @@ import NextLink from "next/link";
 const PersonBasicDetails: React.FC<{
     person: ExtendedPersonnel;
     children: ReactNode;
-    handleClick: () => Promise<boolean>
+    handleClick: () => Promise<boolean>|void
 }> = ({ person, children, handleClick }) => (
     <Flex alignItems="center">
         <Box>

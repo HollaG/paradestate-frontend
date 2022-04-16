@@ -124,8 +124,21 @@
 				"format": "dd/MM/yyyy"
 			}
 		}
-	}		
+	},
 
-
+    "activity_types": [
+        {
+            "label": "PT",
+            "value": "PT"
+        },
+        {
+            "label": "Route March",
+            "value": "Route March"
+        },
+        {
+            "label": "Combat Circuit",
+            "value": "Combat Circuit"
+        }
+    ]
 	
 }

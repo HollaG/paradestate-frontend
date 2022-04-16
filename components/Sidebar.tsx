@@ -96,7 +96,7 @@ const LinkItems: (
     | {
           name: string;
           isGroup: boolean;
-          disclosure: "personnel" | "event" | "format";
+          disclosure: "personnel" | "event" | "format" | "paradestate" | "heatacclim";
           children: {
               name: string;
               icon: IconType;
@@ -109,6 +109,48 @@ const LinkItems: (
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
     { name: "Overview", icon: IoCalendarOutline, url: "/info/overview" },
     { name: "Analytics", icon: IoAnalyticsOutline, url: "/info/trends" },
+    {
+        name: "Parade State",
+        isGroup: true,
+        disclosure: "paradestate",
+        icon: IoHomeOutline,
+        children: [
+            {
+                name: "Manage personnel",
+                icon: FiSettings,
+                url: "/personnel/manage",
+            },
+            {
+                name: "Add personnel",
+                icon: FiSettings,
+                url: "/personnel/manage/add",
+            },
+            {
+                name: "Import personnel",
+                icon: FiSettings,
+                url: "/personnel/manage/import",
+            },
+        ],
+    },
+    {
+        name: "Heat Acclimatisation",
+        isGroup: true,
+        disclosure: "heatacclim",
+        icon: IoHomeOutline,
+        children: [
+            {
+                name: "View overall status",
+                icon: FiSettings,
+                url: "/ha",
+            },
+            {
+                name: "Add PT session",
+                icon: FiSettings,
+                url: "/ha/add",
+            },
+            
+        ],
+    },
     {
         name: "Add statuses (medical)",
         icon: IoMedicalOutline,
@@ -146,7 +188,6 @@ const LinkItems: (
                 icon: FiSettings,
                 url: "/personnel/manage/import",
             },
-            
         ],
     },
     { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/audit-log" },
@@ -241,6 +282,8 @@ const Sidebar = (props: any) => {
         personnel: useDisclosure(),
         event: useDisclosure(),
         format: useDisclosure(),
+        paradestate: useDisclosure(),
+        heatacclim: useDisclosure(),
     };
     const NavItem: React.FC<{ icon?: IconType; [key: string]: any }> = (
         props
@@ -426,7 +469,7 @@ const Sidebar = (props: any) => {
                 <DrawerOverlay />
                 <DrawerContent>
                     <SidebarContent
-                    key={2}
+                        key={2}
                         w="full"
                         borderRight="none"
                         onClose={sidebar.onClose}
