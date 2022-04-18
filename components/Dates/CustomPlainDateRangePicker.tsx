@@ -34,26 +34,26 @@ import PickersDay from "@mui/lab/PickersDay";
 import { DateRangePickerDay, DateRangePickerDayProps } from "@mui/lab";
 import { HighlightedDay } from "../../types/types";
 
-const CustomStatusDateRangePicker: React.FC<{
+const CustomPlainDateRangePicker: React.FC<{
     startLeftAdorn: string;
     startPlaceholder: string;
     endLeftAdorn: string;
     endPlaceholder: string;
-    personnel_ID?: number;
+    
     defaultValues?: [Date, Date];
-    num?: number,
-    row_ID?: string,
+    
+    
     control?: Control<any, any>,
-    inputName?: string
+    inputName: string
 }> = ({
     startLeftAdorn,
     startPlaceholder,
     endLeftAdorn,
     endPlaceholder,
-    personnel_ID,
+  
     defaultValues,
-    num,
-    row_ID,
+  
+   
     control,
     inputName
     // isLoading = false,
@@ -73,12 +73,7 @@ const CustomStatusDateRangePicker: React.FC<{
         return isBefore(dates[0], dates[1]) || isEqual(dates[0], dates[1]);
     };
 
-    const [isLoading, setIsLoading] = useState(true);
-    const [highlightedDays, setHighlightedDays] = useState<HighlightedDay[]>(
-        []
-    );
    
-    if (!inputName) inputName = row_ID ? `${row_ID}-status-date` : `${personnel_ID}-${num}-status-date`
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Controller
@@ -97,7 +92,7 @@ const CustomStatusDateRangePicker: React.FC<{
                     } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateRangePicker
-                        minDate={row_ID ? undefined : subMonths(currentDate, 1)}
+                        
                         value={value}
                         onChange={(dates: any) =>
                             validateStartBeforeEnd(dates)
@@ -159,4 +154,4 @@ const CustomStatusDateRangePicker: React.FC<{
     );
 };
 
-export default CustomStatusDateRangePicker;
+export default CustomPlainDateRangePicker;

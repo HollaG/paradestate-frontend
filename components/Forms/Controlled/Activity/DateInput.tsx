@@ -13,11 +13,11 @@ const DateInput: React.FC<{
     return (
         <Box>
             <InputGroup size="sm">
-                <InputLeftAddon children="HA Date" />
+                <InputLeftAddon children="Activity Date" />
                 <CustomControlledDatePicker
                     control={control}
                     name="activity_date"
-                    placeholder="Date of HA"
+                    placeholder="Date of Activity"
                 />
             </InputGroup>
             {errors?.activity_date?.type === "required" && (

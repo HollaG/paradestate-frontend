@@ -245,7 +245,7 @@ const PersonAccordionItem: React.FC<{
     selectedDate: Date;
     search: string;
 }> = ({ person, selectedDate, search }) => {
-    console.log("Person accordion item rerender");
+    
     const textColor = person.location === "In camp" ? "green.500" : "red.500";
     const dashboardData = useSelector(
         (state: RootState) => state.dashboard.data

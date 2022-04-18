@@ -1,16 +1,56 @@
 import { Box, InputGroup, InputLeftAddon } from "@chakra-ui/react";
-import { OptionBase, Select } from "chakra-react-select";
+import {
+    ChakraStylesConfig,
+    components,
+    GroupBase,
+    OptionBase,
+    OptionProps,
+    Select,
+} from "chakra-react-select";
 import { Control, FieldValues, Controller } from "react-hook-form";
 import ErrorText from "../../ErrorText";
 import Assignments from "../../../../config/assignments.json";
 
-
-
-interface ServiceStatusOption extends OptionBase {
+interface ActivityOption extends OptionBase {
     label: string;
     value: string;
+    color?: string;
 }
 [];
+const colorStyles = {
+    option: (styles: any, { data }: { data: { color: string } }) => {
+        return {
+            ...styles,
+            backgroundColor: data.color,
+        };
+    },
+};
+const chakraStyles: ChakraStylesConfig<
+    ActivityOption,
+    false,
+    GroupBase<ActivityOption>
+> = {
+    option: (provided, state) => {
+        
+        let color = state.data.color;
+        if (state.isSelected) color+= '.400'
+        else if (state.isFocused) color+= '.200'
+        else color+= '.100'
+        return {
+            ...provided,
+            background: color,
+        };
+    },
+    control : (provided, state) => {
+        // console.log({provided, state})
+        return({
+        ...provided,
+        //@ts-ignore
+        backgroundColor: `${state.selectProps.value.color}.100`,
+        // color: "white"
+    })}
+};
+
 const ActivityTypeInput: React.FC<{
     control: Control<FieldValues, object>;
     errors: {
@@ -29,16 +69,18 @@ const ActivityTypeInput: React.FC<{
                             required: true,
                         }}
                         render={({ field: { onChange, value = [] } }) => (
-                            <Select<ServiceStatusOption, false>
+                            <Select<ActivityOption, false>
                                 id="activity_type"
                                 name="activity_type"
                                 options={Assignments.activity_types}
-                                placeholder="Select type of HA"
+                                placeholder="Select type of activity"
                                 closeMenuOnSelect={true}
                                 size="sm"
                                 isSearchable={false}
                                 value={value}
                                 onChange={onChange}
+                                colorScheme="purple"
+                                chakraStyles={chakraStyles}
                             />
                         )}
                     />

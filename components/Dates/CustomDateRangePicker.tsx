@@ -23,7 +23,7 @@ import MobileDateRangePicker from "@mui/lab/MobileDateRangePicker";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { Control, Controller, useFormContext } from "react-hook-form";
 import Assignments from "../../config/assignments.json";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
@@ -72,6 +72,7 @@ const CustomDateRangePicker: React.FC<{
     defaultEndTime?: "AM" | "PM";
 
     row_ID? : string
+    control?: Control<any, any>
     // isLoading?: boolean;
     // handleMonthChange?: (date: Date) => void;
     // highlightedDays?: HighlightedDay[];
@@ -87,13 +88,14 @@ const CustomDateRangePicker: React.FC<{
     defaultValues,
     defaultStartTime = "AM",
     defaultEndTime = "PM",
-
+    control,
     row_ID
     // isLoading = false,
     // handleMonthChange = () => {},
     // highlightedDays = [],
 }) => {
-    const { register, control } = useFormContext();
+    const methods = useFormContext();
+    if (!control) control = methods.control
     const currentDate = parse(
         format(new Date(), Assignments.dateformat),
         Assignments.dateformat,
@@ -110,17 +112,7 @@ const CustomDateRangePicker: React.FC<{
     const [highlightedDays, setHighlightedDays] = useState<HighlightedDay[]>(
         []
     );
-    // const fetchDisabledDates =  (date: Date) => {
-    //     const formattedDate = format(date, Assignments.mysqldateformat);
-    //     const url = `/api/dashboard/activeEvents?personnel_ID=${personnel_ID}&type=${type}&date=${formattedDate}`;
-    //     console.log({ url });
-    //     fetch(url)
-    //         .then((res) => res.json())
-    //         .then((data: HighlightedDay[]) => {                
-    //             setIsLoading(false);
-    //             setHighlightedDays(data);
-    //         });
-    // };
+  
 
     const fetchDisabledDates = useCallback((date: Date) => {
         const formattedDate = format(date, Assignments.mysqldateformat);

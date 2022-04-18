@@ -10,16 +10,10 @@ import {
     AccordionPanel,
     Badge,
     Box,
-    ButtonGroup,
     Collapse,
     Divider,
     Flex,
     Link,
-    Menu,
-    MenuButton,
-    MenuItemOption,
-    MenuList,
-    MenuOptionGroup,
     SimpleGrid,
     Stack,
     Tag,
@@ -29,39 +23,34 @@ import {
     StatHelpText,
     StatLabel,
     StatNumber,
+    Spacer,
 } from "@chakra-ui/react";
+import { format } from "date-fns";
 import { useSession } from "next-auth/react";
-import { useMemo, useState, useEffect } from "react";
-import { FormProvider } from "react-hook-form";
-import { FaChevronDown } from "react-icons/fa";
-import {
-    IoCheckmarkDoneCircleOutline,
-    IoAlertCircleOutline,
-} from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { useMemo, useState, useEffect, useRef } from "react";
+
 import useSWR from "swr";
-import { DefaultLink } from "..";
+
 import BasicCard from "../../components/Card/BasicCard";
-import {
-    AddOff,
-    AddLeave,
-    AddAttC,
-    AddCourse,
-    AddMA,
-    AddOthers,
-} from "../../components/Dashboard/AddEvent";
-import HAStepper from "../../components/HA/HAStepper";
+
 import { NextProtectedPage } from "../../lib/auth";
 import fetcher from "../../lib/fetcher";
+import { Activity } from "../../types/activity";
 import { ExtendedPersonnel } from "../../types/database";
-import { RootState } from "../../types/types";
+
+import Assignments from "../../config/assignments.json";
+import NextLink from "next/link";
+import ActivityCalendar, {
+    CustomEvent,
+} from "../../components/Calendar/ActivityCalendar";
+import { Event } from "react-big-calendar";
+import { useRouter } from "next/router";
+import { IndividualActivityComponent } from "./[activity_ID]";
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
     search: string;
 }> = ({ person, selectedDate, search }) => {
-    console.log("Person accordion item rerender");
-
     const isVisible =
         search.length === 0 ? true : person.name.includes(search.toUpperCase());
 
@@ -158,11 +147,20 @@ const PlatoonAccordianItem: React.FC<{
         </AccordionItem>
     );
 };
-const HAHomePage: NextProtectedPage = () => {
+const ActivityHomePage: NextProtectedPage = () => {
     const { data, error } = useSWR<{
         sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
         selectedDate: string;
-    }>("/api/ha", fetcher);
+        upcomingActivities: Activity[];
+        attendeesGroupedByActivityID: {
+            [key: number]: number[];
+        };
+        absenteesGroupedByActivityID: {
+            [key: number]: number[];
+        };
+        calendarData: CustomEvent[];
+    }>("/api/activity", fetcher);
+
     const { data: session } = useSession();
     console.log(data, error);
     const defaultIndex = useMemo(
@@ -191,46 +189,103 @@ const HAHomePage: NextProtectedPage = () => {
         setIndex(defaultIndex);
         // }
     }, [data?.sortedByPlatoon, defaultIndex]);
+
+    const router = useRouter();
+    const [activity_ID, setActivity_ID] = useState<number>();
+    const activityRef = useRef<HTMLDivElement>(null);
+    // const eventClickHandler = (event: CustomEvent) => {
+    //     setActivity_ID(event.activity_ID);
+    //     // activityRef.current?.scrollIntoView({
+    //     //     behavior: "smooth",
+
+    //     // })
+    // };
+    const eventClickHandler = (event: CustomEvent) =>
+        router.push(`/activity/${event.activity_ID}`);
     return (
         <>
-            
-
-            {data && (
+            {data && data.upcomingActivities && (
                 <Stack direction="column">
-                    
-                    <SimpleGrid columns={2} spacing={6}>
-                        <BasicCard>
-                            <Stat>
-                                <StatLabel> Next PT on 16/4/2022</StatLabel>
-                                <StatNumber>
-                                    <Skeleton
-                                        isLoaded={!!data}
-                                        height="36px"
-                                        display="flex"
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                    >
-                                        3KM run
-                                        <Button
-                                            size="xs"
-                                            colorScheme="teal"
-                                            onClick={() => {}}
+                    <Heading textAlign="center"> Activity agenda </Heading>
+
+                    {/* {activity_ID && (
+                        <Box ref={activityRef}>
+                            <IndividualActivityComponent
+                                activity_ID={activity_ID}
+                            />
+                        </Box>
+                    )} */}
+
+                    <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={6}>
+                        {/* <Stack direction="row"> */}
+                        {data.upcomingActivities.map((activity, index) => (
+                            <BasicCard key={index}>
+                                <Stat>
+                                    <StatLabel>
+                                        Upcoming activity on{" "}
+                                        {format(
+                                            new Date(activity.date),
+                                            Assignments.dateformat
+                                        )}
+                                    </StatLabel>
+                                    <StatNumber>
+                                        <Skeleton
+                                            isLoaded={!!data}
+                                            height="36px"
+                                            display="flex"
+                                            justifyContent="space-between"
+                                            alignItems="center"
                                         >
-                                            {" "}
-                                            View{" "}
-                                        </Button>
-                                    </Skeleton>
-                                </StatNumber>
-                                <StatHelpText>
-                                    <Skeleton
-                                        isLoaded={!!data}
-                                        height="21px"
-                                    ></Skeleton>
-                                </StatHelpText>
-                            </Stat>
-                        </BasicCard>
+                                            <Flex
+                                                width="100%"
+                                                alignItems="center"
+                                            >
+                                                <Text> {activity.name} </Text>
+                                                <Spacer />
+                                                <NextLink
+                                                    href={`/activity/${activity.activity_ID}`}
+                                                    passHref
+                                                >
+                                                    <Button
+                                                        size="xs"
+                                                        colorScheme="teal"
+                                                        as={Link}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                </NextLink>
+                                            </Flex>
+                                        </Skeleton>
+                                    </StatNumber>
+                                    <StatHelpText>
+                                        <Skeleton
+                                            isLoaded={!!data}
+                                            height="21px"
+                                        >
+                                            {activity.type} |{" "}
+                                            {data.attendeesGroupedByActivityID[
+                                                activity.activity_ID
+                                            ].length || 0}{" "}
+                                            /{" "}
+                                            {(data.absenteesGroupedByActivityID[
+                                                activity.activity_ID
+                                            ].length || 0) +
+                                                (data
+                                                    .attendeesGroupedByActivityID[
+                                                    activity.activity_ID
+                                                ].length || 0)} | {activity.start_date !== activity.end_date && `Day ${activity.day}`}
+                                        </Skeleton>
+                                    </StatHelpText>
+                                </Stat>
+                            </BasicCard>
+                        ))}
+                        {/* </Stack> */}
                     </SimpleGrid>
-                    <Accordion
+                    <ActivityCalendar
+                        data={data.calendarData}
+                        onClick={eventClickHandler}
+                    />
+                    {/* <Accordion
                         // defaultIndex={[0]}
                         allowMultiple
                         allowToggle
@@ -248,13 +303,14 @@ const HAHomePage: NextProtectedPage = () => {
                                 />
                             )
                         )}
-                    </Accordion>
+                    </Accordion> */}
                 </Stack>
             )}
+            {data && !data.upcomingActivities && <Heading>No activities yet!</Heading> }
         </>
     );
 };
 
-HAHomePage.requireAuth = true;
+ActivityHomePage.requireAuth = true;
 
-export default HAHomePage;
+export default ActivityHomePage;

@@ -21,10 +21,13 @@ export default async function handler(
 
             // According to parade state, retrieve those who are 'in camp'
 
+            const startDate = new Date(date[0])
+            const endDate = new Date(date[1])
+
             const opts = {
                 unit: session.user.unit,
                 company: session.user.company,
-                selDate: new Date(date), 
+                selDate: startDate, 
             };
 
             const query = queryBuilder(
@@ -98,7 +101,7 @@ export default async function handler(
                 data: {
                     type,
                     name,
-                    date,
+                    date: [startDate, endDate],
                     personnel: sortedByPlatoon,
                     hasEvent,
                     noEvent,

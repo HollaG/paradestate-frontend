@@ -29,7 +29,7 @@ const HAStepper:React.FC<{step: 0|1|2}> = ({step}) => {
             sx={{ width: "100%", maxWidth: "700px" }}
         >
             <Step>
-                <StepLabel sx={{ mt: 0 }}>Add PT</StepLabel>
+                <StepLabel sx={{ mt: 0 }}>Add activity</StepLabel>
             </Step>
             <Step>
                 <StepLabel sx={{ mt: 0 }}>Add participants</StepLabel>

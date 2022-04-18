@@ -70,6 +70,7 @@ import {
     IoHomeOutline,
     IoMailOutline,
     IoMedicalOutline,
+    IoMegaphoneOutline,
     IoPeopleOutline,
     IoSettingsOutline,
     IoTrendingUp,
@@ -86,17 +87,23 @@ interface LinkItemProps {
 }
 const LinkItems: (
     | {
-          name: string;
-          icon: IconType;
-          url: string;
+          name?: string;
+          icon?: IconType;
+          url?: string;
           isGroup?: undefined;
           disclosure?: undefined;
           children?: undefined;
+          isDivider?: boolean;
       }
     | {
           name: string;
           isGroup: boolean;
-          disclosure: "personnel" | "event" | "format" | "paradestate" | "heatacclim";
+          disclosure:
+              | "personnel"
+              | "event"
+              | "format"
+              | "paradestate"
+              | "activities";
           children: {
               name: string;
               icon: IconType;
@@ -104,58 +111,18 @@ const LinkItems: (
           }[];
           icon: IconType;
           url?: undefined;
+          isDivider?: undefined;
       }
 )[] = [
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
     { name: "Overview", icon: IoCalendarOutline, url: "/info/overview" },
     { name: "Analytics", icon: IoAnalyticsOutline, url: "/info/trends" },
     {
-        name: "Parade State",
-        isGroup: true,
-        disclosure: "paradestate",
-        icon: IoHomeOutline,
-        children: [
-            {
-                name: "Manage personnel",
-                icon: FiSettings,
-                url: "/personnel/manage",
-            },
-            {
-                name: "Add personnel",
-                icon: FiSettings,
-                url: "/personnel/manage/add",
-            },
-            {
-                name: "Import personnel",
-                icon: FiSettings,
-                url: "/personnel/manage/import",
-            },
-        ],
-    },
-    {
-        name: "Heat Acclimatisation",
-        isGroup: true,
-        disclosure: "heatacclim",
-        icon: IoHomeOutline,
-        children: [
-            {
-                name: "View overall status",
-                icon: FiSettings,
-                url: "/ha",
-            },
-            {
-                name: "Add PT session",
-                icon: FiSettings,
-                url: "/ha/add",
-            },
-            
-        ],
-    },
-    {
         name: "Add statuses (medical)",
         icon: IoMedicalOutline,
         url: "/personnel/manage/status",
     },
+    { isDivider: true },
 
     {
         name: "Parade state",
@@ -166,6 +133,9 @@ const LinkItems: (
         name: "Status list",
         icon: IoMailOutline,
         url: "/deliverables/status-list",
+    },
+    {
+        isDivider: true
     },
     {
         name: "Personnel",
@@ -189,6 +159,27 @@ const LinkItems: (
                 url: "/personnel/manage/import",
             },
         ],
+    },
+    {
+        name: "Activities",
+        isGroup: true,
+        disclosure: "activities",
+        icon: IoMegaphoneOutline,
+        children: [
+            {
+                name: "Overview",
+                icon: IoCalendarOutline,
+                url: "/activity",
+            },
+            {
+                name: "Add activity",
+                icon: FiSettings,
+                url: "/activity/add",
+            },
+        ],
+    },
+    {
+        isDivider: true,
     },
     { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/audit-log" },
 
@@ -283,7 +274,7 @@ const Sidebar = (props: any) => {
         event: useDisclosure(),
         format: useDisclosure(),
         paradestate: useDisclosure(),
-        heatacclim: useDisclosure(),
+        activities: useDisclosure(),
     };
     const NavItem: React.FC<{ icon?: IconType; [key: string]: any }> = (
         props
@@ -361,7 +352,9 @@ const Sidebar = (props: any) => {
                 aria-label="Main Navigation"
             >
                 {LinkItems.map((link, index) => {
-                    if (link.isGroup) {
+                    if (link.isDivider) {
+                        return <Divider key={index} color="gray.400" my={1} opacity={0.3}/>;
+                    } else if (link.isGroup) {
                         return (
                             <Box key={index}>
                                 <NavItem

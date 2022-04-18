@@ -17,8 +17,14 @@ export default async function handler(
 
     try {
         if (req.method === "POST") {
-            const { type, name, date, personnelIDsSortedByPlatoon: attendeeIDsSortedByPlatoon, sortedByPlatoon, reasons } = req.body;
-           
+            const {
+                type,
+                name,
+                date,
+                personnelIDsSortedByPlatoon: attendeeIDsSortedByPlatoon,
+                sortedByPlatoon,
+                reasons,
+            } = req.body;
 
             if (!type || !name || !date || !attendeeIDsSortedByPlatoon)
                 return res
@@ -29,7 +35,8 @@ export default async function handler(
             const attendeeIDs = Object.values(
                 attendeeIDsSortedByPlatoon
             ).flat();
-            const personnel = Object.values<ExtendedPersonnel[]>(sortedByPlatoon).flat()
+            const personnel =
+                Object.values<ExtendedPersonnel[]>(sortedByPlatoon).flat();
             // console.log(personnelIDs);
 
             // ensure that all personnel IDs are available for the user to edit
@@ -45,45 +52,98 @@ export default async function handler(
             //             error: "One or more personnel IDs are not eligible for the user to edit!",
             //         }); // should never fire unless the user is doing some trickery
 
+            const startDate = formatMySQLDateHelper(date[0]);
+            const endDate = formatMySQLDateHelper(date[1]);
 
             // Check to make sure no events are alr added with same details
-            const addedEvent = await executeQuery({
-                query: `SELECT COUNT(ha_ID) as number FROM ha_list WHERE type = ? AND name = ? AND date = ?`,
-                values: [type.value, name, formatMySQLDateHelper(date)],
+            // const addedEvent = await executeQuery({
+            //     query: `SELECT COUNT(activity_ID) as number FROM activity_list WHERE type = ? AND name = ? AND date = ? AND unit = ? AND company = ?`,
+            //     values: [
+            //         type.value,
+            //         name,
+            //         formatMySQLDateHelper(startDate),
+            //         session.user.unit,
+            //         session.user.company,
+            //     ],
+            // });
+
+            // if (addedEvent[0].number > 0) {
+            //     return res.status(400).json({
+            //         error: "Event already added!",
+            //     });
+            // }
+
+            // For every day in startDate and endDate inclusive, add an event
+            const getDaysArray = function (startDate: Date, endDate: Date) {
+                for (
+                    var a = [], d = new Date(startDate);
+                    d <= new Date(endDate);
+                    d.setDate(d.getDate() + 1)
+                ) {
+                    a.push(new Date(d));
+                }
+                return a;
+            };
+
+
+            // Get the group iD
+            const groupID = await executeQuery({
+                query: `SELECT MAX(group_ID) as max FROM activity_list`,
+                values: []
             })
-          
-            if (addedEvent[0].number > 0) {
-                return res
-                    .status(400)
-                    .json({
-                        error: "Event already added!",
-                    });
+            const newGroupID = groupID[0].max + 1
+            const dates = getDaysArray(new Date(date[0]), new Date(date[1]));
+            const activity_IDs = [];
+            for (let i = 0; i < dates.length; i++) { 
+                let loopDate = dates[i];
+            
+         
+                // add the event
+                const responseData = await executeQuery({
+                    query: `INSERT INTO activity_list SET group_ID = ?, type = ?, name = ?, date = ?, start_date = ?, end_date = ?, day = ?, editor_ID = ?, unit = ?, company = ?`,
+                    values: [
+                        newGroupID,
+                        type.value,
+                        name,
+                        formatMySQLDateHelper(loopDate.toString()),
+                        formatMySQLDateHelper(date[0].toString()),
+                        formatMySQLDateHelper(date[1].toString()),
+                        
+                        i+1,
+                        session.user.email,
+                        session.user.unit,
+                        session.user.company,
+                    ],
+                });
+
+                const activity_ID = responseData.insertId;
+                activity_IDs.push(activity_ID);
+                // add the personnel who went
+                await executeQuery({
+                    query: `INSERT INTO activity_attendees (activity_ID, personnel_ID) VALUES ?`,
+                    values: [[...attendeeIDs.map((id) => [activity_ID, id])]],
+                });
+
+                const absentees = personnel.filter(
+                    (person) => !attendeeIDs.includes(person.personnel_ID)
+                );
+
+                const query = `INSERT INTO activity_absentees (activity_ID, personnel_ID, reason) VALUES ?`;
+                const values = [
+                    [
+                        ...absentees.map((person) => [
+                            activity_ID,
+                            person.personnel_ID,
+                            reasons[person.personnel_ID],
+                        ]),
+                    ],
+                ];
+                console.log({ values, attendeeIDs });
+                await executeQuery({
+                    query,
+                    values,
+                });
             }
-            // add the event
-            const responseData = await executeQuery({
-                query: `INSERT INTO ha_list SET type = ?, name = ?, date = ?, editor_ID = ?`,
-                values: [type.value, name, formatMySQLDateHelper(date), session.user.email],
-            })
-            
-            const ha_ID = responseData.insertId;
-
-            // add the personnel who went 
-            await executeQuery({
-                query: `INSERT INTO ha_attendees (ha_ID, personnel_ID) VALUES ?`,
-                values: [[...attendeeIDs.map(id => [ha_ID, id])]],
-                
-            })
-
-            const absentees = personnel.filter(person => !attendeeIDs.includes(person.personnel_ID))
-            
-
-            const query = `INSERT INTO ha_absentees (ha_ID, personnel_ID, reason) VALUES ?`
-            const values = [[...absentees.map(person => [ha_ID, person.personnel_ID, reasons[person.personnel_ID]])]]
-            console.log({values, attendeeIDs})
-            await executeQuery({
-                query,
-                values,
-            })
             // add the personnel who didn't go
             // const absenteesResult:{personnel_ID: number}[] = await executeQuery({
             //     query: `SELECT personnel_ID FROM personnel WHERE personnel_ID NOT IN (?) AND unit = ? AND company = ? AND DATE(post_in) <= ? AND DATE(ord) >= ?`,
@@ -104,10 +164,10 @@ export default async function handler(
             // // );
 
             // await executeQuery({
-            //     query: `INSERT INTO ha_absentees (ha_ID, personnel_ID) VALUES ?`,
-            //     values: [[...absentees.map(id => [ha_ID, id])]],
+            //     query: `INSERT INTO activity_absentees (activity_ID, personnel_ID) VALUES ?`,
+            //     values: [[...absentees.map(id => [activity_ID, id])]],
             // })
-            res.json({ success: true });
+            res.json({ success: true, data: { activity_IDs } });
         }
     } catch (e) {
         console.log(e);

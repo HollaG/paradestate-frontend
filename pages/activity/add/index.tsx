@@ -52,16 +52,16 @@ import CustomStepper from "../../../components/Auth/AuthStepper";
 import ORDInput from "../../../components/Forms/Controlled/ORDInput";
 import PesInput from "../../../components/Forms/Controlled/PesInput";
 import PostInInput from "../../../components/Forms/Controlled/PostInInput";
-import ActivityTypeInput from "../../../components/Forms/Controlled/HA/ActivityTypeInput";
+import ActivityTypeInput from "../../../components/Forms/Controlled/Activity/ActivityTypeInput";
 import RankInput from "../../../components/Forms/Controlled/RankInput";
 import ServiceStatusInput from "../../../components/Forms/Controlled/ServiceStatusInput";
 import ErrorText from "../../../components/Forms/ErrorText";
 import HelpText from "../../../components/Forms/HelpText";
 import { NextProtectedPage } from "../../../lib/auth";
 import platoons from "../../api/auth/platoons";
-import DateInput from "../../../components/Forms/Controlled/HA/DateInput";
+import DateInput from "../../../components/Forms/Controlled/Activity/DateInput";
 import { useEffect, useState } from "react";
-import HAStepper from "../../../components/HA/HAStepper";
+import HAStepper from "../../../components/Activity/ActivityStepper";
 import { sendPOST } from "../../../lib/fetcher";
 
 import { ExtendedPersonnel } from "../../../types/database";
@@ -77,7 +77,14 @@ import { format } from "date-fns";
 import Assignments from "../../../config/assignments.json";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
-const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
+import CustomPlainDateRangePicker from "../../../components/Dates/CustomPlainDateRangePicker";
+import CustomDatePicker from "../../../components/Dates/CustomDatePicker";
+import CustomDateRangePicker from "../../../components/Dates/CustomDateRangePicker";
+import CustomStatusDateRangePicker from "../../../components/Dates/CustomStatusDateRangePicker";
+const Tags: React.FC<{
+    person: ExtendedPersonnel;
+    handleClick: () => void | Promise<boolean>;
+}> = ({ person, handleClick }) => {
     const tags = [];
 
     if (person.locationArr && person.locationArr.length) {
@@ -88,7 +95,8 @@ const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
                     variant="subtle"
                     colorScheme="red"
                     key={tags.length}
-                    // onClick={onOpen}
+                    onClick={() => handleClick()}
+                    cursor="pointer"
                     // sx={{ cursor: "pointer" }}
                 >
                     {/* <TagLeftIcon as={IoCheckmarkDoneOutline} boxSize='12px'/> */}
@@ -112,7 +120,14 @@ const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     }
     if (person.status_row_ID) {
         tags.push(
-            <Tag key={tags.length} size="sm" variant="subtle" colorScheme="red">
+            <Tag
+                key={tags.length}
+                size="sm"
+                variant="subtle"
+                colorScheme="red"
+                onClick={() => handleClick()}
+                cursor="pointer"
+            >
                 <TagLabel>On status</TagLabel>
                 <TagRightIcon as={IoOpenOutline} />
             </Tag>
@@ -181,9 +196,12 @@ const PersonAccordionItem: React.FC<{
                     <Checkbox isChecked={isChecked} onChange={handleCheck} />
                     <PersonBasicDetails
                         person={person}
-                        handleClick={handleClick}
+                        // handleClick={handleClick}
                     >
-                        <MemoizedTags person={person} />
+                        <MemoizedTags
+                            person={person}
+                            handleClick={handleClick}
+                        />
                     </PersonBasicDetails>
                 </Stack>
 
@@ -287,7 +305,18 @@ const MemoizedPlatoonAccordionItem = React.memo(PlatoonAccordionItem);
 const AddParticipants: React.FC<{
     data: { [key: string]: ExtendedPersonnel[] };
     submit: (data: any, reasons: any) => Promise<void>;
-}> = ({ data, submit }) => {
+    date: (Date | string)[];
+    setStage: React.Dispatch<React.SetStateAction<0 | 2 | 1>>;
+}> = ({ data, submit, date, setStage }) => {
+    console.log(date);
+    const activityDate = format(
+        new Date(date[0]),
+        Assignments.datewithnameformat
+    );
+    const activityEndDate = format(
+        new Date(date[1]),
+        Assignments.datewithnameformat
+    );
     console.log({ data }, "------------------------");
     const defaultIndex = Object.keys(data).map((_, index) => index);
     const [index, setIndex] = useState<number[]>(defaultIndex); // todo - set this to the user platoon
@@ -341,6 +370,24 @@ const AddParticipants: React.FC<{
         <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(submitFn)}>
                 <Stack direction="column">
+                    <Alert status="info">
+                        <AlertIcon />
+                        <Flex flexWrap="wrap">
+                            <Text>
+                                Accurate for{" "}
+                                {activityDate}{date[0] !== date[1] && " (Day 1)"}.
+                            </Text>
+                            <Button
+                                size="xs"
+                                colorScheme="blue"
+                                ml={2}
+                                onClick={() => setStage(0)}
+                            >
+                                {" "}
+                                Change{" "}
+                            </Button>
+                        </Flex>
+                    </Alert>
                     <SearchInput setSearch={setSearch} />
                     <Accordion
                         defaultIndex={Object.keys(data).map(
@@ -383,7 +430,7 @@ const HAAddPage: NextProtectedPage = () => {
     const [formData, setFormData] = useState<{
         type: any;
         name: any;
-        date: any;
+        date: (Date|string)[];
         personnel: {
             [key: string]: ExtendedPersonnel[];
         };
@@ -404,21 +451,29 @@ const HAAddPage: NextProtectedPage = () => {
     const [isSubmittingHAInfo, setIsSubmittingHAInfo] = useState(false);
     const submitActivityInfo = async (data: any) => {
         console.log(data);
+        
         setIsSubmittingHAInfo(true);
-
-        const responseData = await sendPOST("/api/ha/getParticipants", data);
+        if (!data.activity_name) data.activity_name = data.activity_type.value;
+        const responseData = await sendPOST(
+            "/api/activity/getParticipants",
+            data
+        );
         console.log("Got a response - ", responseData);
         if (responseData.success) {
             setStage(1);
             setFormData(responseData.data);
+            setIsSubmittingHAInfo(false);
+        } else {
+            alert("error TODO");
         }
     };
 
+    const [activityIDs, setActivityIDs] = useState<number[]>([]);
     const submitPersonnelInfo = async (data: any, reasons: any) => {
         console.log({ reasons, data });
         setStage(2);
         setAttendeeIDsSortedByPlatoon(data);
-        const responseData = await sendPOST("/api/ha/add", {
+        const responseData = await sendPOST("/api/activity/add", {
             personnelIDsSortedByPlatoon: data,
             sortedByPlatoon: formData?.personnel,
             type: formData?.type,
@@ -429,6 +484,8 @@ const HAAddPage: NextProtectedPage = () => {
 
         if (responseData.error) {
             alert(responseData.error);
+        } else {
+            setActivityIDs(responseData.data.activity_IDs);
         }
     };
 
@@ -442,19 +499,28 @@ const HAAddPage: NextProtectedPage = () => {
             return () => clearInterval(timer);
         }
     }, [stage, setTimeLeft]);
-    const router = useRouter()
+
+    const resetPage = () => {
+        setStage(0);
+        setFormData(undefined);
+        setAttendeeIDsSortedByPlatoon({});
+        setTimeLeft(10);
+        setIsSubmittingHAInfo(false);
+
+        reset()
+    };
     if (timeLeft < 0) {
-        setStage(0)
-        setFormData(undefined)
-        setAttendeeIDsSortedByPlatoon({})
-        setTimeLeft(10)
-        setIsSubmittingHAInfo(false)
+        resetPage();
     }
     return (
         <>
             <Stack>
                 <Center>
-                    <Heading> Add a(n) HA </Heading>
+                    <Heading>
+                        {stage === 0 && "Add an activity"}
+                        {stage === 1 && `Adding ${formData?.name}`}
+                        {stage === 2 && "Activity added "}
+                    </Heading>
                 </Center>
                 <Center>
                     <HAStepper step={stage} />
@@ -471,28 +537,45 @@ const HAAddPage: NextProtectedPage = () => {
                         <Button colorScheme="teal"> Import </Button>
                     </Box>
                 </Center> */}
-                            <Text pl={2}> All fields are required. </Text>
+                            {/* <Text pl={2}> All fields are required. </Text> */}
                             <Stack direction="column" spacing={6}>
                                 <ActivityTypeInput
                                     control={control}
                                     errors={errors}
                                 />
-                                <DateInput control={control} errors={errors} />
                                 <Box>
                                     <InputGroup size="sm">
                                         <InputLeftAddon children="Name" />
                                         <Input
-                                            placeholder="Name of HA"
-                                            {...register("activity_name", {
-                                                required: true,
-                                            })}
+                                            placeholder="Optional; will be the Type if left blank."
+                                            {...register("activity_name", {})}
                                         />
                                     </InputGroup>
-                                    {errors?.activity_name?.type === "required" && (
+                                    {/* {errors?.activity_name?.type ===
+                                        "required" && (
                                         <ErrorText text="Please enter a name!" />
-                                    )}
+                                    )} */}
                                 </Box>
+                                {/* <DateInput control={control} errors={errors} /> */}
 
+                                {/* If a range is set, then separate activities will be set, ignore for now */}
+                                {/* <CustomPlainDateRangePicker
+                                    startLeftAdorn="Start"
+                                    endLeftAdorn="End"
+                                    startPlaceholder="Start Date"
+                                    endPlaceholder="End Date"
+                                    control={control}
+                                    inputName={"activity_date"}
+                                /> */}
+                                <CustomStatusDateRangePicker
+                                    startLeftAdorn="Start"
+                                    startPlaceholder="Status start date"
+                                    endLeftAdorn="End"
+                                    endPlaceholder="Status end date"
+                                    defaultValues={[new Date(), new Date()]}
+                                    inputName="activity_date"
+                                    control={control}
+                                />
                                 <Center>
                                     <Button
                                         colorScheme="teal"
@@ -510,6 +593,8 @@ const HAAddPage: NextProtectedPage = () => {
                     <AddParticipants
                         data={formData.personnel}
                         submit={submitPersonnelInfo}
+                        date={formData.date}
+                        setStage={setStage}
                     />
                 )}
                 {stage === 2 && (
@@ -518,9 +603,12 @@ const HAAddPage: NextProtectedPage = () => {
                             <Text>
                                 Added {formData?.name} on{" "}
                                 {format(
-                                    new Date(formData?.date || new Date()),
+                                    new Date(formData?.date[0] || new Date()),
                                     Assignments.dateformat
-                                )}
+                                )} { formData?.date[1] !== formData?.date[0] ? `to ${format(
+                                    new Date(formData?.date[1] || new Date()),
+                                    Assignments.dateformat
+                                )}` : ""}
                             </Text>
                             <Text>
                                 {
@@ -542,7 +630,10 @@ const HAAddPage: NextProtectedPage = () => {
                                 mt={1}
                                 justifyContent="center"
                             >
-                                <NextLink href="/ha" passHref>
+                                <NextLink
+                                    href={`/activity/${activityIDs && activityIDs[0]}`}
+                                    passHref
+                                >
                                     <Button
                                         size="xs"
                                         colorScheme="teal"
@@ -551,16 +642,15 @@ const HAAddPage: NextProtectedPage = () => {
                                         Edit activity
                                     </Button>
                                 </NextLink>
-                                <NextLink href="/ha" passHref>
-                                    <Button
-                                        size="xs"
-                                        colorScheme="teal"
-                                        as={Link}
-                                    >
-                                        Back to main page ({timeLeft}s)
-                                    </Button>
-                                </NextLink>
-                                
+
+                                <Button
+                                    size="xs"
+                                    colorScheme="teal"
+                                    as={Link}
+                                    onClick={() => resetPage()}
+                                >
+                                    Back to adding ({timeLeft}s)
+                                </Button>
                             </Stack>
                         </Stack>
                     </CustomBigAlert>

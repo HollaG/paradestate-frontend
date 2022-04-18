@@ -6,7 +6,7 @@ import NextLink from "next/link";
 const PersonBasicDetails: React.FC<{
     person: ExtendedPersonnel;
     children: ReactNode;
-    handleClick: () => Promise<boolean>|void
+    handleClick?: () => Promise<boolean> | void;
 }> = ({ person, children, handleClick }) => (
     <Flex alignItems="center">
         <Box>
@@ -24,9 +24,15 @@ const PersonBasicDetails: React.FC<{
                         }}
                         passHref
                     > */}
+                    {handleClick ? (
                         <Link onClick={handleClick}>
                             {person.rank} {person.name}
                         </Link>
+                    ) : (
+                        <Link href={`/personnel/manage/${person.personnel_ID}`} isExternal>
+                            {person.rank} {person.name}
+                        </Link>
+                    )}
                     {/* </NextLink> */}
                 </Text>
             </Stack>
