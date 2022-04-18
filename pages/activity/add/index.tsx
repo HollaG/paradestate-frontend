@@ -308,7 +308,8 @@ const AddParticipants: React.FC<{
     date: (Date | string)[];
     setStage: React.Dispatch<React.SetStateAction<0 | 2 | 1>>;
 }> = ({ data, submit, date, setStage }) => {
-    console.log(date);
+    console.log('rerendering')
+  
     const activityDate = format(
         new Date(date[0]),
         Assignments.datewithnameformat
@@ -317,7 +318,7 @@ const AddParticipants: React.FC<{
         new Date(date[1]),
         Assignments.datewithnameformat
     );
-    console.log({ data }, "------------------------");
+    
     const defaultIndex = Object.keys(data).map((_, index) => index);
     const [index, setIndex] = useState<number[]>(defaultIndex); // todo - set this to the user platoon
 
@@ -341,26 +342,26 @@ const AddParticipants: React.FC<{
     // This creates an object that has the keys which correspond to the platoon names,
     // then it sets the properties an array of personnel ID
     // where each personnel is going to be in camp AND has no status row ID
-    console.log({ checkedIDsState });
+    
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [search, setSearch] = useState("");
-    useEffect(() => {
-        if (search.length && data) {
-            // do stuff
-            // Open all the tabs
-            setIndex(
-                [
-                    ...Object.keys(data).map((_, index) => index),
-                    Object.keys(data).length,
-                ] // add the ORD accordion
-            );
-        } else {
-            // Only set the index if it hasn't been set yet
+    // useEffect(() => {
+    //     if (search.length && data) {
+    //         // do stuff
+    //         // Open all the tabs
+    //         setIndex(
+    //             [
+    //                 ...Object.keys(data).map((_, index) => index),
+    //                 Object.keys(data).length,
+    //             ] // add the ORD accordion
+    //         );
+    //     } else {
+    //         // Only set the index if it hasn't been set yet
 
-            setIndex(defaultIndex);
-        }
-    }, [search, data, defaultIndex]);
+    //         setIndex(defaultIndex);
+    //     }
+    // }, [search, data, defaultIndex]);
 
     const methods = useForm<any>();
     const submitFn = (reasons: any) => {
@@ -426,6 +427,7 @@ const AddParticipants: React.FC<{
 };
 
 const HAAddPage: NextProtectedPage = () => {
+    console.log("page rerendering")
     const [stage, setStage] = useState<0 | 1 | 2>(0);
     const [formData, setFormData] = useState<{
         type: any;
