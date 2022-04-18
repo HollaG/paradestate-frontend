@@ -1,7 +1,15 @@
 import { Box, Flex, useColorModeValue } from "@chakra-ui/react";
 import { ReactNode } from "react";
 
-const SmallCard: React.FC<{ children: ReactNode, colors?: [string, string], borderColors?: [string, string] }> = ({ children, colors = ["white", 'gray.800'], borderColors = ["white", "gray.800"] }) => {
+const SmallCard: React.FC<{
+    children: ReactNode;
+    colors?: [string, string];
+    borderColors?: [string, string];
+}> = ({
+    children,
+    colors = ["white", "gray.800"],
+    borderColors = ["white", "gray.800"],
+}) => {
     return (
         <Box
             px={1}
@@ -15,7 +23,7 @@ const SmallCard: React.FC<{ children: ReactNode, colors?: [string, string], bord
             }}
             w="fit-content"
             border="1px"
-            borderColor={useColorModeValue(borderColors[0], borderColors[1])} 
+            borderColor={useColorModeValue(borderColors[0], borderColors[1])}
         >
             {children}
         </Box>

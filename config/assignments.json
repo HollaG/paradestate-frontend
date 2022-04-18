@@ -1,131 +1,299 @@
 {
     "separator": "-_-_-",
-    "svc_status": ["NSF/NSMan", "REG", "SAFVC"],
-	"rank_army": {
-		"REC": "Recruit",
-		"PTE": "Private",
-		"LCP": "Lance Corporal",
-		"CPL": "Corporal",
-		"CFC": "Corporal First Class",
-		"3SG": "Third Sergeant",
-		"2SG": "Second Sergeant",
-		"1SG": "First Sergeant",
-		"SSG": "Staff Sergeant",
-		"MSG": "Master Sergeant",
-		"3WO": "Third Warrant Officer",
-		"2WO": "Second Warrant Officer",
-		"1WO": "First Warrant Officer",
-		"SWO": "Staff Warrant Officer",
-		"MWO": "Master Warrant Officer",
-		"CWO": "Chief Warrant Officer",
-		"2LT": "Second Lieutenant",
-		"LTA": "Lieutenant",
-		"CPT": "Captain",
-		"MAJ": "Major",
-		"LTC": "Lieutenant Colonel",
-		"SLTC": "Senior Lieutenant Colonel",
-		"COL": "Colonel",
-		"BG": "Brigadier-General",
-		"MG": "Major-General",
-		"LG": "Lieutenant General",
-		"GEN": "General"
-
-	},
-	"commander": {
-		"officer_wospec": ["2LT", "LTA", "CPT", "MAJ", "LTC", "SLTC", "COL", "BG", "MG", "LG", "GEN", "MSG", "3WO", "2WO", "1WO", "SWO", "MWO", "CWO"],
-		"spec": ["3SG", "2SG", "1SG", "SSG"],
-		"men": ["REC", "PTE", "LCP", "CPL", "CFC"]
-	},
-    
-    "pes": [
-        "A", "B1", "B2", "B3", "B4", "C2", "C9", "D", "E1", "E9", "F"
+    "svc_status": [
+        "NSF/NSMan",
+        "REG",
+        "SAFVC"
     ],
-	"formats": {
-		"single_date_no_time": "dd/MM/yyyy",
-		"single_date_AMPM": "dd/MM/yyyy a" 
-	},
-	"dateformat": "dd/MM/yyyy",
-	"datenoyear": "D/M ddd",
-	"dateampmformat": "dd/MM/yyyy a",
-	"mysqldateformat": "yyyy-MM-dd",
-	"mysqltimeformat": "HHmm",
-	"mysqldatetimeformat": "yyyy-MM-dd HHmm",
-	"datetimeformat": "dd/MM/yyyy h:mm a",
-	"timeformat": "hh:mm A",
-	"datepickers": {
-		"single_no_time": {
-			"format": "dd/MM/yyyy",
-			"date": true,
-			"time": false,
-			"year": false,
-			"clearButton": false,
-			"nowButton": true,
-			"switchOnClick": true,
-			"cancelText": "CANCEL",
-			
-			"weekStart": 1
-		},
-		"single_time": {
-			"format": "dd/MM/yyyy hh:mm A",
-			"date": true,
-			"time": true,
-			"year": false,
-			"shortTime": true,
-			"clearButton": false,
-			"nowButton": false,
-			"switchOnClick": true,
-			"cancelText": "CANCEL",
-			
-			"weekStart": 1
-		},
-		"double_no_time": {			
-			"showDropdowns": true,
-			"locale": {
-				"format": "dd/MM/yyyy"
-			}
-		},
-		
-		"double_time": {			
-			"showDropdowns": true,
-			"timePicker": true,
-			"locale": {
-				"format": "dd/MM/yyyy"
-			}
-		}
-	},
-	"datepickers_old": {
-		"single_no_time": {
-			"singleDatePicker": true,
-			"showDropdowns": true,
-			"opens": "center",
-			"locale": {
-				"format": "dd/MM/yyyy"
-			}
-		},
-		"double_no_time": {			
-			"showDropdowns": true,
-			"locale": {
-				"format": "dd/MM/yyyy"
-			}
-		},
-		"single_time": {
-			"singleDatePicker": true,
-			"showDropdowns": true,
-			"timePicker": true,
-			"opens": "center",
-			"locale": {
-				"format": "dd/MM/yyyy hh:mm A"
-			}
-		},
-		"double_time": {			
-			"showDropdowns": true,
-			"timePicker": true,
-			"locale": {
-				"format": "dd/MM/yyyy"
-			}
-		}
-	}		
+    "rank_army": {
+        "REC": "Recruit",
+        "PTE": "Private",
+        "LCP": "Lance Corporal",
+        "CPL": "Corporal",
+        "CFC": "Corporal First Class",
+        "3SG": "Third Sergeant",
+        "2SG": "Second Sergeant",
+        "1SG": "First Sergeant",
+        "SSG": "Staff Sergeant",
+        "MSG": "Master Sergeant",
+        "3WO": "Third Warrant Officer",
+        "2WO": "Second Warrant Officer",
+        "1WO": "First Warrant Officer",
+        "SWO": "Staff Warrant Officer",
+        "MWO": "Master Warrant Officer",
+        "CWO": "Chief Warrant Officer",
+        "2LT": "Second Lieutenant",
+        "LTA": "Lieutenant",
+        "CPT": "Captain",
+        "MAJ": "Major",
+        "LTC": "Lieutenant Colonel",
+        "SLTC": "Senior Lieutenant Colonel",
+        "COL": "Colonel",
+        "BG": "Brigadier-General",
+        "MG": "Major-General",
+        "LG": "Lieutenant General",
+        "GEN": "General"
+    },
+    "commander": {
+        "officer_wospec": [
+            "2LT",
+            "LTA",
+            "CPT",
+            "MAJ",
+            "LTC",
+            "SLTC",
+            "COL",
+            "BG",
+            "MG",
+            "LG",
+            "GEN",
+            "MSG",
+            "3WO",
+            "2WO",
+            "1WO",
+            "SWO",
+            "MWO",
+            "CWO"
+        ],
+        "spec": [
+            "3SG",
+            "2SG",
+            "1SG",
+            "SSG"
+        ],
+        "men": [
+            "REC",
+            "PTE",
+            "LCP",
+            "CPL",
+            "CFC"
+        ]
+    },
+    "pes": [
+        "A",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "C2",
+        "C9",
+        "D",
+        "E1",
+        "E9",
+        "F"
+    ],
+    "formats": {
+        "single_date_no_time": "dd/MM/yyyy",
+        "single_date_AMPM": "dd/MM/yyyy a"
+    },
+    "dateformat": "dd/MM/yyyy",
+    "datenoyear": "D/M ddd",
+    "dateampmformat": "dd/MM/yyyy a",
+    "mysqldateformat": "yyyy-MM-dd",
+    "mysqltimeformat": "HHmm",
+    "mysqldatetimeformat": "yyyy-MM-dd HHmm",
+    "datetimeformat": "dd/MM/yyyy h:mm a",
+    "timeformat": "hh:mm A",
+    "datewithnameformat": "eee d LLL yyyy",
+    "datepickers": {
+        "single_no_time": {
+            "format": "dd/MM/yyyy",
+            "date": true,
+            "time": false,
+            "year": false,
+            "clearButton": false,
+            "nowButton": true,
+            "switchOnClick": true,
+            "cancelText": "CANCEL",
+            "weekStart": 1
+        },
+        "single_time": {
+            "format": "dd/MM/yyyy hh:mm A",
+            "date": true,
+            "time": true,
+            "year": false,
+            "shortTime": true,
+            "clearButton": false,
+            "nowButton": false,
+            "switchOnClick": true,
+            "cancelText": "CANCEL",
+            "weekStart": 1
+        },
+        "double_no_time": {
+            "showDropdowns": true,
+            "locale": {
+                "format": "dd/MM/yyyy"
+            }
+        },
+        "double_time": {
+            "showDropdowns": true,
+            "timePicker": true,
+            "locale": {
+                "format": "dd/MM/yyyy"
+            }
+        }
+    },
+    "datepickers_old": {
+        "single_no_time": {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "opens": "center",
+            "locale": {
+                "format": "dd/MM/yyyy"
+            }
+        },
+        "double_no_time": {
+            "showDropdowns": true,
+            "locale": {
+                "format": "dd/MM/yyyy"
+            }
+        },
+        "single_time": {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "timePicker": true,
+            "opens": "center",
+            "locale": {
+                "format": "dd/MM/yyyy hh:mm A"
+            }
+        },
+        "double_time": {
+            "showDropdowns": true,
+            "timePicker": true,
+            "locale": {
+                "format": "dd/MM/yyyy"
+            }
+        }
+    },
+    "activity_types": [
+        {
+            "label": "PT",
+            "value": "PT",
+            "color": "blue"
+        },
+        {
+            "label": "Practical",
+            "value": "Practical",
+            "color": "yellow"
+        },
+        {
+            "label": "Lecture",
+            "value": "Lecture",
+            "color": "orange"
+        },
+        {
+            "label": "Sharings",
+            "value": "Sharings",
+            "color": "orange"
+        },
+        {
+            "label": "Reflections",
+            "value": "Reflections",
+            "color": "orange"
+        },
+        {
+            "label": "Miscellaneous",
+            "value": "Miscellaneous",
+            "color": "cyan"
+        },
+        {
+            "label": "Safety & Security Sharings",
+            "value": "Safety & Security Sharings",
+            "color": "purple"
+        },
+        {
+            "label": "Huddle / Townhall",
+            "value": "Huddle / Townhall",
+            "color": "purple"
+        },
+        {
+            "label": "WPT",
+            "value": "WPT",
+            "color": "green"
+        }
 
+        
+    ],
+    "activities": [
+        {
+            "label": "Miscellaneous",
+            "value": "Miscellaneous"
+        },
+        {
+            "label": "Practical",
+            "value": "Practical"
+        },
+        {
+            "label": "WPT",
+            "value": "WPT"
+        },
+        {
+            "label": "Physical Training",
+            "options": [
+                {
+                    "label": "PT",
+                    "value": "PT"
+                },
+                {
+                    "label": "Route March",
+                    "value": "Route March"
+                },
+                {
+                    "label": "Combat Circuit",
+                    "value": "Combat Circuit"
+                }
+            ]
+        },
+        {
+            "label": "Lecture/Sharings/Reflections",
+            "options": [
+                {
+                    "label": "Lectures",
+                    "value": "Lectures"
+                },                
+                {
+                    "label": "Sharings",
+                    "value": "Sharings"
+                },
+                {
+                    "label": "Reflections",
+                    "value": "Reflections"
+                }
+            ]
+        },
+        {
+            "label": "Soldiering",
+            "options": [                
+                {
+                    "label": "Safety & Security Sharings",
+                    "value": "Safety & Security Sharings"
+                },
+                {
+                    "label": "Huddle/Townhall",
+                    "value": "Huddle/Townhall"
+                },
+                {
+                    "label": "Combat Shoot",
+                    "value": "Combat Shoot"
+                },
+                {
+                    "label": "VOC",
+                    "value": "VOC"
+                }
+            ]
+        }
+    ],
+    "activityColorMap": {
+        "PT": "blue",
+        "Practical": "yellow",
+        "Lecture": "orange",
+        "Sharings": "orange",
+        "Reflections": "orange",
+        "Miscellaneous": "cyan",
+        "Safety & Security Sharings": "purple",
+        "Huddle / Townhall": "purple",
+        "WPT": "green"
+        
 
-	
+    }
 }

@@ -70,6 +70,7 @@ import {
     IoHomeOutline,
     IoMailOutline,
     IoMedicalOutline,
+    IoMegaphoneOutline,
     IoPeopleOutline,
     IoSettingsOutline,
     IoTrendingUp,
@@ -86,17 +87,23 @@ interface LinkItemProps {
 }
 const LinkItems: (
     | {
-          name: string;
-          icon: IconType;
-          url: string;
+          name?: string;
+          icon?: IconType;
+          url?: string;
           isGroup?: undefined;
           disclosure?: undefined;
           children?: undefined;
+          isDivider?: boolean;
       }
     | {
           name: string;
           isGroup: boolean;
-          disclosure: "personnel" | "event" | "format";
+          disclosure:
+              | "personnel"
+              | "event"
+              | "format"
+              | "paradestate"
+              | "activities";
           children: {
               name: string;
               icon: IconType;
@@ -104,6 +111,7 @@ const LinkItems: (
           }[];
           icon: IconType;
           url?: undefined;
+          isDivider?: undefined;
       }
 )[] = [
     { name: "Dashboard", icon: IoHomeOutline, url: "/" },
@@ -114,6 +122,7 @@ const LinkItems: (
         icon: IoMedicalOutline,
         url: "/personnel/manage/status",
     },
+    { isDivider: true },
 
     {
         name: "Parade state",
@@ -124,6 +133,9 @@ const LinkItems: (
         name: "Status list",
         icon: IoMailOutline,
         url: "/deliverables/status-list",
+    },
+    {
+        isDivider: true
     },
     {
         name: "Personnel",
@@ -146,8 +158,28 @@ const LinkItems: (
                 icon: FiSettings,
                 url: "/personnel/manage/import",
             },
-            
         ],
+    },
+    {
+        name: "Activities",
+        isGroup: true,
+        disclosure: "activities",
+        icon: IoMegaphoneOutline,
+        children: [
+            {
+                name: "Overview",
+                icon: IoCalendarOutline,
+                url: "/activity",
+            },
+            {
+                name: "Add activity",
+                icon: FiSettings,
+                url: "/activity/add",
+            },
+        ],
+    },
+    {
+        isDivider: true,
     },
     { name: "Audit log", icon: IoFileTrayStackedOutline, url: "/audit-log" },
 
@@ -241,6 +273,8 @@ const Sidebar = (props: any) => {
         personnel: useDisclosure(),
         event: useDisclosure(),
         format: useDisclosure(),
+        paradestate: useDisclosure(),
+        activities: useDisclosure(),
     };
     const NavItem: React.FC<{ icon?: IconType; [key: string]: any }> = (
         props
@@ -318,7 +352,9 @@ const Sidebar = (props: any) => {
                 aria-label="Main Navigation"
             >
                 {LinkItems.map((link, index) => {
-                    if (link.isGroup) {
+                    if (link.isDivider) {
+                        return <Divider key={index} color="gray.400" my={1} opacity={0.3}/>;
+                    } else if (link.isGroup) {
                         return (
                             <Box key={index}>
                                 <NavItem
@@ -426,7 +462,7 @@ const Sidebar = (props: any) => {
                 <DrawerOverlay />
                 <DrawerContent>
                     <SidebarContent
-                    key={2}
+                        key={2}
                         w="full"
                         borderRight="none"
                         onClose={sidebar.onClose}
