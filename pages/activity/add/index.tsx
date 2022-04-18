@@ -360,7 +360,7 @@ const AddParticipants: React.FC<{
 
             setIndex(defaultIndex);
         }
-    }, [search, data?.sortedByPlatoon]);
+    }, [search, data, defaultIndex]);
 
     const methods = useForm<any>();
     const submitFn = (reasons: any) => {
