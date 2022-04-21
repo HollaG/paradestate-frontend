@@ -35,6 +35,8 @@ export interface Personnel extends BasicPersonnel {
     platoon: string;
     section: string;
     svc_status: string;
+    ha_active: boolean,
+    ha_end_date: Date
 }
 
 export interface ExtendedPersonnel extends Personnel {

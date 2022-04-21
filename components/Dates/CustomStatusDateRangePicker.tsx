@@ -97,7 +97,7 @@ const CustomStatusDateRangePicker: React.FC<{
                     } // Value has to be set to an array of length 2 for the start value and end value
                 ) => (
                     <MobileDateRangePicker
-                        minDate={row_ID ? undefined : subMonths(currentDate, 1)}
+                        // minDate={row_ID ? undefined : subMonths(currentDate, 1)}
                         value={value}
                         onChange={(dates: any) =>
                             validateStartBeforeEnd(dates)

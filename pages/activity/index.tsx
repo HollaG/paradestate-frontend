@@ -25,7 +25,7 @@ import {
     StatNumber,
     Spacer,
 } from "@chakra-ui/react";
-import { format } from "date-fns";
+import { addDays, format, isAfter } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useMemo, useState, useEffect, useRef } from "react";
 
@@ -34,7 +34,7 @@ import useSWR from "swr";
 import BasicCard from "../../components/Card/BasicCard";
 
 import { NextProtectedPage } from "../../lib/auth";
-import fetcher from "../../lib/fetcher";
+import fetcher, { sendPOST } from "../../lib/fetcher";
 import { Activity } from "../../types/activity";
 import { ExtendedPersonnel } from "../../types/database";
 
@@ -46,6 +46,7 @@ import ActivityCalendar, {
 import { Event } from "react-big-calendar";
 import { useRouter } from "next/router";
 import { IndividualActivityComponent } from "./[activity_ID]";
+import { isBefore, isSameDay, subDays } from "date-fns";
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
     selectedDate: Date;
@@ -147,19 +148,93 @@ const PlatoonAccordianItem: React.FC<{
         </AccordionItem>
     );
 };
+
+const ActivityCard: React.FC<{ activity: Activity; data: PageData }> = ({
+    activity,
+    data,
+}) => {
+    let activityDateText = `Upcoming activity on ${format(
+        new Date(activity.date),
+        Assignments.dateformat
+    )}`;
+    if (isSameDay(new Date(activity.date), new Date()))
+        activityDateText = `Activity today (${format(
+            new Date(activity.date),
+            Assignments.dateformat
+        )})`;
+    if (isBefore(new Date(activity.date), subDays(new Date(), 1)))
+        activityDateText = `Past activity on ${format(
+            new Date(activity.date),
+            Assignments.dateformat
+        )}`;
+
+    // TODO - what do we do with the old activities?  do we hide them or show them
+    // we can use TABS again?
+    if (isBefore(new Date(activity.date), subDays(new Date(), 1))) return null;
+    return (
+        <BasicCard>
+            <Stat>
+                <StatLabel>{activityDateText}</StatLabel>
+                <StatNumber>
+                    <Skeleton
+                        isLoaded={!!data}
+                        height="36px"
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                    >
+                        <Flex width="100%" alignItems="center">
+                            <Text> {activity.name} </Text>
+                            <Spacer />
+                            <NextLink
+                                href={`/activity/${activity.activity_ID}`}
+                                passHref
+                            >
+                                <Button size="xs" colorScheme="teal" as={Link}>
+                                    View
+                                </Button>
+                            </NextLink>
+                        </Flex>
+                    </Skeleton>
+                </StatNumber>
+                <StatHelpText>
+                    <Skeleton isLoaded={!!data} height="21px">
+                        {activity.type} |{" "}
+                        {data.attendeesGroupedByActivityID[activity.activity_ID]
+                            .length || 0}{" "}
+                        /{" "}
+                        {(data.absenteesGroupedByActivityID[
+                            activity.activity_ID
+                        ].length || 0) +
+                            (data.attendeesGroupedByActivityID[
+                                activity.activity_ID
+                            ].length || 0)}{" "}
+                        |{" "}
+                        {activity.start_date !== activity.end_date &&
+                            `Day ${activity.day}`}
+                    </Skeleton>
+                </StatHelpText>
+            </Stat>
+        </BasicCard>
+    );
+};
+interface PageData {
+    sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
+    selectedDate: string;
+    upcomingActivities: Activity[];
+    attendeesGroupedByActivityID: {
+        [key: number]: number[];
+    };
+    absenteesGroupedByActivityID: {
+        [key: number]: number[];
+    };
+    calendarData: CustomEvent[];
+}
 const ActivityHomePage: NextProtectedPage = () => {
-    const { data, error } = useSWR<{
-        sortedByPlatoon: { [key: string]: ExtendedPersonnel[] };
-        selectedDate: string;
-        upcomingActivities: Activity[];
-        attendeesGroupedByActivityID: {
-            [key: number]: number[];
-        };
-        absenteesGroupedByActivityID: {
-            [key: number]: number[];
-        };
-        calendarData: CustomEvent[];
-    }>("/api/activity", fetcher);
+    useEffect(() => {
+        sendPOST("/api/activity/maintenance/refreshAll", {}).then(console.log);
+    }, []);
+    const { data, error } = useSWR<PageData>("/api/activity", fetcher);
 
     const { data: session } = useSession();
     console.log(data, error);
@@ -178,17 +253,17 @@ const ActivityHomePage: NextProtectedPage = () => {
     const handleAccordion = (index: number[]) => {
         setIndex(index);
     };
-    useEffect(() => {
-        // if (search.length && data?.sortedByPlatoon) {
-        //     // do stuff
-        //     // Open all the tabs
-        //     setIndex(
-        //         Object.keys(data.sortedByPlatoon).map((_, index) => index)
-        //     );
-        // } else {
-        setIndex(defaultIndex);
-        // }
-    }, [data?.sortedByPlatoon, defaultIndex]);
+    // useEffect(() => {
+    //     // if (search.length && data?.sortedByPlatoon) {
+    //     //     // do stuff
+    //     //     // Open all the tabs
+    //     //     setIndex(
+    //     //         Object.keys(data.sortedByPlatoon).map((_, index) => index)
+    //     //     );
+    //     // } else {
+    //     setIndex(defaultIndex);
+    //     // }
+    // }, [data?.sortedByPlatoon, defaultIndex]);
 
     const router = useRouter();
     const [activity_ID, setActivity_ID] = useState<number>();
@@ -216,75 +291,20 @@ const ActivityHomePage: NextProtectedPage = () => {
                         </Box>
                     )} */}
 
-                    <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={6}>
-                        {/* <Stack direction="row"> */}
-                        {data.upcomingActivities.map((activity, index) => (
-                            <BasicCard key={index}>
-                                <Stat>
-                                    <StatLabel>
-                                        Upcoming activity on{" "}
-                                        {format(
-                                            new Date(activity.date),
-                                            Assignments.dateformat
-                                        )}
-                                    </StatLabel>
-                                    <StatNumber>
-                                        <Skeleton
-                                            isLoaded={!!data}
-                                            height="36px"
-                                            display="flex"
-                                            justifyContent="space-between"
-                                            alignItems="center"
-                                        >
-                                            <Flex
-                                                width="100%"
-                                                alignItems="center"
-                                            >
-                                                <Text> {activity.name} </Text>
-                                                <Spacer />
-                                                <NextLink
-                                                    href={`/activity/${activity.activity_ID}`}
-                                                    passHref
-                                                >
-                                                    <Button
-                                                        size="xs"
-                                                        colorScheme="teal"
-                                                        as={Link}
-                                                    >
-                                                        View
-                                                    </Button>
-                                                </NextLink>
-                                            </Flex>
-                                        </Skeleton>
-                                    </StatNumber>
-                                    <StatHelpText>
-                                        <Skeleton
-                                            isLoaded={!!data}
-                                            height="21px"
-                                        >
-                                            {activity.type} |{" "}
-                                            {data.attendeesGroupedByActivityID[
-                                                activity.activity_ID
-                                            ].length || 0}{" "}
-                                            /{" "}
-                                            {(data.absenteesGroupedByActivityID[
-                                                activity.activity_ID
-                                            ].length || 0) +
-                                                (data
-                                                    .attendeesGroupedByActivityID[
-                                                    activity.activity_ID
-                                                ].length || 0)} | {activity.start_date !== activity.end_date && `Day ${activity.day}`}
-                                        </Skeleton>
-                                    </StatHelpText>
-                                </Stat>
-                            </BasicCard>
-                        ))}
-                        {/* </Stack> */}
-                    </SimpleGrid>
                     <ActivityCalendar
-                        data={data.calendarData}
+                        data={data.calendarData || []}
                         onClick={eventClickHandler}
                     />
+                    <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={6}>
+                        {data.upcomingActivities.map((activity, index) => (
+                            <ActivityCard
+                                key={index}
+                                activity={activity}
+                                data={data}
+                            />
+                        ))}
+                    </SimpleGrid>
+
                     {/* <Accordion
                         // defaultIndex={[0]}
                         allowMultiple
@@ -306,7 +326,9 @@ const ActivityHomePage: NextProtectedPage = () => {
                     </Accordion> */}
                 </Stack>
             )}
-            {data && !data.upcomingActivities && <Heading>No activities yet!</Heading> }
+            {data && !data.upcomingActivities && (
+                <Heading>No activities yet!</Heading>
+            )}
         </>
     );
 };

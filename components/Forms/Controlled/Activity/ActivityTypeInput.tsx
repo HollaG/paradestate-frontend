@@ -1,4 +1,17 @@
-import { Box, InputGroup, InputLeftAddon } from "@chakra-ui/react";
+import {
+    Box,
+    Checkbox,
+    Flex,
+    InputGroup,
+    InputLeftAddon,
+    InputRightAddon,
+    InputRightElement,
+    NumberDecrementStepper,
+    NumberIncrementStepper,
+    NumberInput,
+    NumberInputField,
+    NumberInputStepper,
+} from "@chakra-ui/react";
 import {
     ChakraStylesConfig,
     components,
@@ -7,9 +20,15 @@ import {
     OptionProps,
     Select,
 } from "chakra-react-select";
-import { Control, FieldValues, Controller } from "react-hook-form";
+import {
+    Control,
+    FieldValues,
+    Controller,
+    UseFormRegister,
+} from "react-hook-form";
 import ErrorText from "../../ErrorText";
 import Assignments from "../../../../config/assignments.json";
+import { useEffect } from "react";
 
 interface ActivityOption extends OptionBase {
     label: string;
@@ -31,24 +50,24 @@ const chakraStyles: ChakraStylesConfig<
     GroupBase<ActivityOption>
 > = {
     option: (provided, state) => {
-        
         let color = state.data.color;
-        if (state.isSelected) color+= '.400'
-        else if (state.isFocused) color+= '.200'
-        else color+= '.100'
+        if (state.isSelected) color += ".400";
+        else if (state.isFocused) color += ".200";
+        else color += ".100";
         return {
             ...provided,
             background: color,
         };
     },
-    control : (provided, state) => {
+    control: (provided, state) => {
         // console.log({provided, state})
-        return({
-        ...provided,
-        //@ts-ignore
-        backgroundColor: `${state.selectProps.value.color}.100`,
-        // color: "white"
-    })}
+        return {
+            ...provided,
+            //@ts-ignore
+            backgroundColor: `${state.selectProps.value.color}.100`,
+            // color: "white"
+        };
+    },
 };
 
 const ActivityTypeInput: React.FC<{
@@ -56,10 +75,15 @@ const ActivityTypeInput: React.FC<{
     errors: {
         [x: string]: any;
     };
-}> = ({ control, errors }) => {
+    register: UseFormRegister<any>;
+
+    contributes: "0" | "1" | "2";
+    setContributes: React.Dispatch<React.SetStateAction<"0" | "1" | "2">>;
+}> = ({ control, errors, register, contributes, setContributes }) => {
+    
     return (
-        <Box>
-            <InputGroup size="sm">
+        <Flex>
+            <InputGroup size="sm" flexGrow={1}>
                 <InputLeftAddon children="Type" />
                 <Box w="100%">
                     <Controller
@@ -86,10 +110,28 @@ const ActivityTypeInput: React.FC<{
                     />
                 </Box>
             </InputGroup>
-            {errors?.hatype?.type === "required" && (
-                <ErrorText text="Please select a type of activity!" />
-            )}
-        </Box>
+            <InputGroup size="sm" w="8.5rem" flexShrink={0}>
+                <InputLeftAddon children="HA units" />
+
+                <NumberInput
+                    size="sm"
+                    defaultValue={0}
+                    min={0}
+                    max={2}
+                    value={contributes}
+                    onChange={(event) =>
+                        (event === "0" || event === "1" || event === "2") &&
+                        setContributes(event as "0"|"1"|"2")
+                    }
+                >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                    </NumberInputStepper>
+                </NumberInput>
+            </InputGroup>
+        </Flex>
     );
 };
 

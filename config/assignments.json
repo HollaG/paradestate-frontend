@@ -214,75 +214,7 @@
 
         
     ],
-    "activities": [
-        {
-            "label": "Miscellaneous",
-            "value": "Miscellaneous"
-        },
-        {
-            "label": "Practical",
-            "value": "Practical"
-        },
-        {
-            "label": "WPT",
-            "value": "WPT"
-        },
-        {
-            "label": "Physical Training",
-            "options": [
-                {
-                    "label": "PT",
-                    "value": "PT"
-                },
-                {
-                    "label": "Route March",
-                    "value": "Route March"
-                },
-                {
-                    "label": "Combat Circuit",
-                    "value": "Combat Circuit"
-                }
-            ]
-        },
-        {
-            "label": "Lecture/Sharings/Reflections",
-            "options": [
-                {
-                    "label": "Lectures",
-                    "value": "Lectures"
-                },                
-                {
-                    "label": "Sharings",
-                    "value": "Sharings"
-                },
-                {
-                    "label": "Reflections",
-                    "value": "Reflections"
-                }
-            ]
-        },
-        {
-            "label": "Soldiering",
-            "options": [                
-                {
-                    "label": "Safety & Security Sharings",
-                    "value": "Safety & Security Sharings"
-                },
-                {
-                    "label": "Huddle/Townhall",
-                    "value": "Huddle/Townhall"
-                },
-                {
-                    "label": "Combat Shoot",
-                    "value": "Combat Shoot"
-                },
-                {
-                    "label": "VOC",
-                    "value": "VOC"
-                }
-            ]
-        }
-    ],
+    "ha_types": ["PT"],
     "activityColorMap": {
         "PT": "blue",
         "Practical": "yellow",

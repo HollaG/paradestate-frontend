@@ -62,6 +62,7 @@ import { FaClipboardCheck, FaRss, FaChevronDown } from "react-icons/fa";
 import {
     IoAnalyticsOutline,
     IoArrowForward,
+    IoBonfireOutline,
     IoCalendarOutline,
     IoChevronDown,
     IoChevronUp,
@@ -167,7 +168,12 @@ const LinkItems: (
         icon: IoMegaphoneOutline,
         children: [
             {
-                name: "Overview",
+                name: "Heat Acclimatisation",
+                icon: IoBonfireOutline,
+                url: "/ha"
+            },
+            {
+                name: "Agenda",
                 icon: IoCalendarOutline,
                 url: "/activity",
             },

@@ -8,6 +8,7 @@ export interface Activity {
     end_date: Date | string,
     day: number,
     type: keyof typeof Assignments.activityColorMap,
+    contributes: "0"|"1"|"2",
     editor_ID: string,
     unit: string,
     company: string

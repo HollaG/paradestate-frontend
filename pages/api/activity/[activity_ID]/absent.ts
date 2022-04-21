@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 
 import executeQuery from "../../../../lib/db";
+import { refreshPersonnelID } from "../../../../lib/ha";
 import { Activity } from "../../../../types/activity";
 
 export default async function handler(
@@ -48,6 +49,8 @@ export default async function handler(
             query: `INSERT INTO activity_absentees SET activity_ID = ?, personnel_ID = ?, reason = ?`,
             values: [activity_ID, req.body.personnel_ID, req.body.reason],
         });
+
+        await refreshPersonnelID(req.body.personnel_ID, session.user.company, session.user.unit);
 
         res.status(200).json({ success: true });
     }

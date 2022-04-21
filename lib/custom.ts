@@ -8,6 +8,7 @@ import {
     isBefore,
     isSameDay,
     parse,
+    subMonths,
 } from "date-fns";
 import { queryBuilder } from "mysql-query-placeholders";
 
@@ -839,7 +840,6 @@ export const generatePSObject = async (
         };
 
         statuses.forEach((status) => {
-           
             // if perm, we must add the full duration
             if (status.type === "perm") {
                 let custStart = replaceSlash(
@@ -863,7 +863,7 @@ export const generatePSObject = async (
                 let custEnd = replaceSlash(
                     format(new Date(status.end), Assignments.dateformat)
                 );
-               
+
                 o["INCLUDE-STATUSES"].push({
                     INDEX: o["INCLUDE-STATUSES"].length + 1,
                     NAME: status.status_name,
@@ -874,11 +874,10 @@ export const generatePSObject = async (
                 });
             }
         });
-      
+
         dict["INCLUDE-STATUS"].push(o);
-       
     }
-    
+
     // Checking COURSE table
     const course_personnel: GenericEvent[] = await executeQuery({
         query: `SELECT * FROM course_tracker LEFT JOIN personnel ON course_tracker.personnel_ID = personnel.personnel_ID WHERE personnel.unit = ? AND personnel.company = ? AND DATE(course_tracker.start) <= DATE(?) AND DATE(course_tracker.end) >= DATE(?) AND personnel.personnel_ID IN (?) AND DATE(ord) >= DATE(?) ORDER BY platoon ASC`,
@@ -1026,3 +1025,23 @@ export const generatePSObject = async (
 //     getHoursBetweenStartAndEndTimes(testTime.startTime, testTime.endTime)
 // );
 // console.log(results) // [24, 0, 12, 12]
+
+export const getDaysArray = function (s: Date, e: Date) {
+    for (
+        var a = [], d = new Date(s);
+        d <= new Date(e);
+        d.setDate(d.getDate() + 1)
+    ) {
+        a.push(new Date(d));
+    }
+    return a;
+};
+
+export const isYearTwo = (svc_status: string, ord: Date) => {
+    if (svc_status === "REG") {
+        return true;
+    }
+    const secondYearDate = subMonths(ord, 10);
+    if (isBefore(secondYearDate, new Date())) return true;
+    else return false;
+};

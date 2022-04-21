@@ -308,8 +308,8 @@ const AddParticipants: React.FC<{
     date: (Date | string)[];
     setStage: React.Dispatch<React.SetStateAction<0 | 2 | 1>>;
 }> = ({ data, submit, date, setStage }) => {
-    console.log('rerendering')
-  
+    console.log("rerendering");
+
     const activityDate = format(
         new Date(date[0]),
         Assignments.datewithnameformat
@@ -318,7 +318,7 @@ const AddParticipants: React.FC<{
         new Date(date[1]),
         Assignments.datewithnameformat
     );
-    
+
     const defaultIndex = Object.keys(data).map((_, index) => index);
     const [index, setIndex] = useState<number[]>(defaultIndex); // todo - set this to the user platoon
 
@@ -342,7 +342,6 @@ const AddParticipants: React.FC<{
     // This creates an object that has the keys which correspond to the platoon names,
     // then it sets the properties an array of personnel ID
     // where each personnel is going to be in camp AND has no status row ID
-    
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [search, setSearch] = useState("");
@@ -375,8 +374,8 @@ const AddParticipants: React.FC<{
                         <AlertIcon />
                         <Flex flexWrap="wrap">
                             <Text>
-                                Accurate for{" "}
-                                {activityDate}{date[0] !== date[1] && " (Day 1)"}.
+                                Accurate for {activityDate}
+                                {date[0] !== date[1] && " (Day 1)"}.
                             </Text>
                             <Button
                                 size="xs"
@@ -427,12 +426,12 @@ const AddParticipants: React.FC<{
 };
 
 const HAAddPage: NextProtectedPage = () => {
-    console.log("page rerendering")
+    console.log("page rerendering");
     const [stage, setStage] = useState<0 | 1 | 2>(0);
     const [formData, setFormData] = useState<{
         type: any;
         name: any;
-        date: (Date|string)[];
+        date: (Date | string)[];
         personnel: {
             [key: string]: ExtendedPersonnel[];
         };
@@ -447,15 +446,29 @@ const HAAddPage: NextProtectedPage = () => {
         control,
         handleSubmit,
         formState: { errors },
-        setError,
+        watch,
         reset,
     } = useForm<any>();
+    const watchActivityType = watch("activity_type");
+
+    const [contributes, setContributes] = useState<"0"|"1"|"2">("0");
+    console.log({contributes})
+    useEffect(() => {
+        if (watchActivityType && watchActivityType.value === "PT") {
+            console.log('setting contributes')
+            setContributes("1");
+           
+        } else {
+            setContributes("0");
+        }
+    }, [watchActivityType, setContributes]);
     const [isSubmittingHAInfo, setIsSubmittingHAInfo] = useState(false);
     const submitActivityInfo = async (data: any) => {
         console.log(data);
-        
+
         setIsSubmittingHAInfo(true);
         if (!data.activity_name) data.activity_name = data.activity_type.value;
+        
         const responseData = await sendPOST(
             "/api/activity/getParticipants",
             data
@@ -481,6 +494,7 @@ const HAAddPage: NextProtectedPage = () => {
             type: formData?.type,
             name: formData?.name,
             date: formData?.date,
+            contributes,
             reasons,
         });
 
@@ -509,11 +523,12 @@ const HAAddPage: NextProtectedPage = () => {
         setTimeLeft(10);
         setIsSubmittingHAInfo(false);
 
-        reset()
+        reset();
     };
     if (timeLeft < 0) {
         resetPage();
     }
+
     return (
         <>
             <Stack>
@@ -544,6 +559,9 @@ const HAAddPage: NextProtectedPage = () => {
                                 <ActivityTypeInput
                                     control={control}
                                     errors={errors}
+                                    register={register}
+                                    contributes={contributes}
+                                    setContributes={setContributes}
                                 />
                                 <Box>
                                     <InputGroup size="sm">
@@ -607,10 +625,15 @@ const HAAddPage: NextProtectedPage = () => {
                                 {format(
                                     new Date(formData?.date[0] || new Date()),
                                     Assignments.dateformat
-                                )} { formData?.date[1] !== formData?.date[0] ? `to ${format(
-                                    new Date(formData?.date[1] || new Date()),
-                                    Assignments.dateformat
-                                )}` : ""}
+                                )}{" "}
+                                {formData?.date[1] !== formData?.date[0]
+                                    ? `to ${format(
+                                          new Date(
+                                              formData?.date[1] || new Date()
+                                          ),
+                                          Assignments.dateformat
+                                      )}`
+                                    : ""}
                             </Text>
                             <Text>
                                 {
@@ -633,7 +656,9 @@ const HAAddPage: NextProtectedPage = () => {
                                 justifyContent="center"
                             >
                                 <NextLink
-                                    href={`/activity/${activityIDs && activityIDs[0]}`}
+                                    href={`/activity/${
+                                        activityIDs && activityIDs[0]
+                                    }`}
                                     passHref
                                 >
                                     <Button

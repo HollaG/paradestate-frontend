@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 import { formatMySQLDateHelper } from "../../../../lib/custom";
 import executeQuery from "../../../../lib/db";
+import { refreshAll } from "../../../../lib/ha";
 import { Activity } from "../../../../types/activity";
 import { ExtendedPersonnel, Personnel } from "../../../../types/database";
 export interface Absentee {
@@ -171,6 +172,10 @@ export default async function handler(
             query: `DELETE FROM activity_list WHERE activity_ID = ?`,
             values: [activity_ID],
         })
+
+        // refresh the HA status
+        await refreshAll(session.user.company, session.user.unit)
+
         res.status(200).json({success: true})
     }
     // res.json(data);

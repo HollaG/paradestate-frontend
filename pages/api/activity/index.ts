@@ -45,8 +45,8 @@ export default async function handler(
 
         // grab the upcoming activities
         const activities:Activity[] = await executeQuery({
-            query: `SELECT * FROM activity_list WHERE date >= DATE(?) AND unit = ? AND company = ? ORDER BY date ASC`,
-            values: [opts.selDate, opts.unit, opts.company],
+            query: `SELECT * FROM activity_list WHERE unit = ? AND company = ? ORDER BY date ASC`,
+            values: [opts.unit, opts.company],
         })
 
         if (!activities.length) return res.status(200).json({})
