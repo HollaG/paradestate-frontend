@@ -10,7 +10,13 @@ export interface Absentee {
     row_ID: number;
     personnel_ID: number;
     reason: string;
-    activity_ID: number
+    activity_ID: number;
+}
+
+export interface Attendee {
+    row_ID: number;
+    personnel_ID: number;
+    activity_ID: number;
 }
 
 export default async function handler(
@@ -159,24 +165,25 @@ export default async function handler(
             absentees,
         };
         res.json(response);
-    } else if (req.method === "DELETE") { 
-        // ensure perms 
+    } else if (req.method === "DELETE") {
+        // ensure perms
         const activity = await executeQuery({
             query: `SELECT * FROM activity WHERE activity_ID = ? AND unit = ? AND company = ?`,
             values: [activity_ID, session.user.unit, session.user.company],
         });
 
-        if (!activity) return res.status(400).json({error: "Insufficient permissions!"})
+        if (!activity)
+            return res.status(400).json({ error: "Insufficient permissions!" });
 
         await executeQuery({
             query: `DELETE FROM activity_list WHERE activity_ID = ?`,
             values: [activity_ID],
-        })
+        });
 
         // refresh the HA status
-        await refreshAll(session.user.company, session.user.unit)
+        await refreshAll(session.user.company, session.user.unit);
 
-        res.status(200).json({success: true})
+        res.status(200).json({ success: true });
     }
     // res.json(data);
 }

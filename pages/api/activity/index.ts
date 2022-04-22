@@ -6,7 +6,7 @@ import Assignments from "../../../config/assignments.json";
 import executeQuery from "../../../lib/db";
 import { Activity } from "../../../types/activity";
 import { ExtendedPersonnel, Personnel } from "../../../types/database";
-import { Absentee } from "./[activity_ID]";
+import { Absentee, Attendee } from "./[activity_ID]";
 import { Event } from "react-big-calendar";
 import { CustomEvent } from "../../../components/Calendar/ActivityCalendar";
 
@@ -60,7 +60,7 @@ export default async function handler(
             }
         } = {}
 
-        const listOfAttendeesForActivityIDs:{row_ID: number, personnel_ID: number, activity_ID: number}[] = await executeQuery({
+        const listOfAttendeesForActivityIDs:Attendee[] = await executeQuery({
             query: `SELECT * FROM activity_attendees WHERE activity_ID IN (?)`,
             values: [activity_IDs],
 
@@ -97,7 +97,7 @@ export default async function handler(
             title: `${activity.name} (${activity.type})`,
             activity_ID: activity.activity_ID,
             type: activity.type,
-            color: colorCalculator(activity.type),
+            color:  colorCalculator(activity.type),
             
         }))
 
@@ -106,5 +106,4 @@ export default async function handler(
     }
     // res.json(data);
 }
-
-const colorCalculator = (type: keyof typeof Assignments.activityColorMap) => Assignments.activityColorMap[type]
+export const colorCalculator = (type: keyof typeof Assignments.activityColorMap) => Assignments.activityColorMap[type]

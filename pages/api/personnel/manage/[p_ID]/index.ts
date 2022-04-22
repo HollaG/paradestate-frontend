@@ -6,6 +6,7 @@ import {
     isBefore,
     isEqual,
     isSameDay,
+    subMonths,
 } from "date-fns";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
@@ -410,6 +411,36 @@ export default async function handler(
                 // }
             }
 
+            const significantDates = [];
+            significantDates.push({
+                allDay: true,
+                // color: "green",
+                start: person[0].ord,
+                end: person[0].ord,
+                title: "ORD",
+            });
+            significantDates.push({
+                allDay: true,
+                // color: "green",
+                start: person[0].post_in,
+                end: person[0].post_in,
+                title: "Post In",
+            });
+
+            // second year date
+            const secondYearDate = subMonths(person[0].ord, 10);
+            let isSecondYear = false
+            if (person[0].svc_status === "REG" || isBefore(secondYearDate, new Date())) isSecondYear = true
+
+            if (person[0].svc_status !== "REG")
+                significantDates.push({
+                    allDay: true,
+                    // color: "green",
+                    start: secondYearDate,
+                    end: secondYearDate,
+                    title: "Yr 2 start",
+                });
+
             const locationArr = [];
             let onStatus = false;
             if (offsActive.length) locationArr.push("off");
@@ -442,9 +473,12 @@ export default async function handler(
                     ...maEvents,
                     ...otherEvents,
                     ...statusEvents,
+                    ...significantDates,
                 ],
                 locationArr,
                 onStatus,
+                isSecondYear,
+                secondYearDate
             };
 
             res.status(200).json(data);

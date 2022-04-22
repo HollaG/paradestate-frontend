@@ -68,7 +68,11 @@ const PersonAccordionItem: React.FC<{
                         <Text fontWeight="semibold">
                             <Link
                                 isExternal
-                                href={`/personnel/manage/${person.personnel_ID}`}
+                                // href={{
+                                //     pathName: `/personnel/manage/${person.personnel_ID}`,
+                                //     query: { view: "ha" },
+                                // }}
+                                href={`/personnel/manage/${person.personnel_ID}?view="ha"`}
                             >
                                 {person.rank} {person.name}
                             </Link>
@@ -99,13 +103,16 @@ const PersonAccordionItem: React.FC<{
                                     <Tag
                                         size="sm"
                                         variant="subtle"
-                                        colorScheme={differenceInBusinessDays(
-                                            new Date(person.ha_end_date),
-                                            new Date()
-                                        ) > 3 ? "green" : 'yellow'}
+                                        colorScheme={
+                                            differenceInBusinessDays(
+                                                new Date(person.ha_end_date),
+                                                new Date()
+                                            ) > 3
+                                                ? "green"
+                                                : "yellow"
+                                        }
                                     >
                                         <TagLabel>
-                                            
                                             {differenceInBusinessDays(
                                                 new Date(person.ha_end_date),
                                                 new Date()
@@ -145,7 +152,6 @@ const PersonAccordionItem: React.FC<{
                                         colorScheme="red"
                                     >
                                         <TagLabel>
-                                            
                                             {differenceInBusinessDays(
                                                 new Date(),
                                                 new Date(person.ha_end_date)

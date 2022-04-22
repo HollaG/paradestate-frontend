@@ -18,9 +18,9 @@ import { Box } from "@chakra-ui/react";
 import { colorArray, googleColors } from "../../lib/colors";
 
 export interface CustomEvent extends Event { 
-    activity_ID: number;
-    type: string,
-    color: string
+    activity_ID?: number;
+    type?: string,
+    color?: string
 }
 
 const locales = {
@@ -42,7 +42,19 @@ const ActivityCalendar: React.FC<{
     const eventStyleGetter: EventPropGetter<CustomEvent> = (event) => {
       
         console.log({event})
-
+        if (event.title?.toString().startsWith("Missed:")) { 
+            return {
+                style: {
+                    backgroundColor: "gray",
+                    color: "darkgray"
+                }
+            }
+        }
+        // if (event.title?.toString().startsWith("HA")) {
+        //     return {style: {
+        //         backgroundColor: event.color
+        //     }}
+        // }
         return {
             style: {
                 backgroundColor: googleColors[event.color as keyof typeof googleColors],

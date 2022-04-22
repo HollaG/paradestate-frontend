@@ -27,8 +27,16 @@ const muiTheme = createTheme({
         primary: {
             light: "#38B2AC", //Colors from Chakra-UI (Teal-400)
             main: "#319795", //Teal-500
-            dark: "#2C7A7B", //Teal-600
+            dark: "#2C7A7B", //Teal-600,
+            
         },
+        error: {
+            main: "#e53e3e"
+        }
+        , success: {
+            main: "#38A169"
+        }
+        // error: "#e53e3e" // chakra red colorscheme"
     },
     // stepper:  {
     //     iconColor: "red"

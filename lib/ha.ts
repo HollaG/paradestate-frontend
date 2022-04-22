@@ -1,7 +1,7 @@
 // Notes:
 // - When posted in, HA is considered achieved
 
-import { addDays, subMonths, isAfter, subDays } from "date-fns";
+import { addDays, subMonths, isAfter, subDays, isBefore } from "date-fns";
 import { Personnel } from "../types/database";
 import { getDaysArray, formatMySQLDateHelper } from "./custom";
 import executeQuery from "./db";
@@ -195,13 +195,16 @@ export const refreshAll = async (company: string, unit: string) => {
     );
 
     // Construct object to find out who went for what activities
+    const activity_IDs = activities.map((activity) => activity.activity_ID);
     const attendeesObject: {
         activity_ID: number;
         personnel_ID: number;
-    }[] = await executeQuery({
-        query: `SELECT * FROM activity_attendees WHERE activity_ID IN (?)`,
-        values: [activities.map((a) => a.activity_ID)],
-    });
+    }[] = activity_IDs.length
+        ? await executeQuery({
+              query: `SELECT * FROM activity_attendees WHERE activity_ID IN (?)`,
+              values: [activity_IDs],
+          })
+        : [];
 
     // Group according to personnel ID
     const attendedActivitiesGroupedByPersonnelID = attendeesObject.reduce<{
@@ -270,11 +273,20 @@ export const refreshAll = async (company: string, unit: string) => {
         let isSecondYear = false;
         if (isAfter(end, secondYearDate)) {
             // this dude is a second year soldier
+
             dateArrayHAForFirstYear = getDaysArray(post_in, secondYearDate);
+            // todo edge case - if the interval between post_in and ord is less than 10 months,
+            // secondYearDate will be before post_in.
+            // therefore,
+            // instead if subbing 12 days from secondYearDate,
+            // check if secondYearDate is before post_in, if so, then use post_in instead
             dateArrayHAForSecondYear = getDaysArray(
-                subDays(secondYearDate, 12), // 12 days before the start of 2nd year to account for them doing the 10 consective PTs before the swap to 2nd year
+                isBefore(secondYearDate, post_in)
+                    ? post_in
+                    : subDays(secondYearDate, 12), // 12 days before the start of 2nd year to account for them doing the 10 consective PTs before the swap to 2nd year
                 end
             );
+            console.log(dateArrayHAForFirstYear, dateArrayHAForSecondYear);
             isSecondYear = true;
         } else {
             // solely first year soldier

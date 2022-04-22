@@ -22,4 +22,6 @@ export const googleColors = {
     cyan: "#A4BDFC",
     purple: "#DBADFF",
     green: "#51B749",
+    // red: "#DC2127"
+    red: "#e53e3e"
 };

@@ -57,15 +57,15 @@ export const calculateMonthsToOrFrom = (date: [Date, Date]) => {
     if (diff > 0) {
         if (diff <= 1) {
             // one month left, return days
-            return `${days} days left`;
+            return `${Math.abs(days)} days left`;
         } else {
             // more than one month left, return months
-            return `${diff} months left`;
+            return `${Math.abs(diff)} months left`;
         }
     } else if (diff < 0) {
         if (Math.abs(diff) <= 1) {
             // one month ago, return days
-            return `${days} days ago`;
+            return `${Math.abs(days)} days ago`;
         } else {
             // More than 1 month ago, return months
             return `${Math.abs(diff)} months ago`;
