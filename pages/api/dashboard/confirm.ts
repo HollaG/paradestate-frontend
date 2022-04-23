@@ -26,7 +26,7 @@ export default async function handler(
 
         // Make hashmap mapping personnel_IDs to their details
         const personnel: Personnel[] = await executeQuery({
-            query: `SELECT * FROM personnel WHERE personnel_ID IN (?)`,
+            query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE personnel_ID IN (?)`,
             values: [personnel_IDs],
         });
         const personnelMap: { [key: string]: Personnel } = {};

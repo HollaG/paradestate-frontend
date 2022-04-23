@@ -77,8 +77,8 @@ export default async function handler(
             // 1) Get all the personnel IDs in the company
             let personnel: { personnel_ID: string; [key: string]: any }[] =
                 await executeQuery({
-                    query: `SELECT * FROM personnel WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?) ORDER BY platoon ASC`,
-                    values: [unit, company, mysqlFormatted, mysqlFormatted],
+                    query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active FROM personnel WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?) ORDER BY platoon ASC`,
+                    values: [mysqlFormatted, unit, company, mysqlFormatted, mysqlFormatted],
                 });
             let personnel_IDs = personnel.map((x) => x.personnel_ID);
             if (personnel_IDs.length == 0) return 0;
