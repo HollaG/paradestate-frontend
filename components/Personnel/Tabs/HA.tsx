@@ -32,9 +32,11 @@ const HA: React.FC = () => {
         }[];
         person: Personnel;
     }>(`/api/personnel/manage/${personnel_ID}/ha`, fetcher);
-    console.log({ data }, "ha");
 
-    const eventOnClick = (event: any) => {};
+
+    const eventOnClick = (event: CustomEvent) => {
+        router.push(`/activity/${event.activity_ID}`);
+    };
 
     if (data)
         return (

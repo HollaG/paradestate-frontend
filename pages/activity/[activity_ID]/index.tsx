@@ -116,10 +116,9 @@ const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
 
     search: string;
-    attending: boolean;
 
     absentee?: Absentee;
-}> = ({ person, search, attending, absentee }) => {
+}> = ({ person, search, absentee }) => {
     const { mutate } = useSWRConfig();
     const router = useRouter();
     const activity_ID = router.query.activity_ID;
@@ -183,7 +182,7 @@ const PersonAccordionItem: React.FC<{
                             <MemoizedTags person={person} />
                         </PersonBasicDetails>
                     </Stack>
-                    {!attending && (
+                    {absentee && (
                         <SmallCard
                             colors={["red.50", "gray.800"]}
                             borderColors={["red.100", "gray.800"]}
@@ -197,7 +196,7 @@ const PersonAccordionItem: React.FC<{
                 </Stack>
                 {/* <Spacer /> */}
                 <Flex alignItems="center" m={{ lg: "unset", base: "auto" }}>
-                    {attending && (
+                    {!absentee && (
                         <Button
                             size="xs"
                             ml={{ lg: "auto" }}
@@ -208,7 +207,7 @@ const PersonAccordionItem: React.FC<{
                             Set as absent
                         </Button>
                     )}
-                    {!attending && (
+                    {absentee && (
                         <Button
                             size="xs"
                             ml={{ lg: "auto" }}
@@ -252,16 +251,18 @@ const PersonAccordionItem: React.FC<{
 const PlatoonAccordianItem: React.FC<{
     personnel: ExtendedPersonnel[];
     platoon: string;
-    attendee_IDs: number[];
-    absentee_IDs: number[];
-    absentees: { [key: number]: Absentee[] };
+    // attendee_IDs: number[];
+    // absentee_IDs: number[];
+    absentees?: { [key: number]: Absentee[] };
+    total: number
     // search: string;
 }> = ({
     personnel,
     platoon,
-    attendee_IDs,
-    absentee_IDs,
+    // attendee_IDs,
+    // absentee_IDs,
     absentees,
+    total
     //  search
 }) => {
     const { data: session } = useSession();
@@ -274,13 +275,13 @@ const PlatoonAccordianItem: React.FC<{
     //     if (search.length) setRendered(true);
     // }, [search]);
 
-    const attendeesID: ExtendedPersonnel[] = [];
-    const absenteesIDs: ExtendedPersonnel[] = [];
-    personnel.forEach((person) =>
-        attendee_IDs.includes(person.personnel_ID)
-            ? attendeesID.push(person)
-            : absenteesIDs.push(person)
-    );
+    // const attendeesID: ExtendedPersonnel[] = [];
+    // const absenteesIDs: ExtendedPersonnel[] = [];
+    // personnel.forEach((person) =>
+    //     attendee_IDs.includes(person.personnel_ID)
+    //         ? attendeesID.push(person)
+    //         : absenteesIDs.push(person)
+    // );
     return (
         <AccordionItem>
             <>
@@ -290,61 +291,25 @@ const PlatoonAccordianItem: React.FC<{
                         onClick={() => setRendered(true)}
                     >
                         <Box flex={1} textAlign="left">
-                            {platoon} ({personnel.length})
+                            {platoon} ({personnel.length}/{total})
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
                 </Text>
                 <AccordionPanel borderColor="gray.200" borderWidth={2} pb={4}>
-                    {rendered && (
-                        <Tabs align="center" variant="soft-rounded">
-                            <TabList>
-                                <Tab
-                                    _selected={{
-                                        bg: "green.400",
-                                        color: "white",
-                                    }}
-                                >
-                                    Attendees
-                                </Tab>
-                                <Tab
-                                    _selected={{
-                                        bg: "red.400",
-                                        color: "white",
-                                    }}
-                                >
-                                    Absentees
-                                </Tab>
-                            </TabList>
-                            <TabPanels>
-                                <TabPanel>
-                                    {attendeesID.map((person, index) => (
-                                        <PersonAccordionItem
-                                            key={index}
-                                            person={person}
-                                            search={""}
-                                            attending={true}
-                                        />
-                                    ))}
-                                </TabPanel>
-                                <TabPanel>
-                                    {absenteesIDs.map((person, index) => (
-                                        <PersonAccordionItem
-                                            key={index}
-                                            person={person}
-                                            search={""}
-                                            attending={false}
-                                            absentee={
-                                                absentees[
-                                                    person.personnel_ID
-                                                ][0]
-                                            }
-                                        />
-                                    ))}
-                                </TabPanel>
-                            </TabPanels>
-                        </Tabs>
-                    )}
+                    {rendered &&
+                        personnel.map((person, index) => (
+                            <PersonAccordionItem
+                                key={index}
+                                person={person}
+                                search={""}
+                                absentee={
+                                    absentees
+                                        ? absentees[person.personnel_ID][0]
+                                        : undefined
+                                }
+                            />
+                        ))}
                 </AccordionPanel>
             </>
         </AccordionItem>
@@ -358,13 +323,17 @@ const IndividualActivityPage: NextProtectedPage = () => {
         activity: Activity;
         absentees_IDs: any;
         attendees_IDs: any;
-        sortedByPlatoon: {
+
+        absentees: { [key: number]: Absentee[] };
+        attendeesByPlatoon: {
             [key: string]: ExtendedPersonnel[];
         };
-        attendeeNumbers: {
+        absenteesByPlatoon: {
+            [key: string]: ExtendedPersonnel[];
+        };
+        totalNumbers: {
             [key: string]: number;
         };
-        absentees: { [key: number]: Absentee[] };
     }>(`/api/activity/${activity_ID}`, fetcher);
     console.log({ data });
 
@@ -387,10 +356,15 @@ const IndividualActivityPage: NextProtectedPage = () => {
         pastPresentFuture.text = "Upcoming";
         pastPresentFuture.color = "red";
     }
-    const [index, setIndex] = useState<number[]>([]); // todo - set this to the user platoon
+    const [indexAttendees, setIndexAttendees] = useState<number[]>([]); // todo - set this to the user platoon
 
-    const handleAccordion = (index: number[]) => {
-        setIndex(index);
+    const handleAttendeeAccordion = (index: number[]) => {
+        setIndexAttendees(index);
+    };
+    const [indexAbsentees, setIndexAbsentees] = useState<number[]>([]); // todo - set this to the user platoon
+
+    const handleAbsenteeAccordion = (index: number[]) => {
+        setIndexAbsentees(index);
     };
     const { data: session } = useSession();
     useEffect(() => {
@@ -408,17 +382,27 @@ const IndividualActivityPage: NextProtectedPage = () => {
         // } else {
         // Only set the index if it hasn't been set yet
 
-        setIndex((prev) => {
+        setIndexAttendees((prev) => {
             if (!prev.length) {
                 const newIndex = Object.keys(
-                    data?.sortedByPlatoon || {}
+                    data?.attendeesByPlatoon || {}
+                ).indexOf(session?.user.platoon || "");
+                if (newIndex === -1) return [...prev];
+                else return [newIndex];
+            } else return [...prev];
+        });
+
+        setIndexAbsentees((prev) => {
+            if (!prev.length) {
+                const newIndex = Object.keys(
+                    data?.absenteesByPlatoon || {}
                 ).indexOf(session?.user.platoon || "");
                 if (newIndex === -1) return [...prev];
                 else return [newIndex];
             } else return [...prev];
         });
         // }
-    }, [data?.sortedByPlatoon, session]);
+    }, [data?.attendeesByPlatoon, data?.absenteesByPlatoon, session]);
 
     const activityDate = format(
         activity?.date ? new Date(activity.date) : new Date(),
@@ -427,13 +411,16 @@ const IndividualActivityPage: NextProtectedPage = () => {
 
     const [deleteIsOpen, setDeleteIsOpen] = useState(false);
     const deleteActivity = async () => {
-        const responseData = await sendDELETE(`/api/activity/${activity_ID}`, {});
-        if (responseData.success) { 
-            router.push("/activity")
+        const responseData = await sendDELETE(
+            `/api/activity/${activity_ID}`,
+            {}
+        );
+        if (responseData.success) {
+            router.push("/activity");
         } else {
-            alert(responseData.error)
+            alert(responseData.error);
         }
-    }
+    };
     return (
         <Stack>
             <Grid
@@ -557,7 +544,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                         </Stat>
 
                         {data &&
-                            Object.keys(data.sortedByPlatoon).map(
+                            Object.keys(data.totalNumbers).map(
                                 (platoon, index) => (
                                     <Stat
                                         textAlign={{
@@ -572,15 +559,10 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                                 fontSize="lg"
                                                 colorScheme="purple"
                                             >
-                                                {data.attendeeNumbers[
+                                                {data.attendeesByPlatoon[
                                                     platoon
-                                                ] || 0}{" "}
-                                                /{" "}
-                                                {
-                                                    data.sortedByPlatoon[
-                                                        platoon
-                                                    ].length
-                                                }
+                                                ].length || 0}{" "}
+                                                / {data.totalNumbers[platoon]}
                                             </Badge>
                                         </StatNumber>
                                     </Stat>
@@ -591,14 +573,14 @@ const IndividualActivityPage: NextProtectedPage = () => {
                             <Button colorScheme="teal" onClick={editUser}>
                                 Edit
                             </Button> */}
-                            
-                            <Button
-                                colorScheme="red"
-                                size="sm"
-                                onClick={() => setDeleteIsOpen(true)}
-                            >
-                                Delete
-                            </Button>
+
+                        <Button
+                            colorScheme="red"
+                            size="sm"
+                            onClick={() => setDeleteIsOpen(true)}
+                        >
+                            Delete
+                        </Button>
                         {/* </SimpleGrid> */}
                     </SimpleGrid>
                 </GridItem>
@@ -612,7 +594,93 @@ const IndividualActivityPage: NextProtectedPage = () => {
                             </Text>
                         </Flex>
                     </Alert>
-                    <Accordion
+                    <Tabs variant="soft-rounded" align="center">
+                        <TabList>
+                            <Tab
+                                _selected={{
+                                    bg: "green.400",
+                                    color: "white",
+                                }}
+                                // bg="green.100"
+
+                                // color={"green.400"}
+                            >
+                                Attendees
+                            </Tab>
+                            <Tab
+                                _selected={{
+                                    bg: "red.400",
+                                    color: "white",
+                                }}
+                            >
+                                Absentees
+                            </Tab>
+                        </TabList>
+
+                        <TabPanels>
+                            <TabPanel>
+                                <Accordion
+                                    defaultIndex={[0]}
+                                    allowMultiple
+                                    allowToggle
+                                    index={indexAttendees}
+                                    onChange={(e) =>
+                                        handleAttendeeAccordion(e as number[])
+                                    }
+                                    key={0}
+                                >
+                                    {data &&
+                                        Object.keys(
+                                            data.attendeesByPlatoon
+                                        ).map((platoon, index) => (
+                                            <PlatoonAccordianItem
+                                                key={index}
+                                                personnel={
+                                                    data.attendeesByPlatoon[
+                                                        platoon
+                                                    ]
+                                                }
+                                                platoon={platoon}
+                                                total={data.totalNumbers[platoon]}
+                                                // search={search}
+                                                // absentees={data.absentees}
+                                            />
+                                        ))}
+                                </Accordion>
+                            </TabPanel>
+                            <TabPanel>
+                                <Accordion
+                                    defaultIndex={[0]}
+                                    allowMultiple
+                                    allowToggle
+                                    index={indexAbsentees}
+                                    onChange={(e) =>
+                                        handleAbsenteeAccordion(e as number[])
+                                    }
+                                    key={1}
+                                >
+                                    {data &&
+                                        Object.keys(
+                                            data.absenteesByPlatoon
+                                        ).map((platoon, index) => (
+                                            <PlatoonAccordianItem
+                                                key={index}
+                                                personnel={
+                                                    data.absenteesByPlatoon[
+                                                        platoon
+                                                    ]
+                                                }
+                                                platoon={platoon}
+                                                // search={search}
+                                                absentees={data.absentees}
+                                                total={data.totalNumbers[platoon]}
+                                            />
+                                        ))}
+                                </Accordion>
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
+                    {/* <Accordion
                         defaultIndex={[0]}
                         allowMultiple
                         allowToggle
@@ -635,311 +703,314 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                     />
                                 )
                             )}
-                    </Accordion>
+                    </Accordion> */}
                 </GridItem>
             </Grid>
-            <DeleteDialog isOpen={deleteIsOpen} setIsOpen={setDeleteIsOpen} confirmDelete={deleteActivity}/>
+            <DeleteDialog
+                isOpen={deleteIsOpen}
+                setIsOpen={setDeleteIsOpen}
+                confirmDelete={deleteActivity}
+            />
         </Stack>
     );
 };
 
 IndividualActivityPage.requireAuth = true;
 
-export const IndividualActivityComponent: React.FC<{ activity_ID: number }> = ({
-    activity_ID,
-}) => {
-    const activityRef = useRef<HTMLDivElement>(null);
-    console.log(activity_ID);
-    const { data, error } = useSWR<{
-        activity: Activity;
-        absentees_IDs: any;
-        attendees_IDs: any;
-        sortedByPlatoon: {
-            [key: string]: ExtendedPersonnel[];
-        };
-        attendeeNumbers: {
-            [key: string]: number;
-        };
-        absentees: { [key: number]: Absentee[] };
-    }>(`/api/activity/${activity_ID}`, fetcher);
-    console.log({ data });
-    useEffect(() => {
-        if (data && activityRef && activityRef.current) {
-            // activityRef.current?.scrollIntoView({ behavior: "smooth" });
-            // setTimeout(() => {
-                window.scrollTo({
-                    top:
-                        activityRef.current.offsetTop -
-                        (window.innerHeight -
-                            activityRef.current.offsetHeight) /
-                            2 -
-                        56,
-                    left: 0,
-                    behavior: "smooth",
-                });
-            // }, 150);
-        }
-    }, [data, activityRef]);
-    // Check if upcoming / Today / Past
-    const activity = data?.activity;
-    let pastPresentFuture = {
-        color: "",
-        text: "",
-    };
-    if (isSameDay(new Date(activity?.date || ""), new Date())) {
-        // same date
-        pastPresentFuture.text = "Today";
-        pastPresentFuture.color = "purple";
-    } else if (isBefore(new Date(activity?.date || ""), new Date())) {
-        // past activity
-        pastPresentFuture.text = "Past";
-        pastPresentFuture.color = "green";
-    } else {
-        // future
-        pastPresentFuture.text = "Upcoming";
-        pastPresentFuture.color = "red";
-    }
-    const [index, setIndex] = useState<number[]>([]); // todo - set this to the user platoon
+// export const IndividualActivityComponent: React.FC<{ activity_ID: number }> = ({
+//     activity_ID,
+// }) => {
+//     const activityRef = useRef<HTMLDivElement>(null);
+//     console.log(activity_ID);
+//     const { data, error } = useSWR<{
+//         activity: Activity;
+//         absentees_IDs: any;
+//         attendees_IDs: any;
+//         sortedByPlatoon: {
+//             [key: string]: ExtendedPersonnel[];
+//         };
+//         attendeeNumbers: {
+//             [key: string]: number;
+//         };
+//         absentees: { [key: number]: Absentee[] };
+//     }>(`/api/activity/${activity_ID}`, fetcher);
+//     console.log({ data });
+//     useEffect(() => {
+//         if (data && activityRef && activityRef.current) {
+//             // activityRef.current?.scrollIntoView({ behavior: "smooth" });
+//             // setTimeout(() => {
+//             window.scrollTo({
+//                 top:
+//                     activityRef.current.offsetTop -
+//                     (window.innerHeight - activityRef.current.offsetHeight) /
+//                         2 -
+//                     56,
+//                 left: 0,
+//                 behavior: "smooth",
+//             });
+//             // }, 150);
+//         }
+//     }, [data, activityRef]);
+//     // Check if upcoming / Today / Past
+//     const activity = data?.activity;
+//     let pastPresentFuture = {
+//         color: "",
+//         text: "",
+//     };
+//     if (isSameDay(new Date(activity?.date || ""), new Date())) {
+//         // same date
+//         pastPresentFuture.text = "Today";
+//         pastPresentFuture.color = "purple";
+//     } else if (isBefore(new Date(activity?.date || ""), new Date())) {
+//         // past activity
+//         pastPresentFuture.text = "Past";
+//         pastPresentFuture.color = "green";
+//     } else {
+//         // future
+//         pastPresentFuture.text = "Upcoming";
+//         pastPresentFuture.color = "red";
+//     }
+//     const [index, setIndex] = useState<number[]>([]); // todo - set this to the user platoon
 
-    const handleAccordion = (index: number[]) => {
-        setIndex(index);
-    };
-    const { data: session } = useSession();
-    useEffect(() => {
-        // if (search.length && data?.sortedByPlatoon) {
-        //     // do stuff
-        //     // Open all the tabs
-        //     setIndex(
-        //         [
-        //             ...Object.keys(data.sortedByPlatoon).map(
-        //                 (_, index) => index
-        //             ),
-        //             Object.keys(data.sortedByPlatoon).length,
-        //         ] // add the ORD accordion
-        //     );
-        // } else {
-        // Only set the index if it hasn't been set yet
+//     const handleAccordion = (index: number[]) => {
+//         setIndex(index);
+//     };
+//     const { data: session } = useSession();
+//     useEffect(() => {
+//         // if (search.length && data?.sortedByPlatoon) {
+//         //     // do stuff
+//         //     // Open all the tabs
+//         //     setIndex(
+//         //         [
+//         //             ...Object.keys(data.sortedByPlatoon).map(
+//         //                 (_, index) => index
+//         //             ),
+//         //             Object.keys(data.sortedByPlatoon).length,
+//         //         ] // add the ORD accordion
+//         //     );
+//         // } else {
+//         // Only set the index if it hasn't been set yet
 
-        setIndex((prev) => {
-            if (!prev.length) {
-                const newIndex = Object.keys(
-                    data?.sortedByPlatoon || {}
-                ).indexOf(session?.user.platoon || "");
-                if (newIndex === -1) return [...prev];
-                else return [newIndex];
-            } else return [...prev];
-        });
-        // }
-    }, [data?.sortedByPlatoon, session]);
+//         setIndex((prev) => {
+//             if (!prev.length) {
+//                 const newIndex = Object.keys(
+//                     data?.sortedByPlatoon || {}
+//                 ).indexOf(session?.user.platoon || "");
+//                 if (newIndex === -1) return [...prev];
+//                 else return [newIndex];
+//             } else return [...prev];
+//         });
+//         // }
+//     }, [data?.sortedByPlatoon, session]);
 
-    const activityDate = format(
-        activity?.date ? new Date(activity.date) : new Date(),
-        Assignments.datewithnameformat
-    );
-    return (
-        <Stack ref={activityRef}>
-            <Grid
-                templateColumns={{
-                    base: "repeat(1, 1fr)",
-                    lg: "repeat(6, 1fr)",
-                }}
-                templateRows={{
-                    base: "repeat(2, 1fr)",
-                    lg: "repeat(1, 1fr)",
-                }}
-                gap={{
-                    base: 0,
-                    lg: 4,
-                }}
-            >
-                <GridItem minW="180px">
-                    <Center>
-                        <Avatar
-                            size="2xl"
-                            name={activity?.type}
-                            bgColor="teal"
-                            color="gray.300"
-                        />
-                    </Center>
-                </GridItem>
-                <GridItem
-                    colSpan={5}
-                    mt={2}
-                    display="flex"
-                    justifyContent={{ base: "center", lg: "unset" }}
-                >
-                    <Box>
-                        <Box
-                            display={{ base: "block", lg: "flex" }}
-                            // flexDirection="row-reverse"
-                            alignItems="center"
-                        >
-                            <Heading
-                                size="2xl"
-                                textAlign="center"
-                                mr={{ base: 0, lg: 2 }}
-                            >
-                                {activity?.name}
-                            </Heading>
-                            <Box textAlign={{ base: "center", lg: "left" }}>
-                                <Tag
-                                    size="md"
-                                    variant="subtle"
-                                    colorScheme={"purple"}
-                                >
-                                    <TagLabel>{activity?.type}</TagLabel>
-                                </Tag>
-                            </Box>
-                        </Box>
-                        <Flex
-                            justifyContent={{
-                                base: "center",
-                                lg: "unset",
-                            }}
-                        >
-                            <Stack direction="row" alignItems="center">
-                                <Text
-                                    fontSize="2xl"
-                                    fontWeight="bold"
-                                    textAlign="center"
-                                >
-                                    {activityDate}
-                                </Text>
-                                <Box>
-                                    <Tag
-                                        size="md"
-                                        variant="subtle"
-                                        colorScheme={pastPresentFuture.color}
-                                    >
-                                        <TagLabel>
-                                            {pastPresentFuture.text}
-                                        </TagLabel>
-                                    </Tag>
-                                </Box>
-                            </Stack>
-                        </Flex>
-                        <Box display={{ base: "block", lg: "flex" }}>
-                            <Text
-                                size="sm"
-                                textAlign="center"
-                                mr={{ base: 0, lg: 2 }}
-                            >
-                                {activity?.editor_ID}
-                            </Text>
-                        </Box>
-                    </Box>
-                </GridItem>
-                <GridItem>
-                    <SimpleGrid columns={{ base: 2, lg: 1 }} spacing={2}>
-                        <Stat textAlign={{ base: "center", lg: "unset" }}>
-                            <StatLabel> Activity ID </StatLabel>
-                            <StatNumber>
-                                <Badge fontSize="lg" colorScheme="purple">
-                                    {activity?.activity_ID}
-                                </Badge>
-                            </StatNumber>
-                            {/* <StatHelpText>
-                            {" "}
-                            When this person was posted into the company{" "}
-                        </StatHelpText> */}
-                        </Stat>
-                        <Stat textAlign={{ base: "center", lg: "unset" }}>
-                            <StatLabel> Attendees </StatLabel>
-                            <StatNumber>
-                                <Badge fontSize="lg" colorScheme="purple">
-                                    {data?.attendees_IDs.length} /{" "}
-                                    {data?.attendees_IDs.length +
-                                        data?.absentees_IDs.length}
-                                </Badge>
-                            </StatNumber>
-                            {/* <StatHelpText>
-                            {" "}
-                            When this person was posted into the company{" "}
-                        </StatHelpText> */}
-                        </Stat>
+//     const activityDate = format(
+//         activity?.date ? new Date(activity.date) : new Date(),
+//         Assignments.datewithnameformat
+//     );
+//     return (
+//         <Stack ref={activityRef}>
+//             <Grid
+//                 templateColumns={{
+//                     base: "repeat(1, 1fr)",
+//                     lg: "repeat(6, 1fr)",
+//                 }}
+//                 templateRows={{
+//                     base: "repeat(2, 1fr)",
+//                     lg: "repeat(1, 1fr)",
+//                 }}
+//                 gap={{
+//                     base: 0,
+//                     lg: 4,
+//                 }}
+//             >
+//                 <GridItem minW="180px">
+//                     <Center>
+//                         <Avatar
+//                             size="2xl"
+//                             name={activity?.type}
+//                             bgColor="teal"
+//                             color="gray.300"
+//                         />
+//                     </Center>
+//                 </GridItem>
+//                 <GridItem
+//                     colSpan={5}
+//                     mt={2}
+//                     display="flex"
+//                     justifyContent={{ base: "center", lg: "unset" }}
+//                 >
+//                     <Box>
+//                         <Box
+//                             display={{ base: "block", lg: "flex" }}
+//                             // flexDirection="row-reverse"
+//                             alignItems="center"
+//                         >
+//                             <Heading
+//                                 size="2xl"
+//                                 textAlign="center"
+//                                 mr={{ base: 0, lg: 2 }}
+//                             >
+//                                 {activity?.name}
+//                             </Heading>
+//                             <Box textAlign={{ base: "center", lg: "left" }}>
+//                                 <Tag
+//                                     size="md"
+//                                     variant="subtle"
+//                                     colorScheme={"purple"}
+//                                 >
+//                                     <TagLabel>{activity?.type}</TagLabel>
+//                                 </Tag>
+//                             </Box>
+//                         </Box>
+//                         <Flex
+//                             justifyContent={{
+//                                 base: "center",
+//                                 lg: "unset",
+//                             }}
+//                         >
+//                             <Stack direction="row" alignItems="center">
+//                                 <Text
+//                                     fontSize="2xl"
+//                                     fontWeight="bold"
+//                                     textAlign="center"
+//                                 >
+//                                     {activityDate}
+//                                 </Text>
+//                                 <Box>
+//                                     <Tag
+//                                         size="md"
+//                                         variant="subtle"
+//                                         colorScheme={pastPresentFuture.color}
+//                                     >
+//                                         <TagLabel>
+//                                             {pastPresentFuture.text}
+//                                         </TagLabel>
+//                                     </Tag>
+//                                 </Box>
+//                             </Stack>
+//                         </Flex>
+//                         <Box display={{ base: "block", lg: "flex" }}>
+//                             <Text
+//                                 size="sm"
+//                                 textAlign="center"
+//                                 mr={{ base: 0, lg: 2 }}
+//                             >
+//                                 {activity?.editor_ID}
+//                             </Text>
+//                         </Box>
+//                     </Box>
+//                 </GridItem>
+//                 <GridItem>
+//                     <SimpleGrid columns={{ base: 2, lg: 1 }} spacing={2}>
+//                         <Stat textAlign={{ base: "center", lg: "unset" }}>
+//                             <StatLabel> Activity ID </StatLabel>
+//                             <StatNumber>
+//                                 <Badge fontSize="lg" colorScheme="purple">
+//                                     {activity?.activity_ID}
+//                                 </Badge>
+//                             </StatNumber>
+//                             {/* <StatHelpText>
+//                             {" "}
+//                             When this person was posted into the company{" "}
+//                         </StatHelpText> */}
+//                         </Stat>
+//                         <Stat textAlign={{ base: "center", lg: "unset" }}>
+//                             <StatLabel> Attendees </StatLabel>
+//                             <StatNumber>
+//                                 <Badge fontSize="lg" colorScheme="purple">
+//                                     {data?.attendees_IDs.length} /{" "}
+//                                     {data?.attendees_IDs.length +
+//                                         data?.absentees_IDs.length}
+//                                 </Badge>
+//                             </StatNumber>
+//                             {/* <StatHelpText>
+//                             {" "}
+//                             When this person was posted into the company{" "}
+//                         </StatHelpText> */}
+//                         </Stat>
 
-                        {data &&
-                            Object.keys(data.sortedByPlatoon).map(
-                                (platoon, index) => (
-                                    <Stat
-                                        textAlign={{
-                                            base: "center",
-                                            lg: "unset",
-                                        }}
-                                        key={index}
-                                    >
-                                        <StatLabel> {platoon} </StatLabel>
-                                        <StatNumber>
-                                            <Badge
-                                                fontSize="lg"
-                                                colorScheme="purple"
-                                            >
-                                                {data.attendeeNumbers[
-                                                    platoon
-                                                ] || 0}{" "}
-                                                /{" "}
-                                                {
-                                                    data.sortedByPlatoon[
-                                                        platoon
-                                                    ].length
-                                                }
-                                            </Badge>
-                                        </StatNumber>
-                                    </Stat>
-                                )
-                            )}
+//                         {data &&
+//                             Object.keys(data.sortedByPlatoon).map(
+//                                 (platoon, index) => (
+//                                     <Stat
+//                                         textAlign={{
+//                                             base: "center",
+//                                             lg: "unset",
+//                                         }}
+//                                         key={index}
+//                                     >
+//                                         <StatLabel> {platoon} </StatLabel>
+//                                         <StatNumber>
+//                                             <Badge
+//                                                 fontSize="lg"
+//                                                 colorScheme="purple"
+//                                             >
+//                                                 {data.attendeeNumbers[
+//                                                     platoon
+//                                                 ] || 0}{" "}
+//                                                 /{" "}
+//                                                 {
+//                                                     data.sortedByPlatoon[
+//                                                         platoon
+//                                                     ].length
+//                                                 }
+//                                             </Badge>
+//                                         </StatNumber>
+//                                     </Stat>
+//                                 )
+//                             )}
 
-                        {/* <SimpleGrid columns={2} spacing={2} alignItems="center">
-                            <Button colorScheme="teal" onClick={editUser}>
-                                Edit
-                            </Button>
-                            <Button
-                                colorScheme="red"
-                                onClick={() => setIsDeleteUserOpen(true)}
-                            >
-                                Delete
-                            </Button>
-                        </SimpleGrid> */}
-                    </SimpleGrid>
-                </GridItem>
-                <GridItem colSpan={5} mt={{ base: 2, lg: 0 }}>
-                    <Alert status="info" mb={2}>
-                        <AlertIcon />
-                        <Flex flexWrap="wrap">
-                            <Text>
-                                Personnel location and statuses as it appears on{" "}
-                                {activityDate}.
-                            </Text>
-                        </Flex>
-                    </Alert>
-                    <Accordion
-                        defaultIndex={[0]}
-                        allowMultiple
-                        allowToggle
-                        index={index}
-                        onChange={(e) => handleAccordion(e as number[])}
-                    >
-                        {data &&
-                            Object.keys(data.sortedByPlatoon).map(
-                                (platoon, index) => (
-                                    <PlatoonAccordianItem
-                                        key={index}
-                                        personnel={
-                                            data.sortedByPlatoon[platoon]
-                                        }
-                                        platoon={platoon}
-                                        attendee_IDs={data.attendees_IDs}
-                                        absentee_IDs={data.absentees_IDs}
-                                        // search={search}
-                                        absentees={data.absentees}
-                                    />
-                                )
-                            )}
-                    </Accordion>
-                </GridItem>
-            </Grid>
-        </Stack>
-    );
-};
+//                         {/* <SimpleGrid columns={2} spacing={2} alignItems="center">
+//                             <Button colorScheme="teal" onClick={editUser}>
+//                                 Edit
+//                             </Button>
+//                             <Button
+//                                 colorScheme="red"
+//                                 onClick={() => setIsDeleteUserOpen(true)}
+//                             >
+//                                 Delete
+//                             </Button>
+//                         </SimpleGrid> */}
+//                     </SimpleGrid>
+//                 </GridItem>
+//                 <GridItem colSpan={5} mt={{ base: 2, lg: 0 }}>
+//                     <Alert status="info" mb={2}>
+//                         <AlertIcon />
+//                         <Flex flexWrap="wrap">
+//                             <Text>
+//                                 Personnel location and statuses as it appears on{" "}
+//                                 {activityDate}.
+//                             </Text>
+//                         </Flex>
+//                     </Alert>
+//                     <Accordion
+//                         defaultIndex={[0]}
+//                         allowMultiple
+//                         allowToggle
+//                         index={index}
+//                         onChange={(e) => handleAccordion(e as number[])}
+//                     >
+//                         {data &&
+//                             Object.keys(data.sortedByPlatoon).map(
+//                                 (platoon, index) => (
+//                                     <PlatoonAccordianItem
+//                                         key={index}
+//                                         personnel={
+//                                             data.sortedByPlatoon[platoon]
+//                                         }
+//                                         platoon={platoon}
+//                                         // attendee_IDs={data.attendees_IDs}
+//                                         // absentee_IDs={data.absentees_IDs}
+//                                         // // search={search}
+//                                         absentees={data.absentees}
+//                                     />
+//                                 )
+//                             )}
+//                     </Accordion>
+//                 </GridItem>
+//             </Grid>
+//         </Stack>
+//     );
+// };
 
 export default IndividualActivityPage;

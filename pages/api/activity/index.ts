@@ -29,8 +29,8 @@ export default async function handler(
 
         // console.log(query);
         const personnel: ExtendedPersonnel[] = await executeQuery({
-            query: `SELECT * FROM personnel LEFT JOIN ranks ON ranks.rank = personnel.rank WHERE DATE(post_in) <= DATE(?) AND DATE(ord) >= DATE(?) AND unit = ? AND company = ?`,
-            values: [opts.selDate, opts.selDate, opts.unit, opts.company],
+            query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active FROM personnel LEFT JOIN ranks ON ranks.rank = personnel.rank WHERE DATE(post_in) <= DATE(?) AND DATE(ord) >= DATE(?) AND unit = ? AND company = ?`,
+            values: [opts.selDate, opts.selDate, opts.selDate, opts.unit, opts.company],
         });
 
         // const objectified = [...personnel];

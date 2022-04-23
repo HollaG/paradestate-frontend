@@ -32,6 +32,17 @@ const StatusAlert: React.FC<{ person: Personnel }> = ({ person }) => {
                 {format(new Date(person.ha_end_date), Assignments.dateformat)})
             </Alert>
         );
-    return <></>;
+    return (
+        <Alert status="success">
+            <AlertIcon />
+            Heat acclimatisation will expire in{" "}
+            {differenceInBusinessDays(
+                new Date(person.ha_end_date),
+                new Date()
+            )}{" "}
+            days. (
+            {format(new Date(person.ha_end_date), Assignments.dateformat)})
+        </Alert>
+    );
 };
 export default StatusAlert;

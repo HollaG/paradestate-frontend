@@ -63,106 +63,120 @@ export default async function handler(
 
         const personnel_IDs = [...attendees_IDs, ...absentees_IDs];
 
-        const opts = {
-            personnel_IDs,
-            selDate: formatMySQLDateHelper(activity[0].date.toString()), // todo
+        // TODO remove any
+        const getPersonnel:any = async (opts: {
+            personnel_IDs: number[];
+            selDate: string;
+        }) => {
+            const query = queryBuilder(
+                "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE personnel_ID IN (:personnel_IDs) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
+                opts
+            );
+            // console.log(query);
+            const personnel: ExtendedPersonnel[] = await executeQuery({
+                query: query.sql,
+                values: query.values,
+            });
+
+            const objectified = [...personnel];
+
+            if (!objectified) return { props: {} };
+
+            const hasEvent: any[] = [];
+            const noEvent: any[] = [];
+
+            // create the numbers
+            const attendeeNumbers: { [key: string]: any } = {};
+
+            objectified.forEach((x) => {
+                const strArr = [];
+                let unableToParticipate = false;
+                if (x.attc_row_ID) strArr.push("On AttC");
+                if (x.course_row_ID) strArr.push("On course");
+                if (x.leave_row_ID) strArr.push("On leave");
+                if (x.off_row_ID) strArr.push("On off");
+                if (x.ma_row_ID) {
+                    if (x.ma_in_camp) {
+                        strArr.push("On MA (In camp)");
+                    } else {
+                        strArr.push("On MA");
+                    }
+                }
+                if (x.others_row_ID) {
+                    if (x.others_in_camp) {
+                        strArr.push("Others (In camp)");
+                    } else {
+                        strArr.push("Others");
+                    }
+                }
+                // if (x.status_row_ID) strArr.push("On status")
+
+                x.locationArr = strArr;
+                if (!strArr.length) {
+                    x.location = "In camp";
+                } else {
+                    x.location = strArr.join(", ");
+                    unableToParticipate = true;
+                }
+                if (x.status_row_ID) unableToParticipate = true;
+
+                // Remove null values
+                const cleansed = Object.fromEntries(
+                    Object.entries(x).filter(([_, v]) => v != null)
+                ) as ExtendedPersonnel;
+                if (unableToParticipate) hasEvent.push(cleansed);
+                else noEvent.push(cleansed);
+
+                if (attendees_IDs.includes(x.personnel_ID)) {
+                    if (!attendeeNumbers[x.platoon]) {
+                        attendeeNumbers[x.platoon] = 1;
+                    } else {
+                        attendeeNumbers[x.platoon]++;
+                    }
+                }
+            });
+            const edited = [...hasEvent, ...noEvent];
+            const sortedByPlatoon = edited.reduce<{
+                [key: string]: ExtendedPersonnel[];
+            }>((r, a) => {
+                r[a.platoon] = [...(r[a.platoon] || []), a];
+                return r;
+            }, {});
+            return sortedByPlatoon;
         };
 
-        const query = queryBuilder(
-            "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE personnel_ID IN (:personnel_IDs) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
-            opts
-        );
-        // console.log(query);
-        const personnel: ExtendedPersonnel[] = await executeQuery({
-            query: query.sql,
-            values: query.values,
+        const sortedByPlatoon = await getPersonnel({
+            personnel_IDs,
+            selDate: formatMySQLDateHelper(activity[0].date.toString()),
         });
-
-        const objectified = [...personnel];
-
-        if (!objectified) return { props: {} };
-
-        const hasEvent: any[] = [];
-        const noEvent: any[] = [];
-
-        // create the numbers
-        const attendeeNumbers: { [key: string]: any } = {};
-
-        objectified.forEach((x) => {
-            const strArr = [];
-            let unableToParticipate = false;
-            if (x.attc_row_ID) strArr.push("On AttC");
-            if (x.course_row_ID) strArr.push("On course");
-            if (x.leave_row_ID) strArr.push("On leave");
-            if (x.off_row_ID) strArr.push("On off");
-            if (x.ma_row_ID) {
-                if (x.ma_in_camp) {
-                    strArr.push("On MA (In camp)");
-                } else {
-                    strArr.push("On MA");
-                }
-            }
-            if (x.others_row_ID) {
-                if (x.others_in_camp) {
-                    strArr.push("Others (In camp)");
-                } else {
-                    strArr.push("Others");
-                }
-            }
-            // if (x.status_row_ID) strArr.push("On status")
-
-            x.locationArr = strArr;
-            if (!strArr.length) {
-                x.location = "In camp";
-            } else {
-                x.location = strArr.join(", ");
-                unableToParticipate = true;
-            }
-            if (x.status_row_ID) unableToParticipate = true;
-
-            // Remove null values
-            const cleansed = Object.fromEntries(
-                Object.entries(x).filter(([_, v]) => v != null)
-            ) as ExtendedPersonnel;
-            if (unableToParticipate) hasEvent.push(cleansed);
-            else noEvent.push(cleansed);
-
-            if (attendees_IDs.includes(x.personnel_ID)) {
-                if (!attendeeNumbers[x.platoon]) {
-                    attendeeNumbers[x.platoon] = 1;
-                } else {
-                    attendeeNumbers[x.platoon]++;
-                }
-            }
-        });
-        const edited = [...hasEvent, ...noEvent];
-        const sortedByPlatoon = edited.reduce<{
-            [key: string]: ExtendedPersonnel[];
-        }>((r, a) => {
-            r[a.platoon] = [...(r[a.platoon] || []), a];
-            return r;
-        }, {});
-        // const absentees = await executeQuery({
-        //     query: `SELECT * FROM activity_absentees LEFT JOIN personnel ON personnel.personnel_ID = activity_absentees.personnel_ID WHERE unit = ? AND company = ? AND activity_ID = ? `,
-        //     values: [session.user.unit, session.user.company, activity_ID],
-        // });
-
-        // const attendees = await executeQuery({
-        //     query: `SELECT * FROM activity_attendees LEFT JOIN personnel ON personnel.personnel_ID = activity_attendees.personnel_ID WHERE unit = ? AND company = ? AND activity_ID = ? `,
-        //     values: [session.user.unit, session.user.company, activity_ID],
-        // });
-
+        const totalNumbers: { [key: string]: number } = {};
         Object.keys(sortedByPlatoon).forEach((platoon, index) => {
-            // for each platoon, find the number of personnel attending
+            // for each platoon, find the total number of personnel
+            totalNumbers[platoon] = sortedByPlatoon[platoon].length;
+        });
+
+        // make sorted By Platoon for both attending and absentees
+
+        const absenteesByPlatoon = await getPersonnel({
+            personnel_IDs: absentees_IDs,
+            selDate: formatMySQLDateHelper(activity[0].date.toString()),
+        });
+
+        const attendeesByPlatoon = await getPersonnel({
+            personnel_IDs: attendees_IDs,
+            selDate: formatMySQLDateHelper(activity[0].date.toString()),
         });
 
         const response = {
             activity: activity[0],
             absentees_IDs,
             attendees_IDs,
-            sortedByPlatoon,
-            attendeeNumbers,
+          
+           
             absentees,
+            attendeesByPlatoon,
+            absenteesByPlatoon,
+            totalNumbers,
         };
         res.json(response);
     } else if (req.method === "DELETE") {

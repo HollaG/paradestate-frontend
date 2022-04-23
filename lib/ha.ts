@@ -1,5 +1,6 @@
 // Notes:
 // - When posted in, HA is considered achieved
+// - Date loops until the latest activity date + 15 days for HA to expire
 
 import { addDays, subMonths, isAfter, subDays, isBefore } from "date-fns";
 import { Personnel } from "../types/database";
@@ -155,7 +156,8 @@ export const refreshAll = async (company: string, unit: string) => {
         contributes: string;
     }[] = await executeQuery({
         // todo set limit of looking back to the earliest post in of the currently active personnel
-        query: `SELECT activity_ID, date, contributes FROM activity_list WHERE company = ? AND unit = ? AND DATE(date) <= DATE(NOW()) AND contributes > 0`,
+        // query: `SELECT activity_ID, date, contributes FROM activity_list WHERE company = ? AND unit = ? AND DATE(date) <= DATE(NOW()) AND contributes > 0`,
+        query: `SELECT activity_ID, date, contributes FROM activity_list WHERE company = ? AND unit = ? AND contributes > 0 ORDER BY date ASC`,
         values: [company, unit],
     });
 
@@ -228,11 +230,14 @@ export const refreshAll = async (company: string, unit: string) => {
     // construct the date range
     // const now = new Date(); // TODO
     // const now = new Date("2022-07-01");
-    const end = addDays(new Date(), 15);
+    // const end = addDays(new Date(), 15);
+
+    // end look date shuold be the latest activity date that's active
+    const end = addDays(activities[activities.length - 1].date, 15);
 
     // const personnel_IDs = [259]; // todo to change
     const activePersonnel: Personnel[] = await executeQuery({
-        query: `SELECT * FROM personnel WHERE DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW()) AND company = ? AND unit = ?`,
+        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW()) AND company = ? AND unit = ?`,
         values: [company, unit],
     });
 
@@ -512,9 +517,9 @@ export const refreshAll = async (company: string, unit: string) => {
         });
 
         await executeQuery({
-            query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
+            // query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
+            query: `UPDATE personnel SET ha_end_date = ? WHERE personnel_ID = ?`,
             values: [
-                haActive,
                 formatMySQLDateHelper(haEndDate || new Date().toDateString()),
                 person.personnel_ID,
             ],
@@ -578,7 +583,7 @@ export const refreshPersonnelID = async (
         contributes: string;
     }[] = await executeQuery({
         // todo set limit of looking back to the earliest post in of the currently active personnel
-        query: `SELECT activity_ID, date, contributes FROM activity_list WHERE activity_ID IN (?) AND contributes > 0`,
+        query: `SELECT activity_ID, date, contributes FROM activity_list WHERE activity_ID IN (?) AND contributes > 0 ORDER BY date ASC`,
         values: [activity_IDs],
     });
 
@@ -639,7 +644,10 @@ export const refreshPersonnelID = async (
     // construct the date range
     // const now = new Date(); // TODO
     // const now = new Date("2022-07-01");
-    const end = addDays(new Date(), 15);
+    // const end = addDays(new Date(), 15);
+
+    // set to the last activityDate + 15
+    const end = addDays(activities[activities.length - 1].date, 15);
 
     const results = [];
 
@@ -656,7 +664,7 @@ export const refreshPersonnelID = async (
     });
 
     const personList: Personnel[] = await executeQuery({
-        query: `SELECT * FROM personnel WHERE personnel_ID = ? AND company = ? AND unit = ?`,
+        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active  FROM personnel WHERE personnel_ID = ? AND company = ? AND unit = ?`,
         values: [personnel_ID, company, unit],
     });
     if (!personList) return { error: "No personnel found " };
@@ -892,9 +900,9 @@ export const refreshPersonnelID = async (
     // })
 
     await executeQuery({
-        query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
+        query: `UPDATE personnel SET ha_end_date = ? WHERE personnel_ID = ?`,
+        // query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
         values: [
-            haActive,
             formatMySQLDateHelper(haEndDate || new Date().toDateString()),
             person.personnel_ID,
         ],

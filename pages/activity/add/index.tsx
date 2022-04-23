@@ -33,6 +33,7 @@ import {
     AlertIcon,
     AlertTitle,
     Link,
+    Icon,
 } from "@chakra-ui/react";
 import {
     CreatableSelect,
@@ -69,7 +70,7 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import { openInNewTab } from "../../../lib/custom";
 import PersonBasicDetails from "../../../components/Common/PersonBasicDetails";
-import { IoOpenOutline } from "react-icons/io5";
+import { IoCheckmarkCircle, IoOpenOutline } from "react-icons/io5";
 import SearchInput from "../../../components/SearchInput";
 import CustomBigAlert from "../../../components/Alert/CustomBigAlert";
 import { format } from "date-fns";
@@ -193,6 +194,9 @@ const PersonAccordionItem: React.FC<{
         <Collapse in={isVisible} animateOpacity>
             <Stack direction="column" my={3}>
                 <Stack direction="row" spacing={3}>
+                    <Center>
+                        <Icon as={IoCheckmarkCircle} w={6} h={6} color="green.400"/>
+                    </Center>
                     <Checkbox isChecked={isChecked} onChange={handleCheck} />
                     <PersonBasicDetails
                         person={person}
@@ -451,13 +455,12 @@ const HAAddPage: NextProtectedPage = () => {
     } = useForm<any>();
     const watchActivityType = watch("activity_type");
 
-    const [contributes, setContributes] = useState<"0"|"1"|"2">("0");
-    console.log({contributes})
+    const [contributes, setContributes] = useState<"0" | "1" | "2">("0");
+    console.log({ contributes });
     useEffect(() => {
         if (watchActivityType && watchActivityType.value === "PT") {
-            console.log('setting contributes')
+            console.log("setting contributes");
             setContributes("1");
-           
         } else {
             setContributes("0");
         }
@@ -468,7 +471,7 @@ const HAAddPage: NextProtectedPage = () => {
 
         setIsSubmittingHAInfo(true);
         if (!data.activity_name) data.activity_name = data.activity_type.value;
-        
+
         const responseData = await sendPOST(
             "/api/activity/getParticipants",
             data

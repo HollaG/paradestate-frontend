@@ -419,13 +419,13 @@ export const generatePSObject = async (
     if (platoon == "Company") {
         // if is to generate for the whole company
         personnel = await executeQuery({
-            query: `SELECT * FROM personnel WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?) ORDER BY platoon ASC`,
-            values: [unit, company, mysqlFormatted, mysqlFormatted],
+            query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active FROM personnel WHERE unit = ? AND company = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?) ORDER BY platoon ASC`,
+            values: [mysqlFormatted, unit, company, mysqlFormatted, mysqlFormatted],
         });
     } else {
         personnel = await executeQuery({
-            query: `SELECT * FROM personnel WHERE unit = ? AND company = ? AND platoon = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?)`,
-            values: [unit, company, platoon, mysqlFormatted, mysqlFormatted],
+            query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active FROM personnel WHERE unit = ? AND company = ? AND platoon = ? AND DATE(ord) >= DATE(?) AND DATE(post_in) <= DATE(?)`,
+            values: [mysqlFormatted, unit, company, platoon, mysqlFormatted, mysqlFormatted],
         });
     }
 

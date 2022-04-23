@@ -27,7 +27,7 @@ export default async function handler(
 
         // ensure person can be edited
         const person = await executeQuery({
-            query: "SELECT * FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?",
+            query: "SELECT, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active * FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?",
             values: [
                 req.body.personnel_ID,
                 session.user.unit,

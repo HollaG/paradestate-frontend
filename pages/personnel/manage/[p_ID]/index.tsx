@@ -156,8 +156,7 @@ const PersonnelPage: NextProtectedPage = () => {
         `/api/personnel/manage/${personnel_ID}`,
         fetcher
     );
-    console.log({ data }, "main");
-
+   
     const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
     const editUser = () =>
         router.push(`/personnel/manage/${personnel_ID}/edit`);
@@ -298,16 +297,25 @@ const PersonnelPage: NextProtectedPage = () => {
     };
 
     const [tabIndex, setTabIndex] = React.useState<number>(0);
+    const tabs = ["main", 'ha']
 
     const handleTabsChange = (index: number) => {
-        setTabIndex(index);
+        // setTabIndex(index);
+        router.push({
+            pathname: router.pathname,
+            query: {
+                view: tabs[index],
+                p_ID: personnel_ID
+            }
+        })
     };
-    const [viewType, setViewType] = useState("main");
+
+
     useEffect(() => {
-        if (router.query.view === "ha") {
-            setViewType("ha");
+        if (tabs.includes(router?.query?.view?.toString() || "")) {
+            setTabIndex(tabs.indexOf(router?.query?.view?.toString() || "main"));
         }
-    }, [router.query.view, setViewType]);
+    }, [router.query.view, setTabIndex]);
 
     return (
         <>
@@ -578,7 +586,7 @@ const PersonnelPage: NextProtectedPage = () => {
                                         </Badge>
                                     </StatNumber>
                                     <StatHelpText>
-                                        {format(
+                                        on {format(
                                             new Date(data.secondYearDate),
                                             Assignments.dateformat
                                         )}

@@ -174,17 +174,17 @@ const ActivityCard: React.FC<{ activity: Activity; data: PageData }> = ({
     return (
         <BasicCard>
             <Stat>
-                <StatLabel>{activityDateText}</StatLabel>
+                <StatLabel >{activityDateText}</StatLabel>
                 <StatNumber>
                     <Skeleton
                         isLoaded={!!data}
-                        height="36px"
+                        
                         display="flex"
                         justifyContent="space-between"
                         alignItems="center"
                     >
                         <Flex width="100%" alignItems="center">
-                            <Text> {activity.name} </Text>
+                            <Text > {activity.name} </Text>
                             <Spacer />
                             <NextLink
                                 href={`/activity/${activity.activity_ID}`}
