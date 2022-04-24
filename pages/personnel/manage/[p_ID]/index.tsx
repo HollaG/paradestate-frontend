@@ -653,6 +653,7 @@ const PersonnelPage: NextProtectedPage = () => {
                                 onChange={handleTabsChange}
                                 variant="soft-rounded"
                                 align="center"
+                                colorScheme="teal"
                             >
                                 <TabList>
                                     <Tab>Main</Tab>

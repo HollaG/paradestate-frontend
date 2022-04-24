@@ -185,7 +185,7 @@ const PersonAccordionItem: React.FC<{
                         />
                         <PersonBasicDetails
                             person={person}
-                            handleClick={() => {}}
+                           
                         >
                             <MemoizedTags person={person} />
                         </PersonBasicDetails>
