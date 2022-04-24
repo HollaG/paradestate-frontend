@@ -73,7 +73,7 @@ const PersonAccordionItem: React.FC<{
                                 //     pathName: `/personnel/manage/${person.personnel_ID}`,
                                 //     query: { view: "ha" },
                                 // }}
-                                href={`/personnel/manage/${person.personnel_ID}?view="ha"`}
+                                href={`/personnel/manage/${person.personnel_ID}?view=ha`}
                             >
                                 {person.rank} {person.name}
                             </Link>
