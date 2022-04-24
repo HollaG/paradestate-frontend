@@ -328,7 +328,7 @@ const HAPage: NextProtectedPage = () => {
                             fontWeight="light"
                         >
                             Note: Time to/from Expiry Date is calculated in
-                            Business Days.
+                            Working Days.
                         </Text>
                     </Center>
                 </Box>

@@ -53,23 +53,25 @@ export default async function handler(
         }, {});
 
         const absentees_IDs = absenteesResult.map((a) => a.personnel_ID);
-        const attendees_IDsResult: { personnel_ID: number }[] =
-            await executeQuery({
-                query: `SELECT personnel_ID FROM activity_attendees WHERE activity_ID = ?`,
-                values: [activity_ID],
-            });
-
+        const attendees_IDsResult: {
+            personnel_ID: number;
+            ha_active: boolean;
+        }[] = await executeQuery({
+            query: `SELECT activity_attendees.personnel_ID,CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active  FROM activity_attendees LEFT JOIN personnel ON personnel.personnel_ID = activity_attendees.personnel_ID WHERE activity_ID = ?`,
+            values: [activity[0].date, activity_ID],
+        });
+     
         const attendees_IDs = attendees_IDsResult.map((a) => a.personnel_ID);
 
         const personnel_IDs = [...attendees_IDs, ...absentees_IDs];
 
         // TODO remove any
-        const getPersonnel:any = async (opts: {
+        const getPersonnel: any = async (opts: {
             personnel_IDs: number[];
             selDate: string;
         }) => {
             const query = queryBuilder(
-                "select * from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE personnel_ID IN (:personnel_IDs) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
+                "select *, CASE WHEN (personnel.ha_end_date) > (DATE(:selDate)) THEN true ELSE false END AS ha_active from personnel left join (SELECT personnel_ID, row_ID as status_row_ID FROM status_tracker WHERE type='perm' OR (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as a USING(personnel_ID) left join (SELECT personnel_ID, start as attc_start, end as attc_end, attc_name, row_ID as attc_row_ID FROM attc_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as b USING(personnel_ID) left join (SELECT personnel_ID, row_ID as course_row_ID, course_name, start as course_start, end as course_end FROM course_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as c USING(personnel_ID) left join (SELECT personnel_ID, start as leave_start, start_time as leave_start_time, end as leave_end, end_time as leave_end_time, reason as leave_reason, row_ID as leave_row_ID FROM leave_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as d USING(personnel_ID) left join (SELECT personnel_ID, start as off_start, start_time as off_start_time, end as off_end, end_time as off_end_time, reason as off_reason, row_ID as off_row_ID FROM off_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as e USING(personnel_ID) left join (SELECT personnel_ID, row_ID as others_row_ID, start as others_start, end as others_end, others_name, in_camp as others_incamp FROM others_tracker WHERE (DATE(start) <= DATE(:selDate) AND DATE(END) >= DATE(:selDate)) group by personnel_ID) as f USING(personnel_ID) left join (SELECT personnel_ID, date as ma_date, time as ma_time, location as ma_location, ma_name, in_camp as ma_in_camp, row_ID as ma_row_ID FROM ma_tracker WHERE DATE(date) = DATE(:selDate) group by personnel_ID) as g USING(personnel_ID) LEFT JOIN ranks ON ranks.`rank` = personnel.`rank` WHERE personnel_ID IN (:personnel_IDs) ORDER BY platoon ASC, ranks.rank_order DESC, personnel.name ASC",
                 opts
             );
             // console.log(query);
@@ -167,16 +169,21 @@ export default async function handler(
             selDate: formatMySQLDateHelper(activity[0].date.toString()),
         });
 
+        // calculate number of personnel not heat acclimatised
+        const numberExpired = attendees_IDsResult.filter(
+            (person) => !person.ha_active
+        ).length;
         const response = {
             activity: activity[0],
             absentees_IDs,
             attendees_IDs,
-          
-           
+
             absentees,
             attendeesByPlatoon,
             absenteesByPlatoon,
             totalNumbers,
+
+            numberExpired,
         };
         res.json(response);
     } else if (req.method === "DELETE") {

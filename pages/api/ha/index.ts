@@ -52,8 +52,9 @@ export default async function handler(
             // console.log(query);
             const personnel: ExtendedPersonnel[] = await executeQuery({
                 query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (DATE(?)) THEN true ELSE false END AS ha_active FROM personnel LEFT JOIN ranks ON ranks.rank = personnel.rank WHERE DATE(post_in) <= DATE(?) AND DATE(ord) >= DATE(?) AND unit = ? AND company = ? ORDER BY ranks.rank_order DESC`,
-                values: [opts.selDate, opts.selDate, opts.unit, opts.company],
+                values: [opts.selDate, opts.selDate, opts.selDate, opts.unit, opts.company],
             });
+   
 
             // Sort into 'expired', 'expiring', and 'active'
             const expired = personnel.filter((person) => !person.ha_active);

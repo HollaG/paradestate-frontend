@@ -24,7 +24,7 @@ export default async function handler(
         return res.status(400).json({ error: "Missing personnel ID" });
     // ensure this person is exists and can view
     const personnel: Personnel[] = await executeQuery({
-        query: `SELECT * FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
+        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
         values: [personnel_ID, session.user.unit, session.user.company],
     });
 

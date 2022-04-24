@@ -56,6 +56,7 @@ import NextLink from "next/link";
 import SmallCard from "../../../components/Card/SmallCard";
 import { Absentee } from "../../api/activity/[activity_ID]";
 import DeleteDialog from "../../../components/Dialogs/DeleteDialog";
+import IconAlert from "../../../components/HA/IconAlert";
 const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     const tags = [];
 
@@ -118,7 +119,8 @@ const PersonAccordionItem: React.FC<{
     search: string;
 
     absentee?: Absentee;
-}> = ({ person, search, absentee }) => {
+    activityDate: Date;
+}> = ({ person, search, absentee, activityDate }) => {
     const { mutate } = useSWRConfig();
     const router = useRouter();
     const activity_ID = router.query.activity_ID;
@@ -175,6 +177,10 @@ const PersonAccordionItem: React.FC<{
                 <Stack>
                     {/* <Flex align="center"> */}
                     <Stack direction="row">
+                        <IconAlert
+                            activityDate={activityDate}
+                            person={person}
+                        />
                         <PersonBasicDetails
                             person={person}
                             handleClick={() => {}}
@@ -254,16 +260,18 @@ const PlatoonAccordianItem: React.FC<{
     // attendee_IDs: number[];
     // absentee_IDs: number[];
     absentees?: { [key: number]: Absentee[] };
-    total: number
+    total: number;
     // search: string;
+    activityDate: Date;
 }> = ({
     personnel,
     platoon,
     // attendee_IDs,
     // absentee_IDs,
     absentees,
-    total
-    //  search
+    total,
+    //  search,
+    activityDate,
 }) => {
     const { data: session } = useSession();
     const [rendered, setRendered] = useState(platoon === session?.user.platoon);
@@ -308,6 +316,7 @@ const PlatoonAccordianItem: React.FC<{
                                         ? absentees[person.personnel_ID][0]
                                         : undefined
                                 }
+                                activityDate={activityDate}
                             />
                         ))}
                 </AccordionPanel>
@@ -318,7 +327,7 @@ const PlatoonAccordianItem: React.FC<{
 const IndividualActivityPage: NextProtectedPage = () => {
     const router = useRouter();
     const activity_ID = router.query.activity_ID;
-    console.log(activity_ID);
+ 
     const { data, error } = useSWR<{
         activity: Activity;
         absentees_IDs: any;
@@ -334,8 +343,9 @@ const IndividualActivityPage: NextProtectedPage = () => {
         totalNumbers: {
             [key: string]: number;
         };
+        numberExpired: number;
     }>(`/api/activity/${activity_ID}`, fetcher);
-    console.log({ data });
+  
 
     // Check if upcoming / Today / Past
     const activity = data?.activity;
@@ -421,6 +431,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
             alert(responseData.error);
         }
     };
+
     return (
         <Stack>
             <Grid
@@ -585,101 +596,143 @@ const IndividualActivityPage: NextProtectedPage = () => {
                     </SimpleGrid>
                 </GridItem>
                 <GridItem colSpan={5} mt={{ base: 2, lg: 0 }}>
-                    <Alert status="info" mb={2}>
-                        <AlertIcon />
-                        <Flex flexWrap="wrap">
-                            <Text>
-                                Personnel location and statuses as it appears on{" "}
-                                {activityDate}.
-                            </Text>
-                        </Flex>
-                    </Alert>
-                    <Tabs variant="soft-rounded" align="center">
-                        <TabList>
-                            <Tab
-                                _selected={{
-                                    bg: "green.400",
-                                    color: "white",
-                                }}
-                                // bg="green.100"
+                    <Stack>
+                        <Alert status="info">
+                            <AlertIcon />
+                            <Flex flexWrap="wrap">
+                                <Text>
+                                    Personnel details as it appears on{" "}
+                                    {activityDate}.
+                                </Text>
+                            </Flex>
+                        </Alert>
+                        <Alert
+                            status={data?.numberExpired ? "error" : "success"}
+                        >
+                            <AlertIcon />
+                            <Flex flexWrap="wrap">
+                                <Text>
+                                    {data?.numberExpired
+                                        ? `${data?.numberExpired} personnel with expired
+                                    HA attending!`
+                                        : `All attending personnel are heat
+                                    acclimatised!`}
+                                </Text>
+                            </Flex>
+                        </Alert>
+                        <Tabs variant="soft-rounded" align="center">
+                            <TabList>
+                                <Tab
+                                    _selected={{
+                                        bg: "green.400",
+                                        color: "white",
+                                    }}
+                                    // bg="green.100"
 
-                                // color={"green.400"}
-                            >
-                                Attendees
-                            </Tab>
-                            <Tab
-                                _selected={{
-                                    bg: "red.400",
-                                    color: "white",
-                                }}
-                            >
-                                Absentees
-                            </Tab>
-                        </TabList>
+                                    // color={"green.400"}
+                                >
+                                    Attendees
+                                </Tab>
+                                <Tab
+                                    _selected={{
+                                        bg: "red.400",
+                                        color: "white",
+                                    }}
+                                >
+                                    Absentees
+                                </Tab>
+                            </TabList>
 
-                        <TabPanels>
-                            <TabPanel>
-                                <Accordion
-                                    defaultIndex={[0]}
-                                    allowMultiple
-                                    allowToggle
-                                    index={indexAttendees}
-                                    onChange={(e) =>
-                                        handleAttendeeAccordion(e as number[])
-                                    }
-                                    key={0}
-                                >
-                                    {data &&
-                                        Object.keys(
-                                            data.attendeesByPlatoon
-                                        ).map((platoon, index) => (
-                                            <PlatoonAccordianItem
-                                                key={index}
-                                                personnel={
-                                                    data.attendeesByPlatoon[
-                                                        platoon
-                                                    ]
-                                                }
-                                                platoon={platoon}
-                                                total={data.totalNumbers[platoon]}
-                                                // search={search}
-                                                // absentees={data.absentees}
-                                            />
-                                        ))}
-                                </Accordion>
-                            </TabPanel>
-                            <TabPanel>
-                                <Accordion
-                                    defaultIndex={[0]}
-                                    allowMultiple
-                                    allowToggle
-                                    index={indexAbsentees}
-                                    onChange={(e) =>
-                                        handleAbsenteeAccordion(e as number[])
-                                    }
-                                    key={1}
-                                >
-                                    {data &&
-                                        Object.keys(
-                                            data.absenteesByPlatoon
-                                        ).map((platoon, index) => (
-                                            <PlatoonAccordianItem
-                                                key={index}
-                                                personnel={
-                                                    data.absenteesByPlatoon[
-                                                        platoon
-                                                    ]
-                                                }
-                                                platoon={platoon}
-                                                // search={search}
-                                                absentees={data.absentees}
-                                                total={data.totalNumbers[platoon]}
-                                            />
-                                        ))}
-                                </Accordion>
-                            </TabPanel>
-                        </TabPanels>
-                    </Tabs>
+                            <TabPanels>
+                                <TabPanel>
+                                    <Accordion
+                                        defaultIndex={[0]}
+                                        allowMultiple
+                                        allowToggle
+                                        index={indexAttendees}
+                                        onChange={(e) =>
+                                            handleAttendeeAccordion(
+                                                e as number[]
+                                            )
+                                        }
+                                        key={0}
+                                    >
+                                        {data &&
+                                            Object.keys(
+                                                data.attendeesByPlatoon
+                                            ).map((platoon, index) => (
+                                                <PlatoonAccordianItem
+                                                    key={index}
+                                                    personnel={
+                                                        data.attendeesByPlatoon[
+                                                            platoon
+                                                        ]
+                                                    }
+                                                    platoon={platoon}
+                                                    total={
+                                                        data.totalNumbers[
+                                                            platoon
+                                                        ]
+                                                    }
+                                                    // search={search}
+                                                    // absentees={data.absentees}
+                                                    activityDate={
+                                                        activity?.date
+                                                            ? new Date(
+                                                                  activity.date
+                                                              )
+                                                            : new Date()
+                                                    }
+                                                />
+                                            ))}
+                                    </Accordion>
+                                </TabPanel>
+                                <TabPanel>
+                                    <Accordion
+                                        defaultIndex={[0]}
+                                        allowMultiple
+                                        allowToggle
+                                        index={indexAbsentees}
+                                        onChange={(e) =>
+                                            handleAbsenteeAccordion(
+                                                e as number[]
+                                            )
+                                        }
+                                        key={1}
+                                    >
+                                        {data &&
+                                            Object.keys(
+                                                data.absenteesByPlatoon
+                                            ).map((platoon, index) => (
+                                                <PlatoonAccordianItem
+                                                    key={index}
+                                                    personnel={
+                                                        data.absenteesByPlatoon[
+                                                            platoon
+                                                        ]
+                                                    }
+                                                    platoon={platoon}
+                                                    // search={search}
+                                                    absentees={data.absentees}
+                                                    total={
+                                                        data.totalNumbers[
+                                                            platoon
+                                                        ]
+                                                    }
+                                                    activityDate={
+                                                        activity?.date
+                                                            ? new Date(
+                                                                  activity.date
+                                                              )
+                                                            : new Date()
+                                                    }
+                                                />
+                                            ))}
+                                    </Accordion>
+                                </TabPanel>
+                            </TabPanels>
+                        </Tabs>
+                    </Stack>
                     {/* <Accordion
                         defaultIndex={[0]}
                         allowMultiple

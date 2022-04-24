@@ -45,7 +45,7 @@ import ActivityCalendar, {
 } from "../../components/Calendar/ActivityCalendar";
 import { Event } from "react-big-calendar";
 import { useRouter } from "next/router";
-import { IndividualActivityComponent } from "./[activity_ID]";
+
 import { isBefore, isSameDay, subDays } from "date-fns";
 const PersonAccordionItem: React.FC<{
     person: ExtendedPersonnel;
@@ -231,13 +231,13 @@ interface PageData {
     calendarData: CustomEvent[];
 }
 const ActivityHomePage: NextProtectedPage = () => {
-    useEffect(() => {
-        sendPOST("/api/activity/maintenance/refreshAll", {}).then(console.log);
-    }, []);
+    // useEffect(() => {
+    //     sendPOST("/api/activity/maintenance/refreshAll", {}).then(console.log);
+    // }, []);
     const { data, error } = useSWR<PageData>("/api/activity", fetcher);
 
     const { data: session } = useSession();
-    console.log(data, error);
+
     const defaultIndex = useMemo(
         () => [
             Object.keys(data?.sortedByPlatoon || {}).indexOf(

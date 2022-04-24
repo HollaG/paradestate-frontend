@@ -70,7 +70,11 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import { openInNewTab } from "../../../lib/custom";
 import PersonBasicDetails from "../../../components/Common/PersonBasicDetails";
-import { IoCheckmarkCircle, IoOpenOutline } from "react-icons/io5";
+import {
+    IoCheckmarkCircle,
+    IoCloseCircle,
+    IoOpenOutline,
+} from "react-icons/io5";
 import SearchInput from "../../../components/SearchInput";
 import CustomBigAlert from "../../../components/Alert/CustomBigAlert";
 import { format } from "date-fns";
@@ -82,6 +86,9 @@ import CustomPlainDateRangePicker from "../../../components/Dates/CustomPlainDat
 import CustomDatePicker from "../../../components/Dates/CustomDatePicker";
 import CustomDateRangePicker from "../../../components/Dates/CustomDateRangePicker";
 import CustomStatusDateRangePicker from "../../../components/Dates/CustomStatusDateRangePicker";
+import { differenceInBusinessDays } from "date-fns/esm";
+import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
+import IconAlert from "../../../components/HA/IconAlert";
 const Tags: React.FC<{
     person: ExtendedPersonnel;
     handleClick: () => void | Promise<boolean>;
@@ -158,8 +165,9 @@ const PersonAccordionItem: React.FC<{
             [key: number]: number[];
         }>
     >;
+    activityDate: Date;
     search: string;
-}> = ({ person, checkedIDs, setCheckedIDsState, search }) => {
+}> = ({ person, checkedIDs, setCheckedIDsState, search, activityDate }) => {
     const handleClick = () =>
         openInNewTab(`/personnel/manage/${person.personnel_ID}`);
 
@@ -190,14 +198,13 @@ const PersonAccordionItem: React.FC<{
     if (person.status_row_ID) defaultValueArr.push("On status");
 
     let defaultValue = defaultValueArr.join(", ") || "";
+
     return (
         <Collapse in={isVisible} animateOpacity>
             <Stack direction="column" my={3}>
                 <Stack direction="row" spacing={3}>
-                    <Center>
-                        <Icon as={IoCheckmarkCircle} w={6} h={6} color="green.400"/>
-                    </Center>
                     <Checkbox isChecked={isChecked} onChange={handleCheck} />
+                    <IconAlert person={person} activityDate={activityDate} />
                     <PersonBasicDetails
                         person={person}
                         // handleClick={handleClick}
@@ -242,7 +249,15 @@ const PlatoonAccordionItem: React.FC<{
         }>
     >;
     search: string;
-}> = ({ personnel, platoon, checkedIDs, setCheckedIDsState, search }) => {
+    activityDate: Date;
+}> = ({
+    personnel,
+    platoon,
+    checkedIDs,
+    setCheckedIDsState,
+    search,
+    activityDate,
+}) => {
     const { data: session } = useSession();
     // don't render the accordion panel by default, only render when use rclicks
     // This allows the page to be more performant as there is less stuff to hydrate
@@ -298,6 +313,7 @@ const PlatoonAccordionItem: React.FC<{
                         checkedIDs={checkedIDs}
                         setCheckedIDsState={setCheckedIDsState}
                         search={search}
+                        activityDate={activityDate}
                     />
                 ))}
             </AccordionPanel>
@@ -311,9 +327,8 @@ const AddParticipants: React.FC<{
     submit: (data: any, reasons: any) => Promise<void>;
     date: (Date | string)[];
     setStage: React.Dispatch<React.SetStateAction<0 | 2 | 1>>;
-}> = ({ data, submit, date, setStage }) => {
-    console.log("rerendering");
-
+    expiredPersonnelIDs: number[];
+}> = ({ data, submit, date, setStage, expiredPersonnelIDs }) => {
     const activityDate = format(
         new Date(date[0]),
         Assignments.datewithnameformat
@@ -369,6 +384,35 @@ const AddParticipants: React.FC<{
     const methods = useForm<any>();
     const submitFn = (reasons: any) => {
         submit(checkedIDsState, reasons);
+        methods.reset();
+    };
+
+    const [expiredNumberSelected, setExpiredNumberSelected] = useState(0);
+    useEffect(() => {
+        // count how many IDs in checkedIDsState are in expiredPersonnelIDs
+        setExpiredNumberSelected(
+            Object.keys(checkedIDsState).reduce((acc, key) => {
+                return (
+                    acc +
+                    checkedIDsState[key].filter((id) =>
+                        expiredPersonnelIDs.includes(id)
+                    ).length
+                );
+            }, 0)
+        );
+    }, [checkedIDsState, expiredPersonnelIDs]);
+
+    const removeExpired = () => {
+        // for every platoon, remove the expired personnel from the checkedIDsState
+        setCheckedIDsState((prevState) => {
+            const newState = { ...prevState };
+            Object.keys(newState).forEach((key) => {
+                newState[key] = newState[key].filter(
+                    (id) => !expiredPersonnelIDs.includes(id)
+                );
+            });
+            return newState;
+        });
     };
     return (
         <FormProvider {...methods}>
@@ -379,7 +423,11 @@ const AddParticipants: React.FC<{
                         <Flex flexWrap="wrap">
                             <Text>
                                 Accurate for {activityDate}
-                                {date[0] !== date[1] && " (Day 1)"}.
+                                {date[0] !== date[1] ? " (Day 1) only!" : "."}.
+                            </Text>
+                            <Text>
+                                Personnel HA status represented by the color of
+                                the sun icon.
                             </Text>
                             <Button
                                 size="xs"
@@ -392,6 +440,36 @@ const AddParticipants: React.FC<{
                             </Button>
                         </Flex>
                     </Alert>
+                    {!!expiredNumberSelected ? (
+                        <Alert status="error">
+                            <AlertIcon />
+                            <Flex flexWrap="wrap">
+                                <Text>
+                                    {expiredNumberSelected} personnel with
+                                    expired HA selected!
+                                </Text>
+                                <Button
+                                    size="xs"
+                                    colorScheme="red"
+                                    ml={2}
+                                    onClick={() => removeExpired()}
+                                >
+                                    {" "}
+                                    Remove{" "}
+                                </Button>
+                            </Flex>
+                        </Alert>
+                    ) : (
+                        <Alert status="success">
+                            <AlertIcon />
+                            <Flex flexWrap="wrap">
+                                <Text>
+                                    All selected personnel are heat
+                                    acclimatised!
+                                </Text>
+                            </Flex>
+                        </Alert>
+                    )}
                     <SearchInput setSearch={setSearch} />
                     <Accordion
                         defaultIndex={Object.keys(data).map(
@@ -410,6 +488,7 @@ const AddParticipants: React.FC<{
                                 checkedIDs={checkedIDsState[platoon] || []}
                                 setCheckedIDsState={setCheckedIDsState}
                                 search={search}
+                                activityDate={new Date(date[0])}
                             />
                         ))}
                     </Accordion>
@@ -430,7 +509,6 @@ const AddParticipants: React.FC<{
 };
 
 const HAAddPage: NextProtectedPage = () => {
-    console.log("page rerendering");
     const [stage, setStage] = useState<0 | 1 | 2>(0);
     const [formData, setFormData] = useState<{
         type: any;
@@ -441,6 +519,7 @@ const HAAddPage: NextProtectedPage = () => {
         };
         hasEvent: any[];
         noEvent: any[];
+        expiredPersonnelIDs: number[];
     }>(); // todo
     const [attendeeIDsSortedByPlatoon, setAttendeeIDsSortedByPlatoon] =
         useState<{ [key: string]: number[] }>();
@@ -456,10 +535,9 @@ const HAAddPage: NextProtectedPage = () => {
     const watchActivityType = watch("activity_type");
 
     const [contributes, setContributes] = useState<"0" | "1" | "2">("0");
-    console.log({ contributes });
+
     useEffect(() => {
         if (watchActivityType && watchActivityType.value === "PT") {
-            console.log("setting contributes");
             setContributes("1");
         } else {
             setContributes("0");
@@ -467,8 +545,6 @@ const HAAddPage: NextProtectedPage = () => {
     }, [watchActivityType, setContributes]);
     const [isSubmittingHAInfo, setIsSubmittingHAInfo] = useState(false);
     const submitActivityInfo = async (data: any) => {
-        console.log(data);
-
         setIsSubmittingHAInfo(true);
         if (!data.activity_name) data.activity_name = data.activity_type.value;
 
@@ -476,7 +552,7 @@ const HAAddPage: NextProtectedPage = () => {
             "/api/activity/getParticipants",
             data
         );
-        console.log("Got a response - ", responseData);
+        // console.log("Got a response - ", responseData);
         if (responseData.success) {
             setStage(1);
             setFormData(responseData.data);
@@ -488,7 +564,7 @@ const HAAddPage: NextProtectedPage = () => {
 
     const [activityIDs, setActivityIDs] = useState<number[]>([]);
     const submitPersonnelInfo = async (data: any, reasons: any) => {
-        console.log({ reasons, data });
+        // console.log({ reasons, data });
         setStage(2);
         setAttendeeIDsSortedByPlatoon(data);
         const responseData = await sendPOST("/api/activity/add", {
@@ -614,6 +690,7 @@ const HAAddPage: NextProtectedPage = () => {
                 )}
                 {stage === 1 && formData && formData.personnel && (
                     <AddParticipants
+                        expiredPersonnelIDs={formData.expiredPersonnelIDs}
                         data={formData.personnel}
                         submit={submitPersonnelInfo}
                         date={formData.date}

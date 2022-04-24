@@ -27,7 +27,7 @@ const StatusAlert: React.FC<{ person: Personnel }> = ({ person }) => {
                 {differenceInBusinessDays(
                     new Date(person.ha_end_date),
                     new Date()
-                )}{" "}
+                )}{" "} working
                 days! (
                 {format(new Date(person.ha_end_date), Assignments.dateformat)})
             </Alert>
@@ -39,7 +39,7 @@ const StatusAlert: React.FC<{ person: Personnel }> = ({ person }) => {
             {differenceInBusinessDays(
                 new Date(person.ha_end_date),
                 new Date()
-            )}{" "}
+            )}{" "} working
             days. (
             {format(new Date(person.ha_end_date), Assignments.dateformat)})
         </Alert>

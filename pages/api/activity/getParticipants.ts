@@ -40,6 +40,8 @@ export default async function handler(
                 values: query.values,
             });
 
+            const expiredPersonnelIDs = personnel.filter((person) => !person.ha_active).map((person) => person.personnel_ID)
+
             const objectified = [...personnel];
 
             if (!objectified) return { props: {} };
@@ -108,7 +110,9 @@ export default async function handler(
                     personnel: sortedByPlatoon,
                     hasEvent,
                     noEvent,
+                    expiredPersonnelIDs
                 },
+
             });
         } catch (e: any) {
             console.log(e);
