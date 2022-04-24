@@ -37,13 +37,14 @@ import {
     Spinner,
     AlertIcon,
     Alert,
+    Icon,
 } from "@chakra-ui/react";
 import { format, isBefore, isSameDay } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
-import { IoOpenOutline } from "react-icons/io5";
+import { IoHourglassOutline, IoOpenOutline } from "react-icons/io5";
 import useSWR, { useSWRConfig } from "swr";
 import PersonBasicDetails from "../../../components/Common/PersonBasicDetails";
 import { NextProtectedPage } from "../../../lib/auth";
@@ -452,9 +453,9 @@ const IndividualActivityPage: NextProtectedPage = () => {
                     <Center>
                         <Avatar
                             size="2xl"
-                            name={activity?.type}
-                            bgColor="teal"
-                            color="gray.300"
+                            name={Assignments.activityShortHandMap[activity?.type || "default"]}
+                            icon={<Icon as={IoHourglassOutline} color="white"/>}
+                            bgColor={`${Assignments.activityColorMap[activity?.type || "default"]}.400`}
                         />
                     </Center>
                 </GridItem>
@@ -481,7 +482,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                 <Tag
                                     size="md"
                                     variant="subtle"
-                                    colorScheme={"purple"}
+                                    colorScheme={Assignments.activityColorMap[activity?.type || "default"]}
                                 >
                                     <TagLabel>{activity?.type}</TagLabel>
                                 </Tag>

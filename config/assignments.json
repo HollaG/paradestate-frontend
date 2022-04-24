@@ -216,6 +216,7 @@
     ],
     "ha_types": ["PT"],
     "activityColorMap": {
+        "default": "grey",
         "PT": "blue",
         "Practical": "yellow",
         "Lecture": "orange",
@@ -224,8 +225,20 @@
         "Miscellaneous": "cyan",
         "Safety & Security Sharings": "purple",
         "Huddle / Townhall": "purple",
-        "WPT": "green"
-        
+        "WPT": "green"       
 
+    },
+    "activityShortHandMap": {
+        "default": "",
+        "PT": "P T",
+        "Practical": "P R",
+        "Lecture": "L T",
+        "Sharings": "S H",
+        "Reflections": "R F",
+        "Miscellaneous": "M S",
+        "Safety & Security Sharings": "S S",
+        "Huddle / Townhall": "T H",
+        "WPT": "W T"
     }
+
 }

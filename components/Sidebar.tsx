@@ -72,6 +72,7 @@ import {
     IoMailOutline,
     IoMedicalOutline,
     IoMegaphoneOutline,
+    IoPartlySunnyOutline,
     IoPeopleOutline,
     IoSettingsOutline,
     IoTrendingUp,
@@ -136,7 +137,12 @@ const LinkItems: (
         url: "/deliverables/status-list",
     },
     {
-        isDivider: true
+        name: "Heat Acclimatisation",
+        icon: IoPartlySunnyOutline,
+        url: "/ha",
+    },
+    {
+        isDivider: true,
     },
     {
         name: "Personnel",
@@ -168,11 +174,6 @@ const LinkItems: (
         icon: IoMegaphoneOutline,
         children: [
             {
-                name: "Heat Acclimatisation",
-                icon: IoBonfireOutline,
-                url: "/ha"
-            },
-            {
                 name: "Agenda",
                 icon: IoCalendarOutline,
                 url: "/activity",
@@ -184,6 +185,7 @@ const LinkItems: (
             },
         ],
     },
+    
     {
         isDivider: true,
     },
@@ -359,7 +361,14 @@ const Sidebar = (props: any) => {
             >
                 {LinkItems.map((link, index) => {
                     if (link.isDivider) {
-                        return <Divider key={index} color="gray.400" my={1} opacity={0.3}/>;
+                        return (
+                            <Divider
+                                key={index}
+                                color="gray.400"
+                                my={1}
+                                opacity={0.3}
+                            />
+                        );
                     } else if (link.isGroup) {
                         return (
                             <Box key={index}>
