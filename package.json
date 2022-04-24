@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 8085",
+    "start": "next start -p 3000",
     "prod": "next start -p 8085",
     "lint": "next lint"
   },

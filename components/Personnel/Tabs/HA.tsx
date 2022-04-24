@@ -38,7 +38,7 @@ const HA: React.FC = () => {
     const eventOnClick = (event: CustomEvent) => {
         router.push(`/activity/${event.activity_ID}`);
     };
-
+    console.log({data}, 'adsfahjdsbfhjadsf', {error}, personnel_ID)
     if (data)
         return (
             <Stack>

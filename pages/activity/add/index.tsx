@@ -382,8 +382,10 @@ const AddParticipants: React.FC<{
     // }, [search, data, defaultIndex]);
 
     const methods = useForm<any>();
-    const submitFn = (reasons: any) => {
-        submit(checkedIDsState, reasons);
+    const submitFn = async (reasons: any) => {
+        setIsSubmitting(true);
+        await submit(checkedIDsState, reasons);
+        setIsSubmitting(false);
         methods.reset();
     };
 
@@ -563,10 +565,10 @@ const HAAddPage: NextProtectedPage = () => {
     };
 
     const [activityIDs, setActivityIDs] = useState<number[]>([]);
+
     const submitPersonnelInfo = async (data: any, reasons: any) => {
         // console.log({ reasons, data });
-        setStage(2);
-        setAttendeeIDsSortedByPlatoon(data);
+
         const responseData = await sendPOST("/api/activity/add", {
             personnelIDsSortedByPlatoon: data,
             sortedByPlatoon: formData?.personnel,
@@ -580,6 +582,8 @@ const HAAddPage: NextProtectedPage = () => {
         if (responseData.error) {
             alert(responseData.error);
         } else {
+            setAttendeeIDsSortedByPlatoon(data);
+            setStage(2);
             setActivityIDs(responseData.data.activity_IDs);
         }
     };
