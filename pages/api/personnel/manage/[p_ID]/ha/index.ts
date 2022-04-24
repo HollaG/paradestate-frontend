@@ -11,6 +11,7 @@ import { Absentee, Attendee } from "../../../../activity/[activity_ID]";
 
 import { CustomEvent } from "../../../../../../components/Calendar/ActivityCalendar";
 import { treeItemClasses } from "@mui/lab";
+import { refreshPersonnelID } from "../../../../../../lib/ha";
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
@@ -27,7 +28,7 @@ export default async function handler(
         query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
         values: [personnel_ID, session.user.unit, session.user.company],
     });
-    
+
     if (!personnel.length)
         return res.status(400).json({ error: "Personnel not found" });
     const person = personnel[0];
@@ -35,23 +36,27 @@ export default async function handler(
         try {
             // get the calendar data
             // calendar should have all the activities, then the ones which he participated in should be in a lighter color
+            // refresh
+            const results = await refreshPersonnelID(
+                person.personnel_ID.toString(),
+                session.user.company,
+                session.user.unit
+            );
 
             const activities: Activity[] = await executeQuery({
                 query: `SELECT * FROM activity_list WHERE unit = ? AND company = ? ORDER BY date ASC`,
                 values: [session.user.unit, session.user.company],
             });
-            
 
             const absences: Absentee[] = await executeQuery({
                 query: `SELECT * FROM activity_absentees WHERE personnel_ID = ?`,
                 values: [personnel_ID],
             });
-            
+
             const attended: Attendee[] = await executeQuery({
                 query: `SELECT * FROM activity_attendees WHERE personnel_ID = ?`,
                 values: [personnel_ID],
             });
-       
 
             const absencesByActivityID = absences.reduce<{
                 [key: string]: Absentee[];
@@ -74,22 +79,22 @@ export default async function handler(
                 event_type: "ended" | "resumed";
                 date: Date;
             }[] = await executeQuery({
-                query: `SELECT * FROM ha_events WHERE personnel_ID = '112' ORDER BY date ASC`,
-                values: [Number(personnel_ID)],
+                query: `SELECT * FROM ha_events WHERE personnel_ID = ? ORDER BY date ASC`,
+                values: [personnel_ID],
             });
-            
+
             const post_in = personnel[0].post_in;
             const secondYear = personnel[0].svc_status === "REG";
             const ord = personnel[0].ord;
-            const secondYearDate = subMonths(ord, 10)
+            const secondYearDate = subMonths(ord, 10);
             // assume when posted in, already have HA
             const haCalendarData: CustomEvent[] = [];
             haEvents.forEach((event, index) => {
                 if (index === 0) {
                     haCalendarData.push({
                         allDay: true,
-                        start: (post_in),
-                        end: (event.date) ,
+                        start: post_in,
+                        end: event.date,
                         title: "HA Active",
                         color: "green",
                     });
@@ -109,17 +114,30 @@ export default async function handler(
             });
 
             // Extend the 'HA expired' duration all the way until ORD, if it is not past ORD
-            if (isBefore(haEvents[haEvents.length - 1].date, person.ord)) {
+            if (haEvents.length) {
+                if (isBefore(haEvents[haEvents.length - 1].date, person.ord)) {
+                    haCalendarData.push({
+                        allDay: true,
+                        start: new Date(haEvents[haEvents.length - 1].date),
+                        end: person.ord,
+                        title: "HA Expired",
+                        color: "red",
+                    });
+                }
+            } else { 
+                // this is a failsafe, ideally this should never happen.
+                // the only way this can happen is if there is no 'end' event registered
+                // set no HA to post_in until ORD
                 haCalendarData.push({
                     allDay: true,
-                    start: new Date(haEvents[haEvents.length - 1].date),
+                    start: post_in,
                     end: person.ord,
                     title: "HA Expired",
-                    color: "red"
-                });
-            }
+                    color: "red",
+                })
+                
 
-           
+            }
 
             // Make the calendar data
             const calendarData: CustomEvent[] = [
@@ -151,15 +169,16 @@ export default async function handler(
                 // color: "green",
                 start: post_in,
                 end: post_in,
-                title: "Post In"
-            })
-            if (person.svc_status !== "REG") calendarData.push({
-                allDay: true,
-                // color: "green",
-                start: secondYearDate,
-                end: secondYearDate,
-                title: "Yr 2 start"
-            })
+                title: "Post In",
+            });
+            if (person.svc_status !== "REG")
+                calendarData.push({
+                    allDay: true,
+                    // color: "green",
+                    start: secondYearDate,
+                    end: secondYearDate,
+                    title: "Yr 2 start",
+                });
 
             const responseData = {
                 activities,
@@ -169,6 +188,7 @@ export default async function handler(
                 haEvents,
                 person: personnel[0],
             };
+          
             res.status(200).json(responseData);
         } catch (e: any) {
             console.log(e);

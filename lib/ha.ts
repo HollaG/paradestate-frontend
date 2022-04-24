@@ -50,6 +50,7 @@ const determineIfYearOneAchievedHA = (
 ) => {
     // find the nearest Monday in dateArray
     const ptDates = Object.keys(activitiesMap);
+    console.log({ ptDates });
     let nearestMonday = dateArray.findIndex(
         (date) => new Date(date).getDay() === 1
     );
@@ -64,7 +65,7 @@ const determineIfYearOneAchievedHA = (
     let consecutivePTDays = 0; // working days only
     for (let i = 0; i < dateArray.length; i++) {
         let date = dateArray[i];
-
+      
         if (consecutivePTDays >= 10) {
             dateAchieved = date;
             break;
@@ -291,7 +292,7 @@ export const refreshAll = async (company: string, unit: string) => {
                     : subDays(secondYearDate, 12), // 12 days before the start of 2nd year to account for them doing the 10 consective PTs before the swap to 2nd year
                 end
             );
-            console.log(dateArrayHAForFirstYear, dateArrayHAForSecondYear);
+            
             isSecondYear = true;
         } else {
             // solely first year soldier
@@ -545,7 +546,7 @@ export const refreshAll = async (company: string, unit: string) => {
         //     ],
         // });
     }
-    console.log(allEventValues);
+   
     await executeQuery({
         query: `INSERT INTO ha_events (personnel_ID, event_type, date) VALUES ?`,
         values: [allEventValues],
@@ -745,6 +746,8 @@ export const refreshPersonnelID = async (
                 stringifiedDateArrayForFirstYear,
                 mappedActivities
             );
+            console.log("-----------------------------------");
+   
             if (resumedDate) {
                 // personnel resumed HA after being on hiatus
                 events[0].push({
@@ -882,7 +885,6 @@ export const refreshPersonnelID = async (
         }
     });
     resultMap[person.personnel_ID] = events;
-
     results.push({
         isSecondYear,
         haActive,
@@ -893,12 +895,27 @@ export const refreshPersonnelID = async (
         },
         activities: mappedActivitiesFinal,
     });
+
     // delete everything from ha_status and ha_events where personnel_ID in selected
     // await executeQuery({
     //     query: `DELETE FROM ha_status WHERE personnel_ID IN (?)`,
     //     values: [activePersonnelIDs],
     // })
+    const flatEvents = events.flat();
+    const allEventValues: any[][] = [];
+    allEventValues.push(
+        ...flatEvents.map((event) => [
+            person.personnel_ID,
+            event.type,
+            formatMySQLDateHelper(event.date),
+        ])
+    );
+   
 
+    await executeQuery({
+        query: `INSERT INTO ha_events (personnel_ID, event_type, date) VALUES ?`,
+        values: [allEventValues],
+    });
     await executeQuery({
         query: `UPDATE personnel SET ha_end_date = ? WHERE personnel_ID = ?`,
         // query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
@@ -907,6 +924,7 @@ export const refreshPersonnelID = async (
             person.personnel_ID,
         ],
     });
+
     console.log(
         `------------ FINISH UPDATING HA STATUS (${personnel_ID}) ------------`
     );
