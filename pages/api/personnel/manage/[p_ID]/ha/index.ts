@@ -27,7 +27,7 @@ export default async function handler(
         query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE personnel_ID = ? AND unit = ? AND company = ?`,
         values: [personnel_ID, session.user.unit, session.user.company],
     });
-    console.log({personnel})
+    
     if (!personnel.length)
         return res.status(400).json({ error: "Personnel not found" });
     const person = personnel[0];
@@ -40,18 +40,18 @@ export default async function handler(
                 query: `SELECT * FROM activity_list WHERE unit = ? AND company = ? ORDER BY date ASC`,
                 values: [session.user.unit, session.user.company],
             });
-            console.log({activities})
+            
 
             const absences: Absentee[] = await executeQuery({
                 query: `SELECT * FROM activity_absentees WHERE personnel_ID = ?`,
                 values: [personnel_ID],
             });
-            console.log({absences})
+            
             const attended: Attendee[] = await executeQuery({
                 query: `SELECT * FROM activity_attendees WHERE personnel_ID = ?`,
                 values: [personnel_ID],
             });
-            console.log({attended})
+       
 
             const absencesByActivityID = absences.reduce<{
                 [key: string]: Absentee[];
@@ -78,7 +78,6 @@ export default async function handler(
                 values: [Number(personnel_ID)],
             });
             
-            console.log({haEvents, personnel_ID})
             const post_in = personnel[0].post_in;
             const secondYear = personnel[0].svc_status === "REG";
             const ord = personnel[0].ord;

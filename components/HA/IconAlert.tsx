@@ -1,4 +1,4 @@
-import { CheckCircleIcon, SunIcon, WarningIcon } from "@chakra-ui/icons";
+
 import { Center, Icon, Link } from "@chakra-ui/react";
 import { differenceInBusinessDays } from "date-fns";
 import { IoPartlySunny } from "react-icons/io5";

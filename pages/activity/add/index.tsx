@@ -87,7 +87,7 @@ import CustomDatePicker from "../../../components/Dates/CustomDatePicker";
 import CustomDateRangePicker from "../../../components/Dates/CustomDateRangePicker";
 import CustomStatusDateRangePicker from "../../../components/Dates/CustomStatusDateRangePicker";
 import { differenceInBusinessDays } from "date-fns/esm";
-import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
+
 import IconAlert from "../../../components/HA/IconAlert";
 const Tags: React.FC<{
     person: ExtendedPersonnel;

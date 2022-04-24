@@ -316,7 +316,7 @@ const PersonnelPage: NextProtectedPage = () => {
         if (tabs.includes(router?.query?.view?.toString() || "")) {
             setTabIndex(tabs.indexOf(router?.query?.view?.toString() || "main"));
         }
-    }, [router.query.view, setTabIndex]);
+    }, [router.query.view, setTabIndex, tabs]);
 
     return (
         <>
