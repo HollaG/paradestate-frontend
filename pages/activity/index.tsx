@@ -174,17 +174,16 @@ const ActivityCard: React.FC<{ activity: Activity; data: PageData }> = ({
     return (
         <BasicCard>
             <Stat>
-                <StatLabel >{activityDateText}</StatLabel>
+                <StatLabel>{activityDateText}</StatLabel>
                 <StatNumber>
                     <Skeleton
                         isLoaded={!!data}
-                        
                         display="flex"
                         justifyContent="space-between"
                         alignItems="center"
                     >
                         <Flex width="100%" alignItems="center">
-                            <Text > {activity.name} </Text>
+                            <Text> {activity.name} </Text>
                             <Spacer />
                             <NextLink
                                 href={`/activity/${activity.activity_ID}`}
@@ -201,14 +200,25 @@ const ActivityCard: React.FC<{ activity: Activity; data: PageData }> = ({
                     <Skeleton isLoaded={!!data} height="21px">
                         {activity.type} |{" "}
                         {data.attendeesGroupedByActivityID[activity.activity_ID]
-                            .length || 0}{" "}
+                            ? data.attendeesGroupedByActivityID[
+                                  activity.activity_ID
+                              ].length
+                            : 0}{" "}
                         /{" "}
                         {(data.absenteesGroupedByActivityID[
                             activity.activity_ID
-                        ].length || 0) +
+                        ]
+                            ? data.absenteesGroupedByActivityID[
+                                  activity.activity_ID
+                              ].length
+                            : 0) +
                             (data.attendeesGroupedByActivityID[
                                 activity.activity_ID
-                            ].length || 0)}{" "}
+                            ]
+                                ? data.attendeesGroupedByActivityID[
+                                      activity.activity_ID
+                                  ].length
+                                : 0)}{" "}
                         |{" "}
                         {activity.start_date !== activity.end_date &&
                             `Day ${activity.day}`}

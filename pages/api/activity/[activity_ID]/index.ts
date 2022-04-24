@@ -159,15 +159,15 @@ export default async function handler(
 
         // make sorted By Platoon for both attending and absentees
 
-        const absenteesByPlatoon = await getPersonnel({
+        const absenteesByPlatoon = absentees_IDs.length ? await getPersonnel({
             personnel_IDs: absentees_IDs,
             selDate: formatMySQLDateHelper(activity[0].date.toString()),
-        });
+        }) : {};
 
-        const attendeesByPlatoon = await getPersonnel({
+        const attendeesByPlatoon = attendees_IDs.length ? await getPersonnel({
             personnel_IDs: attendees_IDs,
             selDate: formatMySQLDateHelper(activity[0].date.toString()),
-        });
+        }) : {};
 
         // calculate number of personnel not heat acclimatised
         const numberExpired = attendees_IDsResult.filter(

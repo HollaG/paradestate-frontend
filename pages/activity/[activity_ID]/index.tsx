@@ -593,7 +593,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                             >
                                                 {data.attendeesByPlatoon[
                                                     platoon
-                                                ].length || 0}{" "}
+                                                ] ? data.attendeesByPlatoon[platoon].length : 0}{" "}
                                                 / {data.totalNumbers[platoon]}
                                             </Badge>
                                         </StatNumber>
