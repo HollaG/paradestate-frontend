@@ -147,6 +147,7 @@ export interface PersonnelPageData {
     isSecondYear: boolean;
     secondYearDate: string;
 }
+const tabs = ["main", 'ha']
 
 const PersonnelPage: NextProtectedPage = () => {
     const router = useRouter();
@@ -298,7 +299,6 @@ const PersonnelPage: NextProtectedPage = () => {
     };
 
     const [tabIndex, setTabIndex] = React.useState<number>(0);
-    const tabs = ["main", 'ha']
 
     const handleTabsChange = (index: number) => {
         // setTabIndex(index);
@@ -316,7 +316,9 @@ const PersonnelPage: NextProtectedPage = () => {
         if (tabs.includes(router?.query?.view?.toString() || "")) {
             setTabIndex(tabs.indexOf(router?.query?.view?.toString() || "main"));
         }
-    }, [router.query.view, setTabIndex, tabs]);
+
+
+    }, [router.query.view, setTabIndex]);
 
     return (
         <>
