@@ -89,6 +89,7 @@ import { capitalizeFirstLetter, onClickUrl } from "../lib/custom";
 import useSWRImmutable from "swr/immutable";
 import fetcher from "../lib/fetcher";
 import SearchInput from "../components/SearchInput";
+import CustomLoadingBar from "../components/Skeleton/LoadingBar";
 
 export const DefaultLink: React.FC<{
     url: string;
@@ -807,7 +808,7 @@ const Dashboard: NextProtectedPage = () => {
                 </Button>
             </DashboardHeading>
             <SearchInput setSearch={setSearch} />
-            {!data && <>Loading data...</>}
+            {!data && <CustomLoadingBar/>}
             {data && (
                 <Accordion
                     // defaultIndex={[0]}

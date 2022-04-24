@@ -34,6 +34,7 @@ import { useCallback, useEffect, useState } from "react";
 import CustomBigAlert from "../../../../components/Alert/CustomBigAlert";
 import { useRouter } from "next/router";
 import AddFormTemplate from "../../../../components/Personnel/Status/Manage/AddFormTemplate";
+import CustomLoadingBar from "../../../../components/Skeleton/LoadingBar";
 
 const steps = ["Add details", "Success"];
 
@@ -198,7 +199,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         return <FormProvider {...methods}>
             <AddFormTemplate isSubmitting={isSubmitting} steps={steps} step={0} submit={submit} platoons={data?.platoons} sections={data?.sections}/>
         </FormProvider>;
-    else return <> Loading data... </>
+    else return <CustomLoadingBar/>
     // return (
     //     <form onSubmit={handleSubmit(submit)}>
     //         <Stack direction="column">

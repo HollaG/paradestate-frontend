@@ -21,6 +21,7 @@ import { NextProtectedPage } from "../../lib/auth";
 import fetcher from "../../lib/fetcher";
 import { AuditLogInterface, AuditResponse } from "../api/audit-log";
 import Assignments from "../../config/assignments.json";
+import CustomLoadingBar from "../../components/Skeleton/LoadingBar";
 const AuditLogEntry: React.FC<{ entry: AuditLogInterface }> = ({ entry }) => {
     const url =
         entry.type === "personnel"
@@ -163,7 +164,7 @@ const AuditLogPage: NextProtectedPage = () => {
                     </Button>
                 </Stack>
             </Center>
-            {!data && <>Loading data...</>}
+            {!data && <CustomLoadingBar/>}
             {data && (
                 <Accordion
                     defaultIndex={[0]}

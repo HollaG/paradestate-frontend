@@ -33,6 +33,7 @@ import { addDays, format, subDays } from "date-fns";
 import Assignments from "../../config/assignments.json";
 import ParadeStateFormat from "../../formats/paradestate";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import CustomLoadingBar from "../../components/Skeleton/LoadingBar";
 const tempPlatoons = ["HQ", "PLATOON 1", "PLATOON 2", "COMPANY"];
 const ParadeState: NextProtectedPage = () => {
     const { data: session } = useSession();
@@ -235,7 +236,7 @@ const ParadeState: NextProtectedPage = () => {
             <Box>
                 {psData?.data ? (
                     <ParadeStateFormat ref={copyRef} data={psData.data} />
-                ) : <> Loading data... </>}
+                ) : <CustomLoadingBar/>}
             </Box>
         </Stack>
     );

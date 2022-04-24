@@ -89,6 +89,7 @@ import CustomStatusDateRangePicker from "../../../../components/Dates/CustomStat
 import DeleteDialog from "../../../../components/Dialogs/DeleteDialog";
 import Main from "../../../../components/Personnel/Tabs/Main";
 import HA from "../../../../components/Personnel/Tabs/HA";
+import CustomLoadingBar from "../../../../components/Skeleton/LoadingBar";
 
 const types = [
     "All",
@@ -685,7 +686,7 @@ const PersonnelPage: NextProtectedPage = () => {
                     </Grid>
                 </Stack>
             ) : (
-                <> Loading data... </>
+                <CustomLoadingBar/>
             )}
         </>
     );

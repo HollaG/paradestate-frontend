@@ -57,6 +57,7 @@ import RankInput from "../../../components/Forms/Controlled/RankInput";
 import PesInput from "../../../components/Forms/Controlled/PesInput";
 import ORDInput from "../../../components/Forms/Controlled/ORDInput";
 import PostInInput from "../../../components/Forms/Controlled/PostInInput";
+import CustomLoadingBar from "../../../components/Skeleton/LoadingBar";
 interface ResponseData {
     sortedByPlatoon: {
         [key: string]: ExtendedPersonnel[];
@@ -613,13 +614,12 @@ const PersonnelListPage: NextProtectedPage = () => {
 
             setIndex((prev) => {
                 if (!prev.length) {
-                    const newIndex = Object.keys(data?.sortedByPlatoon || {}).indexOf(
-                        session?.user.platoon || ""
-                    )
-                    if (newIndex === -1) return [...prev]
-                    else return [newIndex]
-                    
-                } else return [...prev]
+                    const newIndex = Object.keys(
+                        data?.sortedByPlatoon || {}
+                    ).indexOf(session?.user.platoon || "");
+                    if (newIndex === -1) return [...prev];
+                    else return [newIndex];
+                } else return [...prev];
             });
         }
     }, [search, data?.sortedByPlatoon, session]);
@@ -651,7 +651,7 @@ const PersonnelListPage: NextProtectedPage = () => {
                 <Heading> Personnel ({data?.total})</Heading>
             </Center>
             <SearchInput setSearch={setSearch} />
-            {data && platoonData && (
+            {data && platoonData ? (
                 <Accordion
                     // defaultIndex={[0]}
                     allowMultiple
@@ -680,6 +680,8 @@ const PersonnelListPage: NextProtectedPage = () => {
                         />
                     )}
                 </Accordion>
+            ) : (
+                <CustomLoadingBar />
             )}
         </Stack>
     );

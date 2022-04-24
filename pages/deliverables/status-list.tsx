@@ -23,6 +23,7 @@ import fetcher from "../../lib/fetcher";
 import Assignments from "../../config/assignments.json";
 import StatusListFormat from "../../formats/statuslist";
 import { changeToNextDayIfPastNoon } from "../../lib/custom";
+import CustomLoadingBar from "../../components/Skeleton/LoadingBar";
 
 const StatusList: NextProtectedPage = () => {
     const { data: session } = useSession();
@@ -167,7 +168,7 @@ const StatusList: NextProtectedPage = () => {
                 {slData?.data ? (
                     <StatusListFormat ref={copyRef} data={slData.data} />
                 ) : (
-                    <> Loading data... </>
+                    <CustomLoadingBar/>
                 )}
             </Box>
         </Stack>

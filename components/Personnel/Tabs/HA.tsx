@@ -9,6 +9,7 @@ import { Personnel } from "../../../types/database";
 import ActivityCalendar from "../../Calendar/ActivityCalendar";
 import { CustomEvent } from "../../Calendar/ActivityCalendar";
 import StatusAlert from "../../HA/StatusAlert";
+import CustomLoadingBar from "../../Skeleton/LoadingBar";
 import HATimeLine from "../HATimeLine";
 
 const HA: React.FC = () => {
@@ -49,7 +50,7 @@ const HA: React.FC = () => {
                 <HATimeLine haEvents={data.haEvents} person={data.person} />
             </Stack>
         );
-    else return <>Loading...</>;
+    else return <CustomLoadingBar/>;
 };
 
 export default React.memo(HA);

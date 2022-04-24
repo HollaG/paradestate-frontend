@@ -71,6 +71,7 @@ import { IoOpenOutline } from "react-icons/io5";
 import React from "react";
 import NextLink from "next/link";
 import { onClickUrl } from "../../../../lib/custom";
+import CustomLoadingBar from "../../../../components/Skeleton/LoadingBar";
 export interface StatusOption extends OptionBase {
     label: string;
     value: string;
@@ -81,7 +82,7 @@ const StatusModal: React.FC<{
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
-    personnel_ID: number
+    personnel_ID: number;
 }> = React.memo(({ statuses, isOpen, onOpen, onClose, personnel_ID }) => {
     // console.log({ statuses }, "----------------------------------");
     return (
@@ -103,7 +104,9 @@ const StatusModal: React.FC<{
                     <Button
                         colorScheme="purple"
                         mr={3}
-                        onClick={onClickUrl(`/personnel/manage/${personnel_ID}`)}
+                        onClick={onClickUrl(
+                            `/personnel/manage/${personnel_ID}`
+                        )}
                     >
                         Edit statuses
                     </Button>
@@ -336,7 +339,7 @@ const PlatoonAccordionItem: React.FC<{
 }) => {
     const { data: session } = useSession();
     const [rendered, setRendered] = useState(platoon === session?.user.platoon);
- 
+
     useEffect(() => {
         setRendered(platoon === session?.user.platoon);
     }, [session?.user.platoon, platoon]);
@@ -349,7 +352,10 @@ const PlatoonAccordionItem: React.FC<{
     return (
         <AccordionItem>
             <Text>
-                <AccordionButton _expanded={{ bg: "gray.200" }} onClick={() => setRendered(true)}>
+                <AccordionButton
+                    _expanded={{ bg: "gray.200" }}
+                    onClick={() => setRendered(true)}
+                >
                     <Box flex={1} textAlign="left">
                         {platoon} ({personnel.length})
                     </Box>
@@ -393,9 +399,14 @@ const StatusManager: NextProtectedPage<{
     // console.log("rerendered");
     const [search, setSearch] = useState("");
 
-    
-
-    const defaultIndex = useMemo(() => [Object.keys(data?.sortedByPlatoon || {}).indexOf(session?.user.platoon || "")], [data, session]);
+    const defaultIndex = useMemo(
+        () => [
+            Object.keys(data?.sortedByPlatoon || {}).indexOf(
+                session?.user.platoon || ""
+            ),
+        ],
+        [data, session]
+    );
     const [index, setIndex] = useState(defaultIndex); // todo - set this to the user platoon
     const handleAccordion = (index: number[]) => {
         setIndex(index);
@@ -448,7 +459,7 @@ const StatusManager: NextProtectedPage<{
                 </Button>
             </StatusHeading>
             <SearchInput setSearch={setSearch} />
-            {!data && <>Loading data...</>}
+            {!data && <CustomLoadingBar />}
             {data && (
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>

@@ -3,6 +3,7 @@ import { useAuth } from "./AuthProvider";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import Layout from "../Sidebar";
+import CustomLoadingBar from "../Skeleton/LoadingBar";
 
 export function AuthGuard({ children }: { children: JSX.Element }) {
     const { user, initializing, setRedirect } = useAuth();
@@ -24,7 +25,7 @@ export function AuthGuard({ children }: { children: JSX.Element }) {
 
     /* show loading indicator while the auth provider is still initializing */
     if (initializing) {
-        return <> Loading data... </>;
+        return <CustomLoadingBar/>;
     }
 
     // if auth initialized with a valid user show protected page

@@ -34,6 +34,7 @@ import fetcher, { sendPOST } from "../../lib/fetcher";
 import { Personnel } from "../../types/database";
 
 import Assignments from "../../config/assignments.json";
+import CustomLoadingBar from "../../components/Skeleton/LoadingBar";
 const PersonAccordionItem: React.FC<{
     person: Personnel;
     selectedDate: Date;
@@ -491,7 +492,7 @@ const HAPage: NextProtectedPage = () => {
                 </Tabs>
             </Stack>
         );
-    else return <Text>Loading...</Text>;
+    else return <CustomLoadingBar/>;
 };
 
 HAPage.requireAuth = true;

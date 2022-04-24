@@ -58,6 +58,7 @@ import SmallCard from "../../../components/Card/SmallCard";
 import { Absentee } from "../../api/activity/[activity_ID]";
 import DeleteDialog from "../../../components/Dialogs/DeleteDialog";
 import IconAlert from "../../../components/HA/IconAlert";
+import CustomLoadingBar from "../../../components/Skeleton/LoadingBar";
 const Tags: React.FC<{ person: ExtendedPersonnel }> = ({ person }) => {
     const tags = [];
 
@@ -328,7 +329,7 @@ const PlatoonAccordianItem: React.FC<{
 const IndividualActivityPage: NextProtectedPage = () => {
     const router = useRouter();
     const activity_ID = router.query.activity_ID;
- 
+
     const { data, error } = useSWR<{
         activity: Activity;
         absentees_IDs: any;
@@ -346,7 +347,6 @@ const IndividualActivityPage: NextProtectedPage = () => {
         };
         numberExpired: number;
     }>(`/api/activity/${activity_ID}`, fetcher);
-  
 
     // Check if upcoming / Today / Past
     const activity = data?.activity;
@@ -453,9 +453,19 @@ const IndividualActivityPage: NextProtectedPage = () => {
                     <Center>
                         <Avatar
                             size="2xl"
-                            name={Assignments.activityShortHandMap[activity?.type || "default"]}
-                            icon={<Icon as={IoHourglassOutline} color="white"/>}
-                            bgColor={`${Assignments.activityColorMap[activity?.type || "default"]}.400`}
+                            name={
+                                Assignments.activityShortHandMap[
+                                    activity?.type || "default"
+                                ]
+                            }
+                            icon={
+                                <Icon as={IoHourglassOutline} color="white" />
+                            }
+                            bgColor={`${
+                                Assignments.activityColorMap[
+                                    activity?.type || "default"
+                                ]
+                            }.400`}
                         />
                     </Center>
                 </GridItem>
@@ -465,7 +475,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                     display="flex"
                     justifyContent={{ base: "center", lg: "unset" }}
                 >
-                    <Box>
+                    <Skeleton isLoaded={!!activity}>
                         <Box
                             display={{ base: "block", lg: "flex" }}
                             // flexDirection="row-reverse"
@@ -482,12 +492,17 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                 <Tag
                                     size="md"
                                     variant="subtle"
-                                    colorScheme={Assignments.activityColorMap[activity?.type || "default"]}
+                                    colorScheme={
+                                        Assignments.activityColorMap[
+                                            activity?.type || "default"
+                                        ]
+                                    }
                                 >
                                     <TagLabel>{activity?.type}</TagLabel>
                                 </Tag>
                             </Box>
                         </Box>
+
                         <Flex
                             justifyContent={{
                                 base: "center",
@@ -515,6 +530,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                 </Box>
                             </Stack>
                         </Flex>
+
                         <Box display={{ base: "block", lg: "flex" }}>
                             <Text
                                 size="sm"
@@ -524,16 +540,18 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                 {activity?.editor_ID}
                             </Text>
                         </Box>
-                    </Box>
+                    </Skeleton>
                 </GridItem>
                 <GridItem>
                     <SimpleGrid columns={{ base: 2, lg: 1 }} spacing={2}>
                         <Stat textAlign={{ base: "center", lg: "unset" }}>
                             <StatLabel> Activity ID </StatLabel>
                             <StatNumber>
-                                <Badge fontSize="lg" colorScheme="purple">
-                                    {activity?.activity_ID}
-                                </Badge>
+                                <Skeleton isLoaded={!!activity}>
+                                    <Badge fontSize="lg" colorScheme="purple">
+                                        {activity?.activity_ID}
+                                    </Badge>
+                                </Skeleton>
                             </StatNumber>
                             {/* <StatHelpText>
                             {" "}
@@ -543,11 +561,13 @@ const IndividualActivityPage: NextProtectedPage = () => {
                         <Stat textAlign={{ base: "center", lg: "unset" }}>
                             <StatLabel> Attendees </StatLabel>
                             <StatNumber>
-                                <Badge fontSize="lg" colorScheme="purple">
-                                    {data?.attendees_IDs.length} /{" "}
-                                    {data?.attendees_IDs.length +
-                                        data?.absentees_IDs.length}
-                                </Badge>
+                                <Skeleton isLoaded={!!activity}>
+                                    <Badge fontSize="lg" colorScheme="purple">
+                                        {data?.attendees_IDs.length} /{" "}
+                                        {data?.attendees_IDs.length +
+                                            data?.absentees_IDs.length}
+                                    </Badge>
+                                </Skeleton>
                             </StatNumber>
                             {/* <StatHelpText>
                             {" "}
@@ -590,6 +610,7 @@ const IndividualActivityPage: NextProtectedPage = () => {
                             colorScheme="red"
                             size="sm"
                             onClick={() => setDeleteIsOpen(true)}
+                            disabled={!activity}
                         >
                             Delete
                         </Button>
@@ -597,7 +618,8 @@ const IndividualActivityPage: NextProtectedPage = () => {
                     </SimpleGrid>
                 </GridItem>
                 <GridItem colSpan={5} mt={{ base: 2, lg: 0 }}>
-                    <Stack>
+                    {!data && <CustomLoadingBar />}
+                    {data && <Stack>
                         <Alert status="info">
                             <AlertIcon />
                             <Flex flexWrap="wrap">
@@ -733,31 +755,8 @@ const IndividualActivityPage: NextProtectedPage = () => {
                                 </TabPanel>
                             </TabPanels>
                         </Tabs>
-                    </Stack>
-                    {/* <Accordion
-                        defaultIndex={[0]}
-                        allowMultiple
-                        allowToggle
-                        index={index}
-                        onChange={(e) => handleAccordion(e as number[])}
-                    >
-                        {data &&
-                            Object.keys(data.sortedByPlatoon).map(
-                                (platoon, index) => (
-                                    <PlatoonAccordianItem
-                                        key={index}
-                                        personnel={
-                                            data.sortedByPlatoon[platoon]
-                                        }
-                                        platoon={platoon}
-                                        attendee_IDs={data.attendees_IDs}
-                                        absentee_IDs={data.absentees_IDs}
-                                        // search={search}
-                                        absentees={data.absentees}
-                                    />
-                                )
-                            )}
-                    </Accordion> */}
+                    </Stack>}
+                    
                 </GridItem>
             </Grid>
             <DeleteDialog
