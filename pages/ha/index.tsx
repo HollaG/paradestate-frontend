@@ -347,7 +347,7 @@ const HAPage: NextProtectedPage = () => {
                         {" "}
                         <Button size="xs" colorScheme="teal" isLoading={isRefreshing} onClick={() => refreshData()}>
                             {" "}
-                            Inaccurate? Refresh the status (Don't spam!){" "}
+                            Inaccurate? Refresh the status (Do not spam!){" "}
                         </Button>{" "}
                     </Center>
                 </Box>
