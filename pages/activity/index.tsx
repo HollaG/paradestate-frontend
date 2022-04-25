@@ -241,9 +241,7 @@ interface PageData {
     calendarData: CustomEvent[];
 }
 const ActivityHomePage: NextProtectedPage = () => {
-    // useEffect(() => {
-    //     sendPOST("/api/activity/maintenance/refreshAll", {}).then(console.log);
-    // }, []);
+    
     const { data, error } = useSWR<PageData>("/api/activity", fetcher);
 
     const { data: session } = useSession();

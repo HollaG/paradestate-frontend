@@ -50,7 +50,7 @@ const determineIfYearOneAchievedHA = (
 ) => {
     // find the nearest Monday in dateArray
     const ptDates = Object.keys(activitiesMap);
-    console.log({ ptDates });
+    
     let nearestMonday = dateArray.findIndex(
         (date) => new Date(date).getDay() === 1
     );
@@ -65,7 +65,7 @@ const determineIfYearOneAchievedHA = (
     let consecutivePTDays = 0; // working days only
     for (let i = 0; i < dateArray.length; i++) {
         let date = dateArray[i];
-      
+
         if (consecutivePTDays >= 10) {
             dateAchieved = date;
             break;
@@ -162,7 +162,25 @@ export const refreshAll = async (company: string, unit: string) => {
         values: [company, unit],
     });
 
-    if (!activities) return { error: "No activities found " };
+    // const personnel_IDs = [259]; // todo to change
+    const activePersonnel: Personnel[] = await executeQuery({
+        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW()) AND company = ? AND unit = ?`,
+        values: [company, unit],
+    });
+
+    const activePersonnelIDs = activePersonnel.map((p) => p.personnel_ID);
+    await executeQuery({
+        query: `DELETE FROM ha_events WHERE personnel_ID IN (?)`,
+        values: [activePersonnelIDs],
+    });
+    if (!activities.length) { 
+        // for each personnel run the noActivitiesFunc
+        console.log("No activities for overall")
+        for (const person of activePersonnel) {
+            await noActivitiesAtAll(person);
+        }
+        return 
+    }
 
     // For each activity, if the activity 'contributes' value is > 1, duplicate the activity
 
@@ -236,13 +254,7 @@ export const refreshAll = async (company: string, unit: string) => {
     // end look date shuold be the latest activity date that's active
     const end = addDays(activities[activities.length - 1].date, 15);
 
-    // const personnel_IDs = [259]; // todo to change
-    const activePersonnel: Personnel[] = await executeQuery({
-        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active FROM personnel WHERE DATE(ord) >= DATE(NOW()) AND DATE(post_in) <= DATE(NOW()) AND company = ? AND unit = ?`,
-        values: [company, unit],
-    });
-
-    const activePersonnelIDs = activePersonnel.map((p) => p.personnel_ID);
+    
     // const personnelMap = activePersonnel.reduce<{
     //     [key: string]: Personnel[];
     // }>((r, a) => {
@@ -259,10 +271,7 @@ export const refreshAll = async (company: string, unit: string) => {
         }[][];
     } = {};
 
-    await executeQuery({
-        query: `DELETE FROM ha_events WHERE personnel_ID IN (?)`,
-        values: [activePersonnelIDs],
-    });
+   
 
     const allEventValues: any[][] = [];
     for (const person of activePersonnel) {
@@ -292,7 +301,7 @@ export const refreshAll = async (company: string, unit: string) => {
                     : subDays(secondYearDate, 12), // 12 days before the start of 2nd year to account for them doing the 10 consective PTs before the swap to 2nd year
                 end
             );
-            
+
             isSecondYear = true;
         } else {
             // solely first year soldier
@@ -546,7 +555,7 @@ export const refreshAll = async (company: string, unit: string) => {
         //     ],
         // });
     }
-   
+
     await executeQuery({
         query: `INSERT INTO ha_events (personnel_ID, event_type, date) VALUES ?`,
         values: [allEventValues],
@@ -563,7 +572,10 @@ export const refreshPersonnelID = async (
     console.log(
         `------------ BEGIN UPDATING HA STATUS (${personnel_ID}) ------------`
     );
-
+    await executeQuery({
+        query: `DELETE FROM ha_events WHERE personnel_ID = ?`,
+        values: [personnel_ID],
+    });
     // grab a list of activities this person attended
     const attendeesObject: {
         activity_ID: number;
@@ -578,20 +590,32 @@ export const refreshPersonnelID = async (
     );
 
     // grab a list of all activities
+
     const activities: {
         activity_ID: number;
         date: Date;
         contributes: string;
-    }[] = await executeQuery({
-        // todo set limit of looking back to the earliest post in of the currently active personnel
-        query: `SELECT activity_ID, date, contributes FROM activity_list WHERE activity_ID IN (?) AND contributes > 0 ORDER BY date ASC`,
-        values: [activity_IDs],
+    }[] = activity_IDs.length
+        ? await executeQuery({
+              // todo set limit of looking back to the earliest post in of the currently active personnel
+              query: `SELECT activity_ID, date, contributes FROM activity_list WHERE activity_ID IN (?) AND contributes > 0 ORDER BY date ASC`,
+              values: [activity_IDs],
+          })
+        : [];
+    const personList: Personnel[] = await executeQuery({
+        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active  FROM personnel WHERE personnel_ID = ? AND company = ? AND unit = ?`,
+        values: [personnel_ID, company, unit],
     });
+    if (!personList) return { error: "No personnel found " };
+    const person = personList[0];
 
-    if (!activities) return { error: "No activities found " };
+    if (!activities.length) {
+        console.log("NO ACTIVITIE");
+        await noActivitiesAtAll(person);
+        return;
+    }
 
     // For each activity, if the activity 'contributes' value is > 1, duplicate the activity
-
     const stringifiedActivitiesArray = activities.map((activity) => ({
         ...activity,
         stringifiedDate: activity.date.toDateString(),
@@ -659,17 +683,7 @@ export const refreshPersonnelID = async (
         }[][];
     } = {};
 
-    await executeQuery({
-        query: `DELETE FROM ha_events WHERE personnel_ID = ?`,
-        values: [personnel_ID],
-    });
-
-    const personList: Personnel[] = await executeQuery({
-        query: `SELECT *, CASE WHEN (personnel.ha_end_date) > (NOW()) THEN true ELSE false END AS ha_active  FROM personnel WHERE personnel_ID = ? AND company = ? AND unit = ?`,
-        values: [personnel_ID, company, unit],
-    });
-    if (!personList) return { error: "No personnel found " };
-    const person = personList[0];
+   
 
     const ord = person.ord; // end date
     const post_in = person.post_in; // start date
@@ -747,7 +761,7 @@ export const refreshPersonnelID = async (
                 mappedActivities
             );
             console.log("-----------------------------------");
-   
+
             if (resumedDate) {
                 // personnel resumed HA after being on hiatus
                 events[0].push({
@@ -910,7 +924,6 @@ export const refreshPersonnelID = async (
             formatMySQLDateHelper(event.date),
         ])
     );
-   
 
     await executeQuery({
         query: `INSERT INTO ha_events (personnel_ID, event_type, date) VALUES ?`,
@@ -930,4 +943,32 @@ export const refreshPersonnelID = async (
     );
 
     return results;
+};
+
+const noActivitiesAtAll = async (person: Personnel) => {
+    try {
+        console.log("no activities at all for person ", person.name);
+        // HA ends 14 days after post in and lasts until ORD
+        
+        const haEndDate = addDays(person.post_in, 15);
+        const res = await executeQuery({
+            query: `INSERT INTO ha_events SET personnel_ID = ?, event_type = 'ended', date = ?`,
+            values: [
+                person.personnel_ID,
+                formatMySQLDateHelper(haEndDate.toString()),
+            ],
+        });
+     
+
+        await executeQuery({
+            query: `UPDATE personnel SET ha_end_date = ? WHERE personnel_ID = ?`,
+            // query: `UPDATE personnel SET ha_active = ?, ha_end_date = ? WHERE personnel_ID = ?`,
+            values: [
+                formatMySQLDateHelper(haEndDate.toString()),
+                person.personnel_ID,
+            ],
+        });
+    } catch (e) {
+        console.log(e);
+    }
 };

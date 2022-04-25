@@ -22,6 +22,7 @@ import {
     TabPanel,
     TabPanels,
     Tabs,
+    Button,
 } from "@chakra-ui/react";
 import { differenceInBusinessDays, differenceInDays, format } from "date-fns";
 import { useSession } from "next-auth/react";
@@ -313,6 +314,16 @@ const HAPage: NextProtectedPage = () => {
 
     // -----
 
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const refreshData = () => { 
+        setIsRefreshing(true);
+       
+        sendPOST("/api/activity/maintenance/refreshAll", {}).then((res) => {
+            console.log({res})
+            setIsRefreshing(false)
+        });
+ 
+    }
     if (data)
         return (
             <Stack direction="column" spacing={6}>
@@ -331,6 +342,13 @@ const HAPage: NextProtectedPage = () => {
                             Note: Time to/from Expiry Date is calculated in
                             Working Days.
                         </Text>
+                    </Center>
+                    <Center mt={2}>
+                        {" "}
+                        <Button size="xs" colorScheme="teal" isLoading={isRefreshing} onClick={() => refreshData()}>
+                            {" "}
+                            Inaccurate? Refresh the status (Don't spam!){" "}
+                        </Button>{" "}
                     </Center>
                 </Box>
                 {/* <Accordion
@@ -492,7 +510,7 @@ const HAPage: NextProtectedPage = () => {
                 </Tabs>
             </Stack>
         );
-    else return <CustomLoadingBar/>;
+    else return <CustomLoadingBar />;
 };
 
 HAPage.requireAuth = true;
