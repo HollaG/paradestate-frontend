@@ -111,7 +111,6 @@ const determineIfYearTwoAchievedHA = (
     // - max 2 per day
 
     const ptDates = Object.keys(activitiesMap);
-
     let score = 0;
     let dateAchieved = null;
     for (let i = 0; i < dateArray.length; i++) {
@@ -129,7 +128,8 @@ const determineIfYearTwoAchievedHA = (
         }
 
         if (ptDates.includes(date)) {
-            score = score + activitiesMap[date];
+            // clamp to max 2 HA units per day TODO
+            score = score + (activitiesMap[date] > 2 ? 2 : activitiesMap[date]);
         }
         // look back 9 days
         // is there a PT 9 days ago? if so, subtract the score by the number of PTs on that day,
@@ -140,7 +140,8 @@ const determineIfYearTwoAchievedHA = (
         } else {
             const date9DaysBack = dateArray[lookBack];
             if (ptDates.includes(date9DaysBack)) {
-                score -= activitiesMap[date9DaysBack]; // TODO
+                // clamp to subtracting max 2 HA units per day TODO
+                score = score - (activitiesMap[date9DaysBack] > 2 ? 2 : activitiesMap[date9DaysBack]); // TODO
             }
         }
     }
@@ -847,21 +848,25 @@ export const refreshPersonnelID = async (
     // Filter the activities to only include the ones that are attended by this person
     let mappedActivitiesFinal: { [key: string]: number } = {};
     const attendedActivityIDsArray = cleanedAttendees[person.personnel_ID];
+    
     if (attendedActivityIDsArray) {
         // skip if no activities attended at all, which means mappedActivitiesFinal is empty
         for (let date in mappedActivities) {
             const activitiesOnThisDate = mappedActivities[date];
 
-            let numberAttended = 0;
+            let haUnitsOnThisDay = 0;          
             activitiesOnThisDate.forEach((activity) => {
                 if (attendedActivityIDsArray.includes(activity.activity_ID)) {
-                    numberAttended =
-                        Number(activity.contributes) + numberAttended;
+                    haUnitsOnThisDay =
+                        Number(activity.contributes) + haUnitsOnThisDay;
                     // add the number attended to the contribute number (the # of HA units this is)
+                    
+                    // Don't clamp to 2 here, clamp in the function which decides when HA has resumed (determineIfYearTwoAchievedHA())
                 }
+                
             });
-            if (numberAttended > 0)
-                mappedActivitiesFinal[date] = numberAttended;
+            if (haUnitsOnThisDay > 0)
+                mappedActivitiesFinal[date] = haUnitsOnThisDay;
         }
     }
     if (stringifiedDateArrayForFirstYear.length)
