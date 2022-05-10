@@ -554,6 +554,7 @@ const Sidebar = (props: any) => {
                                                 <Avatar
                                                     size={"sm"}
                                                     src={session.user.photo}
+                                                    name={session.user.username}
                                                 />
                                                 <VStack
                                                     display={{
@@ -589,8 +590,8 @@ const Sidebar = (props: any) => {
                                             bg={whiteGray900}
                                             borderColor={gray200Gray700}
                                         >
-                                            <MenuItem>Profile</MenuItem>
-                                            <MenuItem>Settings</MenuItem>
+                                            {/* <MenuItem>Profile</MenuItem>
+                                            <MenuItem>Settings</MenuItem> */}
                                             <MenuItem>
                                                 <NextLink
                                                     href="/auth/registration?change=1"

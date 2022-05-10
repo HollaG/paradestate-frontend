@@ -21,9 +21,9 @@ export default NextAuth({
     ],
     jwt: {
         secret: "asbdfjbajsdfbjkadbfjdkasbjk",
-        maxAge: 30 * 24 * 60 * 60
+        maxAge: 30 * 24 * 60 * 60,
     },
-    
+
     secret: "my-super-secret-token",
     callbacks: {
         async signIn({ account, profile }) {
@@ -35,9 +35,23 @@ export default NextAuth({
             // }
             // console.log({account, profile})
 
-            
             // set('user', user)
-            console.log({account, profile})
+            console.log({ account, profile });
+
+            // if no user in db, add user
+            const userResult: User[] = await executeQuery({
+                query: `SELECT * FROM users WHERE email = ?`,
+                values: [profile.email],
+            });
+            if (!userResult.length) {
+                executeQuery({
+                    query: `INSERT INTO users SET google_ID = ?, personnel_ID = 0, photo = ?, unit = "", company = "", platoon = "", permissions = "", username = ?, email = ?`,
+                    values: [profile.sub, profile.picture, profile.name, profile.email],
+                });
+            }
+
+         
+
             return true; // Do different verification for other providers that don't have `email_verified`
         },
         // async jwt({ token, account }) {
@@ -52,17 +66,21 @@ export default NextAuth({
             // else if (url.startsWith("/"))
             //     return new URL(url, baseUrl).toString();
             // return baseUrl;
-            return "/"
+            return "/";
         },
-        async session({session, token}) { 
-            
-            const userResult:User[] = await executeQuery({query: `SELECT * FROM users WHERE email = ?`, values: [session.user?.email]})
-            
-            session.user = userResult[0] 
-            // console.log({session}, '----------------')
+        async session({ session, token }) {
+            const userResult: User[] = await executeQuery({
+                query: `SELECT * FROM users WHERE email = ?`,
+                values: [session.user?.email],
+            });
+
+  
+
+      
+            session.user = userResult[0];
             // set('user', userResult[0])
             // console.log({session})
-            return session
-        }
+            return session;
+        },
     },
 });
