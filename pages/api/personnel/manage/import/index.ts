@@ -41,14 +41,16 @@ export default async function handler(
 
             const final = personnel.map((person) => {
                 // validate data
+                console.log({person})
                 const finalPerson: BasicPersonnel = {
                     name: person.name.trim().toUpperCase(),
                     platoon: person.platoon.trim().toUpperCase(),
+                    pers_num: person.pers_num.toString().trim().toUpperCase(),
                     ord: "",
                     pes: "",
                     post_in: "",
                     rank: "",
-                    svc_status: ""
+                    svc_status: "",
                 };
                 requiredHeaders.forEach((header) => {
                     const trimmed = person[header]
@@ -75,6 +77,8 @@ export default async function handler(
                 }
 
                 // Check name exists
+
+                // Check pers_num exists
 
                 // Check pes
                 if (Assignments.pes.includes(person.pes.trim().toUpperCase())) {
@@ -176,6 +180,7 @@ export default async function handler(
                 data: final,
             });
         } catch (e: any) {
+            console.log(e)
             res.status(400).json({
                 error: e.toString(),
             });

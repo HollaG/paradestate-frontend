@@ -17,6 +17,7 @@ const requiredHeaders: (keyof BasicPersonnel)[] = [
     "ord",
     "platoon",
     "svc_status",
+    "pers_num"
 ];
 
 export default async function handler(
@@ -54,6 +55,12 @@ export default async function handler(
                     errors.push({
                         name: `input.${index}.name`,
                         message: "Please enter a name!",
+                    });
+                }
+                if (!person.pers_num) { 
+                    errors.push({
+                        name: `input.${index}.pers_num`,
+                        message: "Please enter a persnode number!",
                     });
                 }
                 if (!person.platoon) {
@@ -136,10 +143,11 @@ export default async function handler(
             // console.log({ errors, data });
 
             const sql =
-                "INSERT INTO personnel (`rank`, name, pes, post_in, ord, off_balance, leave_balance, unit, company, platoon, section, svc_status) VALUES ?";
+                "INSERT INTO personnel (`rank`, name, pers_num, pes, post_in, ord, off_balance, leave_balance, unit, company, platoon, section, svc_status) VALUES ?";
             const values = data.map((person) => [
                 person.rank.trim().toUpperCase(),
                 person.name.trim().toUpperCase(),
+                person.pers_num.trim().toUpperCase(),
                 person.pes.trim().toUpperCase(),
                 formatMySQLDateHelper(person.post_in.toString()),
                 formatMySQLDateHelper(person.ord.toString()),

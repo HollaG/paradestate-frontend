@@ -42,7 +42,7 @@ export default async function handler(
         }
     } else {
         try {
-            const { post_in, ord, name, pes, platoon, rank, svc_status } =
+            const { post_in, ord, name, pes, platoon, rank, svc_status, pers_num } =
                 req.body;
             console.log({
                 post_in,
@@ -52,6 +52,7 @@ export default async function handler(
                 platoon,
                 rank,
                 svc_status,
+                pers_num
             });
             if (
                 !post_in ||
@@ -60,7 +61,8 @@ export default async function handler(
                 !pes ||
                 !platoon ||
                 !rank ||
-                !svc_status
+                !svc_status ||
+                !pers_num
             ) {
                 throw new Error("Missing required fields");
             }
@@ -85,10 +87,11 @@ export default async function handler(
 
             // const txn = db.transaction();
             const sql =
-                "INSERT INTO personnel SET `rank` = ?, name = ?, pes = ?, post_in = ?, ord = ?, off_balance = ?, leave_balance = ?, unit = ?, company = ?, platoon = ?, section = ?, svc_status = ?";
+                "INSERT INTO personnel SET `rank` = ?, name = ?, pers_num = ?, pes = ?, post_in = ?, ord = ?, off_balance = ?, leave_balance = ?, unit = ?, company = ?, platoon = ?, section = ?, svc_status = ?";
             const values = [
                 rank,
                 name.trim().toUpperCase(),
+                pers_num,
                 pes,
                 formattedPostIn,
                 formattedORD,
@@ -118,7 +121,7 @@ export default async function handler(
                 personnel_ID,
                 personnel_ID
             ];
-            console.log(result, 'ksadfnka')
+          
             await executeQuery({
                 query: auditSql,
                 values: auditArr,

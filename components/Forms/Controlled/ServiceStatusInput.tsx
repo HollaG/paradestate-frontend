@@ -30,8 +30,8 @@ const ServiceStatusInput:React.FC<{
                         render={({ field: { onChange, value = [] } }) => (
                             <Select<ServiceStatusOption, false>
                                 defaultValue={{
-                                    label: "NSF/NSMan",
-                                    value: "NSF/NSMan",
+                                    label: "NSF/NSMAN",
+                                    value: "NSF/NSMAN",
                                 }}
                                 id="svc_status"
                                 name="svc_status"

@@ -18,7 +18,8 @@ export interface BasicPersonnel {
     post_in: Date|string,
     ord: Date|string,
     platoon: string,
-    svc_status: string
+    svc_status: string,
+    pers_num: string
 }
 
 export interface Personnel extends BasicPersonnel {
@@ -36,7 +37,9 @@ export interface Personnel extends BasicPersonnel {
     section: string;
     svc_status: string;
     ha_active: boolean,
-    ha_end_date: Date
+    ha_end_date: Date,
+    pers_num: string
+
 }
 
 export interface ExtendedPersonnel extends Personnel {

@@ -30,7 +30,7 @@ const EditPage: NextProtectedPage = () => {
 
     const methods = useForm<any>({
         defaultValues: {
-            svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+            svc_status: { label: "NSF/NSMAN", value: "NSF/NSMAN" },
             post_in: new Date(),
             ord: new Date(),
         },
@@ -50,6 +50,7 @@ const EditPage: NextProtectedPage = () => {
                 ord: new Date(data.ord),
 
                 platoon: { label: data.platoon, value: data.platoon },
+                pers_num: data.pers_num,
             });
         }
     }, [data, reset]);
@@ -59,7 +60,7 @@ const EditPage: NextProtectedPage = () => {
     const [personnelData, setPersonnelData] = useState<Personnel>();
     const submit = async (data: any) => {
         setIsSubmitting(true);
-        const { post_in, ord, name } = data;
+        const { post_in, ord, name, pers_num } = data;
 
         if (isBefore(ord, post_in)) {
             methods.setError("ord", {
@@ -85,6 +86,7 @@ const EditPage: NextProtectedPage = () => {
             platoon,
             rank,
             svc_status,
+            pers_num
         });
         if (responseData.success) {
             setSuccess(true);

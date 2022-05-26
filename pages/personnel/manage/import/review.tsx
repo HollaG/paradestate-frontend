@@ -118,6 +118,12 @@ const ReviewPage: NextProtectedPage = () => {
                         message: person.name.replace("error:", ""),
                     });
                 }
+                if (person.pers_num.startsWith("error:")) {
+                    setError(`input.${index}.pers_num`, {
+                        type: "manual",
+                        message: person.pers_num.replace("error:", ""),
+                    });
+                }
                 if (person.ord.toString().startsWith("error:")) {
                     setError(`input.${index}.ord`, {
                         type: "manual",
@@ -200,6 +206,7 @@ const ReviewPage: NextProtectedPage = () => {
                             )} */}
                                 <Th> Rank </Th>
                                 <Th> Name </Th>
+                                <Th> Persnode # </Th>
                                 <Th> PES </Th>
                                 <Th> Post in </Th>
                                 <Th> ORD </Th>
@@ -213,6 +220,9 @@ const ReviewPage: NextProtectedPage = () => {
                                     <Td>{index + 1}</Td>
                                     <Td maxW="100px">{row.rank}</Td>
                                     <Td>{row.name}</Td>
+                                    <Td maxW="130px">
+                                        {row.pers_num}
+                                    </Td>
                                     <Td maxW="90px">{row.pes}</Td>
                                     <Td maxW="130px">
                                         {formatMySQLDateHelper(
@@ -271,6 +281,7 @@ const ReviewPage: NextProtectedPage = () => {
                                 )} */}
                                     <Th> Rank </Th>
                                     <Th> Name </Th>
+                                    <Th> Persnode # </Th>
                                     <Th> PES </Th>
                                     <Th> Post in </Th>
                                     <Th> ORD </Th>
@@ -331,6 +342,27 @@ const ReviewPage: NextProtectedPage = () => {
                                                 <ErrorText
                                                     text={
                                                         errors.input[index].name
+                                                            .message
+                                                    }
+                                                />
+                                            )}
+                                        </Td>
+                                        <Td pr={1}>
+                                            <Input
+                                                defaultValue={row.pers_num}
+                                                size="sm"
+                                                {...register(
+                                                    `input.${index}.pers_num`,
+                                                    {
+                                                        required:
+                                                            "This field is required!",
+                                                    }
+                                                )}
+                                            />
+                                            {errors?.input?.[index]?.pers_num && (
+                                                <ErrorText
+                                                    text={
+                                                        errors.input[index].pers_num
                                                             .message
                                                     }
                                                 />

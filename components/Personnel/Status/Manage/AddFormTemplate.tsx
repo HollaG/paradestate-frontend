@@ -78,6 +78,20 @@ const AddFormTemplate: React.FC<{
                             <ErrorText text="Please enter a name!" />
                         )}
                     </Box>
+                    <Box>
+                        <InputGroup size="sm">
+                            <InputLeftAddon children="Persnode #" />
+                            <Input
+                                placeholder="Persnode ID"
+                                {...register("pers_num", {
+                                    required: true,
+                                })}
+                            />
+                        </InputGroup>
+                        {errors?.pers_num?.type === "required" && (
+                            <ErrorText text="Please enter a persnode identification number!!" />
+                        )}
+                    </Box>
                     <PesInput control={control} errors={errors}/>
                     <PostInInput control={control} errors={errors}/>
                     <ORDInput control={control} errors={errors} />

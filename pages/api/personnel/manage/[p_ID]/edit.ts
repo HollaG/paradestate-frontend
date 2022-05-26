@@ -43,7 +43,7 @@ export default async function handler(
                     .status(400)
                     .json({ error: "Personnel not found or no permissions!" });
 
-            const { post_in, ord, name, pes, platoon, rank, svc_status } =
+            const { post_in, ord, name, pes, platoon, rank, svc_status, pers_num } =
                 req.body;
 
             if (
@@ -53,7 +53,8 @@ export default async function handler(
                 !pes ||
                 !platoon ||
                 !rank ||
-                !svc_status
+                !svc_status ||
+                !pers_num
             ) {
                 throw new Error("Missing required fields");
             }
@@ -71,10 +72,11 @@ export default async function handler(
                 Assignments.mysqldateformat
             );
             const sql =
-                "UPDATE personnel SET `rank` = ?, name = ?, pes = ?, post_in = ?, ord = ?, platoon = ?, section = ?, svc_status = ? WHERE personnel_ID = ?";
+                "UPDATE personnel SET `rank` = ?, name = ?, pers_num = ?, pes = ?, post_in = ?, ord = ?, platoon = ?, section = ?, svc_status = ? WHERE personnel_ID = ?";
             const values = [
                 rank,
                 name.trim().toUpperCase(),
+                pers_num,
                 pes,
                 formattedPostIn,
                 formattedORD,              
@@ -119,7 +121,8 @@ export default async function handler(
                     platoon,
                     rank,
                     svc_status,
-                    personnel_ID
+                    personnel_ID,
+                    pers_num
                 },
            
             });

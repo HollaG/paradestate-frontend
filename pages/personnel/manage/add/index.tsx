@@ -53,14 +53,14 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //     reset,
     // } = useForm<any>({
     //     defaultValues: {
-    //         svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+    //         svc_status: { label: "NSF/NSMAN", value: "NSF/NSMAN" },
     //         post_in: new Date(),
     //         ord: new Date(),
     //     },
     // });
     const methods = useForm<any>({
         defaultValues: {
-            svc_status: { label: "NSF/NSMan", value: "NSF/NSMan" },
+            svc_status: { label: "NSF/NSMAN", value: "NSF/NSMAN" },
             post_in: new Date(),
             ord: new Date(),
         },
@@ -81,6 +81,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         rank: string;
         svc_status: string;
         personnel_ID: string;
+        pers_num: string;
     }>();
     const toast = useToast();
     const router = useRouter();
@@ -89,7 +90,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         setIsSubmitting(true);
         console.log({ data });
 
-        const { post_in, ord, name } = data;
+        const { post_in, ord, name, pers_num } = data;
 
         if (isBefore(ord, post_in)) {
             methods.setError("ord", {
@@ -107,6 +108,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
         const platoon = data.platoon.value;
         const rank = data.rank.value;
         const svc_status = data.svc_status.value;
+  ;
 
         const responseData = await sendPOST("/api/personnel/manage/add", {
             post_in,
@@ -116,6 +118,7 @@ const AddPersonnelPage: NextProtectedPage = () => {
             platoon,
             rank,
             svc_status,
+            pers_num
         });
         
         if (responseData.success) {
@@ -231,8 +234,8 @@ const AddPersonnelPage: NextProtectedPage = () => {
     //                                 }) => (
     //                                     <Select<ServiceStatusOption, false>
     //                                         defaultValue={{
-    //                                             label: "NSF/NSMan",
-    //                                             value: "NSF/NSMan",
+    //                                             label: "NSF/NSMAN",
+    //                                             value: "NSF/NSMAN",
     //                                         }}
     //                                         id="svc_status"
     //                                         name="svc_status"

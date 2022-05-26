@@ -483,13 +483,13 @@ const PersonnelPage: NextProtectedPage = () => {
                                 <Stat
                                     textAlign={{ base: "center", lg: "unset" }}
                                 >
-                                    <StatLabel> Personnel ID</StatLabel>
+                                    <StatLabel> Persnode ID</StatLabel>
                                     <StatNumber>
                                         <Badge
                                             fontSize="lg"
                                             colorScheme="purple"
                                         >
-                                            {data.person.personnel_ID}
+                                            {data.person.pers_num}
                                         </Badge>
                                     </StatNumber>
                                     {/* <StatHelpText>
